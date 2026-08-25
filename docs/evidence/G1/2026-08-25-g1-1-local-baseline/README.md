@@ -1,6 +1,6 @@
 # G1.1 本地工程基线证据
 
-文档状态：G1.1 本地 Git 基线已建立；Node 22 frozen install 验证阻塞，G1.1 尚未完成。  
+文档状态：G1.1 Node 22 可复现基线已完成；G1 Exit、CI/Preview/环境隔离和 G2-A0 仍未通过或打开。
 日期：2026-08-25（Europe/Rome）  
 执行范围：项目根 Git、repo-local 配置、Node 22/pnpm 工具链核对和本地静态验证  
 环境：local-only；未连接远端、CI、Preview、Supabase、Staging 或 Production  
@@ -42,6 +42,14 @@ Owner 原话：`继续下一步`
 
 离线 install 失败后不再运行依赖相关命令，不执行网络安装，不修改 `prototype/package.json` 或 lockfile。当前 `node_modules/` 为被 pnpm 重建后未完成的本地依赖状态，属于 ignored 可恢复工作区状态；tracked source tree 未被修改。
 
+### 3.1 2026-08-25｜隔离副本 frozen install 补验
+
+- 验证源：从初始源码提交 `0d6bb3f621019e3c8ad4b81e6614cd8c6bea5bcb` 使用 `git archive` 解出到 `/private/tmp/rebuy-g1.ml6qyC/prototype`；该隔离副本未复制当前工作区 `node_modules`。
+- 工具链：明确 PATH 下 `node --version=v22.12.0`、`pnpm --version=10.33.3`。
+- 命令：`TMPDIR=/private/tmp pnpm install --frozen-lockfile`。结果退出 0；lockfile resolution skipped，`351` 个包完成安装（`reused=351`、`downloaded=0`、`added=351`）。本次允许隔离目录使用 npm registry 依赖来源，但实际输出未下载 tarball。
+- 安装 warning：pnpm 忽略 `unrs-resolver@1.12.2` build scripts；未执行 `pnpm approve-builds`，不为此声明生产或 CI 通过。
+- `prototype/` 源码、package/lockfile、当前 Node22 dev session 和项目 Git 工作树均未修改。
+
 ## 4. Build 复用与跳过项
 
 - 可复用 build 证据：此前相同 prototype 源码、配置和 lockfile 在隔离 `/tmp/rebuy-g0-build.RKda6l/prototype`、Node `v22.12.0`、pnpm `10.33.3` 下 `pnpm build` 退出 0。
@@ -61,3 +69,17 @@ Owner 原话：`继续下一步`
 - 无外部写入、无远端、无生产数据变化。下一动作是 Owner/维护者在允许的依赖来源可用后恢复 frozen install，补齐 Node22 下 typecheck/lint/build，再按合同进入 G1.2。
 
 本证据不代表 G1 Exit 通过、CI/Preview/Staging/Production 已建立、Auth/数据库已连接、真实登录已实施或生产已批准。
+
+## 6. 2026-08-25｜G1.1 可复现验证完成
+
+在同一隔离目录 `/private/tmp/rebuy-g1.ml6qyC/prototype`、Node `v22.12.0`、pnpm `10.33.3` 下，安装成功后重新运行：
+
+| 命令 | 结果 | 证据边界 |
+|---|---|---|
+| `pnpm typecheck` | 退出 0 | 隔离本地静态 |
+| `pnpm lint` | 退出 0 | 隔离本地静态 |
+| `pnpm build` | 退出 0；Next `16.3.2` 编译、TypeScript、静态页面生成和路由优化完成 | 隔离本地静态；不代表部署/生产 |
+
+- Build 输入来自源码 SHA `0d6bb3f621019e3c8ad4b81e6614cd8c6bea5bcb`；当前工作区预览继续由 Node22 session `16417` 提供，未在工作区 build。
+- 未运行 CI、Preview、Staging、Production、Browser/E2E、Supabase/Auth、数据库、部署或外部业务写入；未读取 secrets/PII；未做 hash。
+- 本条解除“offline store 缺包/Node22 脚本复验未完成”风险，但不改变 G1 Exit 未通过、G1.2/G1.3 未开始和 G2-A0 未打开。
