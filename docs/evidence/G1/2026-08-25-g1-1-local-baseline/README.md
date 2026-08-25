@@ -61,12 +61,12 @@ Owner 原话：`继续下一步`
 
 ## 5. 当前状态、风险、回退与 Owner Gate
 
-- 当前 G0/P1 保持“已通过并冻结”；G1 为“执行中（G1.1 本地 Git 基线已建立，Node22 离线依赖验证阻塞）”。
-- G1.1：Git root、`main`、repo-local identity 和初始 SHA 已建立；Node22/pnpm 版本已确认；frozen install 未完成，因此 G1.1 未完成。
+- 当前 G0/P1 保持“已通过并冻结”；G1 为“执行中（G1.1 已完成，G1.2 待开始）”。
+- G1.1：Git root、`main`、repo-local identity 和初始 SHA 已建立；隔离副本 Node22/pnpm frozen install、typecheck、lint、build 均通过。
 - G1.2 最小 CI、G1.3 四环境/Preview 回退仍未开始；G1 Exit Gate 未通过，不打开 G2-A0。
-- 主要风险：离线 pnpm store 缺少 `@swc/helpers@0.5.23`；在安装恢复前不能证明 frozen lockfile 可复现，也不能把 typecheck/lint 证据升级为当前完整验证。
+- 主要风险：离线 pnpm store 缺少 `@swc/helpers@0.5.23` 的历史问题已由隔离依赖来源补验解除；CI、Preview、四环境隔离与回退证据仍未建立。
 - 安全回退：保留初始提交和后续文档提交；恢复时使用已记录 tag/ref 建分支或追加 `git revert`，不建议 destructive reset；完成依赖补齐后重新验证并追加记录。
-- 无外部写入、无远端、无生产数据变化。下一动作是 Owner/维护者在允许的依赖来源可用后恢复 frozen install，补齐 Node22 下 typecheck/lint/build，再按合同进入 G1.2。
+- 无外部写入、无远端、无生产数据变化。下一动作是按合同进入 G1.2 CI 和 G1.3 四环境/Preview 回退门。
 
 本证据不代表 G1 Exit 通过、CI/Preview/Staging/Production 已建立、Auth/数据库已连接、真实登录已实施或生产已批准。
 
