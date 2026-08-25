@@ -48,7 +48,7 @@ Owner 原话：`继续下一步`
 - 工具链：明确 PATH 下 `node --version=v22.12.0`、`pnpm --version=10.33.3`。
 - 命令：`TMPDIR=/private/tmp pnpm install --frozen-lockfile`。结果退出 0；lockfile resolution skipped，`351` 个包完成安装（`reused=351`、`downloaded=0`、`added=351`）。本次允许隔离目录使用 npm registry 依赖来源，但实际输出未下载 tarball。
 - 安装 warning：pnpm 忽略 `unrs-resolver@1.12.2` build scripts；未执行 `pnpm approve-builds`，不为此声明生产或 CI 通过。
-- `prototype/` 源码、package/lockfile、当前 Node22 dev session 和项目 Git 工作树均未修改。
+- `prototype/` 源码、package/lockfile 和项目 Git 工作树均未修改；验证期间 Node22 本地预览曾返回 HTTP 200，具体执行代理 session/PID 仅属临时运行态，不属于 G1.1 完成或回退证据。
 
 ## 4. Build 复用与跳过项
 
@@ -80,6 +80,12 @@ Owner 原话：`继续下一步`
 | `pnpm lint` | 退出 0 | 隔离本地静态 |
 | `pnpm build` | 退出 0；Next `16.3.2` 编译、TypeScript、静态页面生成和路由优化完成 | 隔离本地静态；不代表部署/生产 |
 
-- Build 输入来自源码 SHA `0d6bb3f621019e3c8ad4b81e6614cd8c6bea5bcb`；当前工作区预览继续由 Node22 session `16417` 提供，未在工作区 build。
+- Build 输入来自源码 SHA `0d6bb3f621019e3c8ad4b81e6614cd8c6bea5bcb`；隔离 build 未写入工作区。验证期间的 Node22 本地预览 HTTP 200 仅为历史运行态证据，后续以实时 HTTP/浏览器复核为准。
 - 未运行 CI、Preview、Staging、Production、Browser/E2E、Supabase/Auth、数据库、部署或外部业务写入；未读取 secrets/PII；未做 hash。
 - 本条解除“offline store 缺包/Node22 脚本复验未完成”风险，但不改变 G1 Exit 未通过、G1.2/G1.3 未开始和 G2-A0 未打开。
+
+## 7. 2026-08-26｜本地预览运行态运维交接
+
+- 运行态边界：执行代理的 dev session/PID 不持久、不属于 G1.1 完成或回退证据；历史 Node22/HTTP 200 仅保留为当时验证事实。
+- 后续使用：主代理或 Owner 需要预览时，先实时检查 127.0.0.1:3000，再通过浏览器复核；不要依赖旧 session/PID。
+- 本注记不改变 G1.1 tag、源码、隔离构建结论、G1 Exit 未通过或阶段状态。
