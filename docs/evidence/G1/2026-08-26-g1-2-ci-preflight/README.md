@@ -63,17 +63,30 @@ GitHub 的 workflow 权限语义下，未列出的权限保持 none；实施时�
 
 ### 3.3 动作版本固定策略
 
-截至 2026-08-26，本批记录的 GitHub 官方仓库示例当前使用 `actions/checkout@v7` 与 `actions/setup-node@v7`。实施时必须先从官方仓库核对对应 v7 release，再把每个 action 固定到完整 40 位 commit SHA；不能凭空写 abbreviated SHA，也不能把可变 tag 当成不可变供应链引用。
+截至 2026-08-26，主代理已沿 GitHub 官方 release → commit 链路核验以下不可变候选。下表和后面的 `uses:` 片段是预检记录，不是 workflow 文件、Owner 授权或 CI 通过：
+
+| Action | 官方 release | 官方 commit | 完整 SHA 候选 |
+|---|---|---|---|
+| `actions/checkout` | [v7.0.1 release](https://github.com/actions/checkout/releases/tag/v7.0.1) | [commit](https://github.com/actions/checkout/commit/3d3c42e5aac5ba805825da76410c181273ba90b1) | `3d3c42e5aac5ba805825da76410c181273ba90b1` |
+| `actions/setup-node` | [v7.0.0 release](https://github.com/actions/setup-node/releases/tag/v7.0.0) | [commit](https://github.com/actions/setup-node/commit/820762786026740c76f36085b0efc47a31fe5020) | `820762786026740c76f36085b0efc47a31fe5020` |
+
+建议的 `uses:` 形式（仅为候选记录，不创建文件）：
+
+```yaml
+- uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+- uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+```
+
+GitHub secure-use 指南明确完整 commit SHA 是当前唯一不可变引用方式：[Secure use reference](https://docs.github.com/en/actions/reference/security/secure-use)。实施当天仍必须从官方 release 页面进入对应 commit 页面再次核验；若 tag、release 或官方稳定候选发生漂移，先更新本证据和 Owner 决策，不得静默替换 SHA。完整 SHA 不改变 G1.2a 尚未获批、无 remote、无 workflow、无真实 CI run 的当前状态。
 
 官方参考：
 
 - [actions/checkout](https://github.com/actions/checkout)
 - [actions/setup-node](https://github.com/actions/setup-node)
-- [Secure use reference](https://docs.github.com/en/actions/reference/security/secure-use)
 - [Workflow syntax reference](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax)
 - [GitHub-hosted runners](https://docs.github.com/en/actions/reference/runners/github-hosted-runners)
 
-实施记录必须同时保存 action 名称、release/tag、完整 SHA、核对日期和核对来源。若官方 v7 release 或 runner 标签发生变化，先更新候选和 Owner 决策，不在 workflow 中临时漂移。
+实施记录必须同时保存 action 名称、release/tag、完整 SHA、核对日期和核对来源。若官方 release/tag、commit 链路或 runner 标签无法复核，立即停止 G1.2a 实施准备；不得使用 abbreviated SHA、可变 tag 或未经核验的新版本。若 G1.2a 未来已创建本地 workflow，错误 pin 只能通过回退该 workflow commit 修复，不修改或删除 G1.1 ref/tag；若尚未创建 workflow，则只更新本预检和 Owner 决策记录。
 
 ## 4. 候选门的行为合同
 
