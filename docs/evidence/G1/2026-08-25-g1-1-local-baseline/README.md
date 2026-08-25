@@ -1,0 +1,63 @@
+# G1.1 本地工程基线证据
+
+文档状态：G1.1 本地 Git 基线已建立；Node 22 frozen install 验证阻塞，G1.1 尚未完成。  
+日期：2026-08-25（Europe/Rome）  
+执行范围：项目根 Git、repo-local 配置、Node 22/pnpm 工具链核对和本地静态验证  
+环境：local-only；未连接远端、CI、Preview、Supabase、Staging 或 Production  
+Owner 原话：`继续下一步`  
+解释范围：按此前已批准的范围执行项目根为唯一 Git 根、`prototype/` 为 app 目录；复用既有 Node 22.12.0/pnpm 10.33.3；不创建远端、CI、Preview、Supabase 或生产连接。
+
+## 1. Git 基线
+
+- Git 根：`/Users/kyox215/Documents/codex应用文件夹/rebuy购物交易计划`。
+- `prototype/` 未建立独立仓库；项目根是唯一 Git 根。
+- 分支：`main`。
+- repo-local identity：`Hexiang Huang <kyox120@gmail.com>`；未修改 global identity。
+- remote：空；本批没有 `git remote add`、push 或其他远端写入。
+- 初始基线提交：`0d6bb3f621019e3c8ad4b81e6614cd8c6bea5bcb`，message `chore: establish Rebuy local project baseline`。
+- 初始提交包含 79 个受审查文件；只允许 `prototype/.env.example` 作为环境示例文件。
+- 预定稳定 ref：`g1.1-local-baseline-2026-08-25`。该 tag 只标记本地 Git/文档基线，不代表 Node 依赖安装、G1 Exit 或生产通过。
+
+## 2. 暂存集与敏感边界
+
+初始暂存集检查结果：
+
+- 未跟踪 `node_modules/`、`.next/`、`.pnpm-store/`、`.vercel/`、`.supabase/`、`*.tsbuildinfo` 或临时目录。
+- 未跟踪 `.env`、`.env.local` 或其他环境值文件；仅保留 `prototype/.env.example`。
+- staged sensitive-content scan 无命中；未读取任何 `.env` 值、密码、token、客户 PII、真实商家资料或生产凭据。
+- staged 大文件检查无超过 10 MiB 文件；既有 `prototype/public/product-sprite.png` 属于本地产品资产。
+- `git diff --cached --check` 报告既有 Markdown 硬换行使用的尾随空格；未为本批清理文档格式，也未改变内容。
+
+## 3. 工具链与安装验证
+
+本批明确 PATH：`/Users/kyox215/.nvm/versions/node/v22.12.0/bin:/Users/kyox215/.nvm/versions/node/v20.20.2/bin:/usr/bin:/bin`。
+
+| 命令 | 实际结果 | 证据边界 |
+|---|---|---|
+| `node --version` | `v22.12.0` | 本次 shell 已切换到 Node 22；不代表依赖安装成功 |
+| `pnpm --version` | `10.33.3` | 与 packageManager 声明一致 |
+| `TMPDIR=/private/tmp pnpm install --frozen-lockfile --offline` | 首次非交互运行：`ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY` | 不是缓存缺包结论；仅说明非 TTY 不允许清理 modules |
+| `CI=true TMPDIR=/private/tmp pnpm install --frozen-lockfile --offline` | 重建 `node_modules` 后退出 `ERR_PNPM_NO_OFFLINE_TARBALL`，缺少 `@swc/helpers@0.5.23` tarball | 离线缓存不完整；未联网、未改 lockfile；按要求停止后续验证 |
+| `pnpm typecheck` / `pnpm lint` | 首次非交互 install 被拒绝、modules 尚未重建前，既有 node_modules 上均通过 | 这是 install 阻塞前的局部证据，不是失败 install 后的复验；不得升级为本批完整通过 |
+
+离线 install 失败后不再运行依赖相关命令，不执行网络安装，不修改 `prototype/package.json` 或 lockfile。当前 `node_modules/` 为被 pnpm 重建后未完成的本地依赖状态，属于 ignored 可恢复工作区状态；tracked source tree 未被修改。
+
+## 4. Build 复用与跳过项
+
+- 可复用 build 证据：此前相同 prototype 源码、配置和 lockfile 在隔离 `/tmp/rebuy-g0-build.RKda6l/prototype`、Node `v22.12.0`、pnpm `10.33.3` 下 `pnpm build` 退出 0。
+- 本批只写入 `.git` 和文档，未修改 prototype 源码、配置、package 或 lockfile，因此该 build 证据在输入条件上仍可复用。
+- 本批不把复用 build 写成当前 `node_modules` 的新鲜验证；Node22 frozen install 阻塞解除后仍需按 G1.1/G1.2 合同补跑 typecheck、lint、build。
+- 未运行 Browser/E2E、CI、Preview、Staging、Production、Supabase/Auth、数据库、部署或外部写入。
+- 未做 hash；Git commit/ref 已提供本批基线完整性，且没有新的确定性传输生成物。
+- 未启动额外独立审查代理；本批为受控本地工程基线，风险集中在版本/依赖验证阻塞。
+
+## 5. 当前状态、风险、回退与 Owner Gate
+
+- 当前 G0/P1 保持“已通过并冻结”；G1 为“执行中（G1.1 本地 Git 基线已建立，Node22 离线依赖验证阻塞）”。
+- G1.1：Git root、`main`、repo-local identity 和初始 SHA 已建立；Node22/pnpm 版本已确认；frozen install 未完成，因此 G1.1 未完成。
+- G1.2 最小 CI、G1.3 四环境/Preview 回退仍未开始；G1 Exit Gate 未通过，不打开 G2-A0。
+- 主要风险：离线 pnpm store 缺少 `@swc/helpers@0.5.23`；在安装恢复前不能证明 frozen lockfile 可复现，也不能把 typecheck/lint 证据升级为当前完整验证。
+- 安全回退：保留初始提交和后续文档提交；恢复时使用已记录 tag/ref 建分支或追加 `git revert`，不建议 destructive reset；完成依赖补齐后重新验证并追加记录。
+- 无外部写入、无远端、无生产数据变化。下一动作是 Owner/维护者在允许的依赖来源可用后恢复 frozen install，补齐 Node22 下 typecheck/lint/build，再按合同进入 G1.2。
+
+本证据不代表 G1 Exit 通过、CI/Preview/Staging/Production 已建立、Auth/数据库已连接、真实登录已实施或生产已批准。
