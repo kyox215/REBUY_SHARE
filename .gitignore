@@ -1,0 +1,25 @@
+# Dependencies and package-manager state
+node_modules/
+.pnpm-store/
+
+# Next.js generated output
+.next/
+out/
+*.tsbuildinfo
+
+# Local environment files; keep only examples
+.env*
+!**/.env.example
+
+# Vercel local project state
+.vercel/
+
+# Supabase local state and credentials
+.supabase/
+supabase/.branches/
+supabase/.temp/
+supabase/.env
+supabase/.env.*
+
+# Local OS/editor noise
+.DS_Store
