@@ -185,4 +185,113 @@ A1 不以静态一次性码为恢复路径。若供应商界面或 API 出现相
 | `auth/oauth/{provider}/start` | 环境、client、state/nonce/PKCE 发起 | 未 allowlist provider/redirect、跨环境配置 |
 | `auth/oauth/callback` | code 兑换、身份建立、错误语义、安全事件 | code 重放、PKCE/state/nonce 错、open redirect、provider 错误 |
 | `auth/identities/link` / `unlink` | 重新认证、目标 identity、孤儿防护 | 最后可用方式、邮箱/relay 猜测、重复业务自动合并 |
-| `members/accept-invitation` | 目标邮箱 OTP、精确匹配、token 消费、membership
+| `members/accept-invitation` | 目标邮箱 OTP、精确匹配、token 消费、membership 激活 | 未证明邮箱、不匹配 identity、过期/撤销/重放 |
+| `auth/mfa/*` | TOTP、备用因子、人工恢复、AAL/会话重置 | support 单独批准、无身份核验、无通知/审计 |
+| `auth/sign-out` | local/global/others 的实测语义 | 未验证的单设备承诺、泄露 token |
+| `auth/sessions/list` / `revoke` | 仅在 `auth.sessions` 能力和权限验证后讨论 | 未授权跨用户、对象枚举、假定即时 token 失效 |
+
+## 13. 测试矩阵
+
+| 类别 | 正向案例 | 负向/边界案例 | 通过证据 |
+|---|---|---|---|
+| 三入口 | Apple、Google、邮箱 OTP 建立同等 identity | 取消、失败、重试、过期、限流、枚举 | 浏览器记录、事件摘要、状态转移 |
+| user 状态 | 三入口转 `pending_identity_verification -> active` | 未 active 读受保护资源、错误 provider、重复回调 | 状态和授权断言 |
+| Google scope | 仅 `openid email profile` | 任何 Gmail/Drive/联系人或额外 scope | consent screen、请求日志、token 检查 |
+| Apple relay | relay 正常登录，姓名缺失仍可用 | 强迫真实邮箱、按姓名合并、不同 relay 自动合并 | identity 与 linking 结果 |
+| callback | 精确 redirect、PKCE/state/nonce/code 一次性通过 | 缺失/错/重放、跨环境、open redirect | callback 负向矩阵和脱敏事件 |
+| OAuth 留存 | 消费后保留必要安全事件 | 原值进入 DB、日志、URL、截图、缓存 | DB/log/cache/Network 扫描 |
+| linking | 同验证邮箱按实测结论处理 | 不同邮箱、未验证邮箱、相似姓名/头像、两个业务用户 | linking 决定表、冲突记录 |
+| unlink | 重新认证后保留至少一个登录方式 | 解除最后可用 identity、陈旧 session | 账户可用性和事件 |
+| 邀请 | 目标邮箱 OTP 后接受；撤销重发路径成功 | Apple/Google 不匹配、relay/姓名猜测、过期/重放/并发 | token、邮箱证明、membership 事务证据 |
+| MFA 主因子 | enrollment/challenge/verify/AAL2 | 错误、重复、撤销、降级、限速 | AAL、因子和通知事件 |
+| 备用因子 | 不同设备/安全位置的第二 TOTP 因子 | 与主因子同设备、撤销、错误、重复使用 | 因子配置和负向记录 |
+| 人工恢复 | 身份核验→职责分离→AAL/会话重置→通知/审计 | support 单人、无核验、无通知、旧高风险 session 仍可用 | 双人审批和 session 对照 |
+| signOut | `local`、`global`、`others` 各自语义 | 未支持语义、刷新/并发/离线 token | 官方行为、客户端/服务端观察 |
+| `auth.sessions` | 可见字段、最小服务端权限、关联 session_id | 跨用户读取、浏览器直读、不可审计撤销 | 权限和 API 证据 |
+| token 窗口 | 撤销后观察 `exp` 前行为 | 把 access token 当即时失效；高风险不查实时状态 | 时间线和业务拒绝结果 |
+| 反枚举/限流 | 存在/不存在邮箱与邀请响应一致 | OTP、邀请、恢复、callback 超限 | 状态码/文案对照、限流计数 |
+| 环境隔离 | local 与 preview-staging 使用各自配置 | 生产 client/secret/SMTP/redirect/真实 PII 混入 | 配置清单和人工复核 |
+| secrets | `.p8`、OAuth secret、SMTP/service role 仅服务端密钥系统 | 仓库、bundle、URL、日志、截图出现原值 | secret scan、bundle/Network 检查 |
+
+## 14. 失败停止条件
+
+出现任一条件，立即停止相关实验、隔离测试账号/secret、保存脱敏证据并通知 Owner；不得用绕过方式继续：
+
+- 任一请求可以读取或写入 production、真实 PII、真实 Storage 或真实 SMTP。
+- callback 能接受错误/重放的 code、PKCE、state、nonce，或存在 open redirect/跨环境混用。
+- Google 请求额外 scope，或任何 provider token/refresh token 进入日志、数据库、客户端或截图。
+- Apple relay、姓名、头像、组织关系或相似邮箱被用于未经验证的自动 linking/邀请接受。
+- 邀请目标邮箱未证明控制权、邮箱不匹配仍能激活 membership，或 token 可重放/并发双消费。
+- support 能看到完整证件、写审核意见、批准申请或单独解除 MFA。
+- MFA 人工恢复缺少身份核验、职责分离、AAL/会话重置、通知或审计。
+- 任何策略仅凭 `org_id IS NULL` 允许读取审批前文件，或批准事务绑定失败仍开放组织/资格。
+- `auth.sessions` 授权边界不清、跨用户可读、浏览器可直读，或实现把 access token 撤销误报为即时失效。
+- 测试发现数据泄露、无法清理原值、无法证明环境隔离、无法复现或无法回退。
+
+停止后的最小处置：撤销测试 client/secret 或测试 session、冻结测试入口、保留不含秘密的时间线和错误分类、删除测试原值/文件、记录影响范围和 Owner 决策。不得删除必要审计证据，不得把失败隐藏成“未复现”。
+
+## 15. 证据清单
+
+A1 结束时必须交付可复核但不含秘密的证据包：
+
+- 环境隔离证明：local/preview-staging 项目摘要、区域、redirect、SMTP 捕获、Storage 和密钥责任。
+- 版本与配置摘要：SDK、Auth provider 设置、Google/Apple client 摘要、测试日期、官方文档复核日期。
+- 三入口正负向测试矩阵、user 状态转换和反枚举/限流结果。
+- OAuth callback 的 PKCE/state/nonce/code 一次性、redirect allowlist、取消、错误、重放和 open redirect 证据。
+- OAuth 短时原值不落 DB/log/cache/URL/Network 的扫描结果；脱敏安全事件样例。
+- Google scope/Apple relay/首次姓名/secret 轮换责任与故障演练记录。
+- identity linking/unlink 决定表、重复业务用户冲突记录和不自动搬运证明。
+- 邀请目标邮箱 OTP 控制权、mismatch 拒绝、OTP→link 或撤销重发、并发/重放证据。
+- 主 TOTP、备用 TOTP 不同设备/安全位置、人工恢复双人审批、身份核验、AAL/会话重置、通知和审计证据。
+- `signOut` local/global/others 实测、`auth.sessions` 可见性/服务端权限/单设备能力结论、access token `exp` 窗口时间线。
+- 失败停止记录、清理/回退结果、残余风险和 Owner 选择建议。
+
+证据必须脱敏：不包含邮箱原文、验证码、OAuth code、PKCE verifier、state、nonce、provider token、refresh token、`.p8`、SMTP secret、service role、真实 PII 或完整文件。
+
+## 16. 密钥与责任合同
+
+| 资产 | 责任 | 保存方式 | 轮换/故障 |
+|---|---|---|---|
+| Supabase 测试密钥 | Owner 指定的测试环境负责人 | 受控 secret manager；服务端使用 | 项目重置或泄露时立即撤销，记录摘要和影响 |
+| Google test client/secret | Google 配置责任人 | 独立测试控制台和 secret manager | redirect/client 变更记录；不得复用 production |
+| Apple `.p8`/client secret | Apple 密钥保管人 | 最小权限密钥系统；禁止仓库/普通 env/截图 | 约 6 个月轮换、到期提醒、失败告警、紧急重签和回滚 |
+| SMTP test credential | 邮件环境负责人 | local catcher 或独立 preview secret | 测试结束撤销；不发送真实用户邮件 |
+| service role/管理权限 | 后端安全负责人 | 仅受信服务端 | 浏览器、bundle、日志和 Network 永不出现 |
+| 测试账号与 TOTP 因子 | 测试负责人 | 专用测试设备/安全位置；不使用个人主账号 | A1 结束清理或冻结，保留无秘密摘要 |
+
+任何密钥责任人只能决定自己负责的测试配置，不能单独批准 production 连接、真实 PII、权限放宽或安全例外。生产密钥、真实账号和生产 callback 需要新的 Owner Gate 与专项审查。
+
+## 17. A1 验收与后续 Gate
+
+A1 技术验证通过的最低条件：
+
+
+- 三入口、callback、linking、邀请邮箱控制权、MFA 和会话测试矩阵有可复核结果，失败项有明确分类。
+- 八项 A0 修正没有被测试结果推翻或绕过；任何未验证能力都标记为后置，不写成已具备。
+- 无 production/真实 PII 连接；无原始短时 OAuth 材料、provider token、密钥或验证码泄露。
+- `signOut` 语义、`auth.sessions` 能力、token `exp` 窗口和高风险实时检查结论被写入 07/后续 ADR 的变更建议，而不是隐含在 UI 中。
+- Owner 选择供应商、入口、linking 规则、人工恢复责任、SMTP/Apple 密钥责任和下一阶段范围。
+
+A1 通过只打开 A2 买家账号或 Owner 指定的下一阶段，不自动打开生产、真实批发、商家审核、支付或跨租户业务。任何 A1 失败都保持关闭并回到补充 ADR/重新实验。
+
+## 18. 当前原型边界
+
+A0 通过前可以继续制作无后端 UI 原型：
+
+- 可展示 Apple、Google、邮箱 OTP、Magic Link 后备、邀请邮箱 mismatch、备用 TOTP、人工恢复、会话能力“待 A1 验证”等状态。
+- 只能使用合成身份、虚构邮箱、虚构组织、不可用的示例 token 文本和静态结果；不得把按钮点击写成真实 Auth 成功。
+- 页面文案必须区分“规划/待验证/已通过测试”；不得显示已连接 Supabase、OAuth、SMTP、Storage 或 production。
+- 原型截图、视觉检查和 HMR 只证明本地视觉/交互，不证明 A1 技术能力、安全、RLS 或隐私合规。
+
+## 19. 正式来源
+
+- [Supabase Auth MFA JavaScript reference](https://supabase.com/docs/reference/javascript/auth-mfa)
+- [Supabase MFA guide](https://supabase.com/docs/guides/auth/auth-mfa)
+- [Supabase signOut](https://supabase.com/docs/guides/auth/signout)
+- [Supabase sessions](https://supabase.com/docs/guides/auth/sessions)
+- [Supabase passwordless email](https://supabase.com/docs/guides/auth/auth-email-passwordless)
+- [Supabase Login with Google](https://supabase.com/docs/guides/auth/social-login/auth-google)
+- [Supabase Login with Apple](https://supabase.com/docs/guides/auth/social-login/auth-apple)
+- [Supabase Identity Linking](https://supabase.com/docs/guides/auth/auth-identity-linking)
+
+这些来源需要在 A1 执行时按当前版本、区域和实际配置重新复核；链接本身不是测试通过证据。
