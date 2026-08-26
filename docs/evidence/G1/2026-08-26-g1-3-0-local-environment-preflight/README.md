@@ -107,9 +107,9 @@
 | 当前 Git tree/index 风险扫描 | 通过 | 非 example 环境、部署状态、密钥证书、dump、附件/临时路径均为 0 |
 | ignored 运行态 | 已统计 | 只记录类别/数量，不读取值或列出敏感文件内容 |
 | current/workflow ref archive | 通过 | refs 可解析、archive 可读，prototype tree/workflow blob 完全一致 |
-| Markdown 相对链接/fragment | 待本批最终检查 | 只提交本批文档后运行 |
-| Markdown fences / 敏感模式 / `git diff --check` | 待本批最终检查 | 只针对 docs 变更做最低限度验证 |
-| protected paths diff | 待本批最终检查 | 确认 prototype、workflow、package、lockfile、`.gitignore`、`.env.example` 无变化 |
+| Markdown 相对链接/fragment | 通过 | 最终扫描 36 个 Markdown 文件、320 个相对链接；fragment 均可解析 |
+| Markdown fences / 敏感模式 / `git diff --check` | 通过 | 围栏配对、docs 敏感模式和尾随空格检查均通过 |
+| protected paths diff | 通过 | prototype、workflow、package、lockfile、`.gitignore`、`.env.example` 均无变化 |
 | typecheck/lint/build/E2E | 跳过 | 本批仅本地 docs/取回预检，代码、workflow、依赖和配置未变；复用 G1.2a 同状态验证 |
 | hash | 跳过 | Git tree/blob identity 比较已覆盖本批，不做普通文件重复 hash |
 | 独立审查 | 跳过 | 低风险本地文档与非破坏性取回预检，不涉及生产写入或公共接口 |
