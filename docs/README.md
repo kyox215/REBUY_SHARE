@@ -37,6 +37,7 @@
 |---|---|
 | [阶段执行记录模板](./templates/阶段执行记录模板.md) | 新阶段/批次的元数据、影响、验证、回退、风险和 Owner Gate 模板 |
 | [阶段记录索引](./stages/README.md) | 阶段事实记录的索引、命名、追加和证据边界 |
+| [G1 Owner 验收清单](./stages/G1-Owner验收清单.md) | G1 Exit requirement-to-evidence 矩阵、NO-GO 缺口和 Owner Gate 执行顺序 |
 
 ## 3. 当前权威关系
 
