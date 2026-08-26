@@ -5,7 +5,7 @@
 状态：`preflight` 完成；Owner 已批准 G1.2a，G1.2a 本地 workflow/等价验证已完成；G1.2b 待 Owner Gate
 证据级别：本地静态 + 本地等价（G1.2a 接续记录）
 记录日期：2026-08-26（Europe/Rome）
-代码 ref：`b0681d5b0aaf48b193fe91caf10c0f06a73844f1`（G1.2a 当前 workflow 修正 commit；初版 `a388348b` 保留为历史；prototype 未修改）
+代码 ref：`b0681d585cabe2f5f293779fc3627e2782be9fa2`（G1.2a 当前 workflow 修正 commit；初版 `a388348b` 保留为历史；prototype 未修改）
 远端 / CI / Preview ref：`N/A`
 
 > 本记录的原始内容是 G1.2 preflight；Owner 已批准 G1.2a 后，由[接续证据](../2026-08-26-g1-2a-local-workflow/README.md)记录本地 workflow 和等价验证。当前项目仍没有 remote，且没有远端 CI run；本记录与接续记录都不是远端 CI 通过证明。
@@ -25,7 +25,7 @@ G1.2 的目标是在保持 G1.1 本地基线可回退的前提下，建立只验
 
 | 子批次 | 内容 | 当前状态 | 通过含义 |
 |---|---|---|---|
-| G1.2a 本地 workflow 配置 / 本地等价验证 | Owner 授权后，在本地创建最小 workflow 文件候选，并用相同 Node/pnpm、工作目录和命令进行本地等价验证 | 已完成；当前 workflow 修正 commit 为 `b0681d5b0aaf48b193fe91caf10c0f06a73844f1`，初版 `a388348b` 保留为历史；详见[接续证据](../2026-08-26-g1-2a-local-workflow/README.md) | 只证明文件合同和本地 fresh 等价复现，不证明 GitHub runner 或远端 CI 通过 |
+| G1.2a 本地 workflow 配置 / 本地等价验证 | Owner 授权后，在本地创建最小 workflow 文件候选，并用相同 Node/pnpm、工作目录和命令进行本地等价验证 | 已完成；当前 workflow 修正 commit 为 `b0681d585cabe2f5f293779fc3627e2782be9fa2`，初版 `a388348b` 保留为历史；详见[接续证据](../2026-08-26-g1-2a-local-workflow/README.md) | 只证明文件合同和本地 fresh 等价复现，不证明 GitHub runner 或远端 CI 通过 |
 | G1.2b 远端真实 CI run | Owner 另行批准 remote/平台后，在真实 GitHub Actions runner 上触发 pull request / `main` push，并保存最小脱敏运行证据 | 未开始；当前无 remote | 只有真实 run 的 job、runner、ref、日志摘要和失败/成功结果才能证明远端 CI 运行 |
 
 G1.1 已有的 Node `v22.12.0`、pnpm `10.33.3`、`pnpm install --frozen-lockfile`、`pnpm typecheck`、`pnpm lint` 与 `pnpm build` 隔离副本证据已在 G1.2a 接续批次中按同一命令合同复验；本次接续进一步以 Corepack `0.34.6` fresh exact bootstrap 重验；它仍不能替代 G1.2b 真实 CI run。
@@ -133,9 +133,9 @@ GitHub secure-use 指南明确完整 commit SHA 是当前唯一不可变引用�
 
 ### 回退
 
-- G1.2a 当前 workflow 为 `b0681d5b0aaf48b193fe91caf10c0f06a73844f1`，错误 bootstrap/workflow 只通过删除或回退当前修正 commit，必要时回退初版 `a388348b81300ca00f669d0bd62b0748b9f191a5` 恢复；不修改、不删除、不重写 G1.1 已记录的 ref/tag。
+- G1.2a 当前 workflow 为 `b0681d585cabe2f5f293779fc3627e2782be9fa2`，错误 bootstrap/workflow 只通过删除或回退当前修正 commit，必要时回退初版 `a388348b81300ca00f669d0bd62b0748b9f191a5` 恢复；不修改、不删除、不重写 G1.1 已记录的 ref/tag。
 - G1.2b 若未来 remote/CI 已获单独授权，失败 run 只停止晋级并回退到上一可验证 ref；不得在无 Owner 决定时删除 remote、覆盖分支或删除审计证据。
-- 当前本地 workflow 修正 commit 为 `b0681d5b0aaf48b193fe91caf10c0f06a73844f1`，初版 `a388348b81300ca00f669d0bd62b0748b9f191a5` 保留为审计历史；如本地合同有误，可回退两次 workflow commit 到 `f05c5f8375143909ae8e01d87b4267a321b590ad`。当前仍没有 remote、远端 run 或 Preview；G1.2b 需另行 Owner 决定。
+- 当前本地 workflow 修正 commit 为 `b0681d585cabe2f5f293779fc3627e2782be9fa2`，初版 `a388348b81300ca00f669d0bd62b0748b9f191a5` 保留为审计历史；如本地合同有误，可回退两次 workflow commit 到 `f05c5f8375143909ae8e01d87b4267a321b590ad`。当前仍没有 remote、远端 run 或 Preview；G1.2b 需另行 Owner 决定。
 
 ### 维护
 
@@ -187,6 +187,6 @@ G1.2a 的 Owner 决策已经明确；以下范围已按授权完成本地实施�
 ### 2026-08-26｜主审修正 Corepack fresh bootstrap 并重验 G1.2a
 
 - 主审指出：Node LTS 随附旧 Corepack 的 warmed-cache 成功不足以证明 fresh runner 可通过 npm 新签名 key 获取新 pnpm；参考[Corepack issue #627](https://github.com/nodejs/corepack/issues/627)、[issue #612](https://github.com/nodejs/corepack/issues/612)和[官方 README](https://github.com/nodejs/corepack)。原 `0.29.4` 无缓存探针的 `ENOTFOUND registry.npmjs.org` 发生在签名检查前，不能排除签名/兼容失败；该结果已降级为历史诊断，不再作为安全获取证明。
-- workflow 修正提交为 `b0681d5b0aaf48b193fe91caf10c0f06a73844f1`，保留初版 `a388348b81300ca00f669d0bd62b0748b9f191a5` 作为审计历史。当前实现先在 `${RUNNER_TEMP}/corepack` 临时 prefix 中执行 `npm install --global --prefix ... --ignore-scripts --no-audit --no-fund corepack@0.34.6`，通过 `${GITHUB_PATH}` 供后续步骤使用；不覆盖 runner Node 目录，不使用 `latest`、`0.35`、`pnpm/action-setup` 或完整性绕过。
+- workflow 修正提交为 `b0681d585cabe2f5f293779fc3627e2782be9fa2`，保留初版 `a388348b81300ca00f669d0bd62b0748b9f191a5` 作为审计历史。当前实现先在 `${RUNNER_TEMP}/corepack` 临时 prefix 中执行 `npm install --global --prefix ... --ignore-scripts --no-audit --no-fund corepack@0.34.6`，通过 `${GITHUB_PATH}` 供后续步骤使用；不覆盖 runner Node 目录，不使用 `latest`、`0.35`、`pnpm/action-setup` 或完整性绕过。
 - fresh exact 本地等价验证使用 Node `v22.12.0`、npm `10.9.0`、全新 npm cache、全新 `COREPACK_HOME` 和临时 prefix：Corepack package `0.34.6`（engines `^20.10.0 || ^22.11.0 || >=24.0.0`）安装退出 0；Corepack `0.34.6` 与 pnpm `10.33.3` 解析均退出 0；frozen install 退出 0（351 packages，复用 351、下载 0）；typecheck、lint、build 均退出 0，Next `16.3.2`。
 - 当前状态仍为 G1.2a 本地 workflow/等价验证完成；不是远端 CI 通过，G1.2b 待 Owner Gate，G1 Exit 未通过，G2-A0 不打开。后续维护需定期复核 Corepack `0.34.6`、Node engines、npm registry 签名链和 pnpm 解析；失败时保留最小脱敏错误并回退 workflow commit，不静默换版本。

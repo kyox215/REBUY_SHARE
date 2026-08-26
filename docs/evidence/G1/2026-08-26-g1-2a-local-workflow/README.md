@@ -5,7 +5,7 @@
 状态：`G1.2a 本地 workflow/等价验证已完成；G1.2b 待 Owner Gate`
 证据级别：本地静态 + 本地等价
 记录日期：2026-08-26（Europe/Rome）
-workflow commit：`b0681d5b0aaf48b193fe91caf10c0f06a73844f1`
+workflow commit：`b0681d585cabe2f5f293779fc3627e2782be9fa2`
 初版 workflow（历史）：`a388348b81300ca00f669d0bd62b0748b9f191a5`
 前一可回退基线：`f05c5f8375143909ae8e01d87b4267a321b590ad`
 远端 / CI / Preview / environment ref：`N/A`
@@ -58,7 +58,7 @@ GitHub 安全指南说明完整 commit SHA 是不可变引用方式：[secure us
 
 ### 3.1 隔离输入
 
-- 从 workflow 修正 commit `b0681d5b0aaf48b193fe91caf10c0f06a73844f1` 创建临时 archive 副本；`a388348b81300ca00f669d0bd62b0748b9f191a5` 仅作为初版 workflow 历史审计 ref。
+- 从 workflow 修正 commit `b0681d585cabe2f5f293779fc3627e2782be9fa2` 创建临时 archive 副本；`a388348b81300ca00f669d0bd62b0748b9f191a5` 仅作为初版 workflow 历史审计 ref。
 - 删除副本中的 `prototype/.env.example`，避免把任何环境示例带入等价运行；未复制 `.env*`、`node_modules`、`.next` 或本机 pnpm store。
 - 使用明确 Node22 PATH：Node `v22.12.0`；workflow 目标 runner 标签记录为 `ubuntu-24.04`，本地等价验证不冒充该 runner。
 - 所有命令在临时副本的 `prototype/` 目录执行；原工作区 `prototype/**` 与 lockfile 无差异。
@@ -96,12 +96,12 @@ GitHub 安全指南说明完整 commit SHA 是不可变引用方式：[secure us
 - Ruby Psych YAML 解析通过；现有 Node 策略断言通过：触发器、`contents: read`、单 job、runner、15 分钟、`prototype` cwd、cache off、命令顺序、两个 40 位 SHA 和禁止关键字均符合合同。
 - `actionlint` 未安装，未为本批安装新工具；YAML 解析器和明确策略断言覆盖了本批静态风险。
 - 临时 harness 使用 `set -e; false; sentinel`，退出码为 1，`sentinel` 未执行；证明 workflow 不用 `continue-on-error` 时失败会停止后续步骤。
-- `git diff` 相对基线 `f05c5f8375143909ae8e01d87b4267a321b590ad` 仅包含初版/修正 workflow 与 docs；当前实现 ref 为 `b0681d5b0aaf48b193fe91caf10c0f06a73844f1`；`prototype/**` 无差异。
+- `git diff` 相对基线 `f05c5f8375143909ae8e01d87b4267a321b590ad` 仅包含初版/修正 workflow 与 docs；当前实现 ref 为 `b0681d585cabe2f5f293779fc3627e2782be9fa2`；`prototype/**` 无差异。
 - G1.1 refs/tags 未改变：`g1.1-local-baseline-2026-08-25` 指向 `47e0d15a3f3078e79bd653c3ec6f06488e4b4aa8`，`g1.1-complete-2026-08-25` 指向 `5b730ff195c017d976da6ad3844995b687a3a10f`；无 remote、无 push、无 tag 新建。
 
 ### 回退
 
-若 workflow pin、Corepack bootstrap、触发器、权限或命令合同有误，删除或回退当前 workflow 修正 commit `b0681d5b0aaf48b193fe91caf10c0f06a73844f1`，必要时连同初版 workflow commit `a388348b81300ca00f669d0bd62b0748b9f191a5` 一并回退，即可回到 `f05c5f8375143909ae8e01d87b4267a321b590ad`；不修改、不删除 G1.1 tag/ref。任何未来 G1.2b 远端失败只停止晋级并回退到上一可验证 ref，需另行 Owner 决策。
+若 workflow pin、Corepack bootstrap、触发器、权限或命令合同有误，删除或回退当前 workflow 修正 commit `b0681d585cabe2f5f293779fc3627e2782be9fa2`，必要时连同初版 workflow commit `a388348b81300ca00f669d0bd62b0748b9f191a5` 一并回退，即可回到 `f05c5f8375143909ae8e01d87b4267a321b590ad`；不修改、不删除 G1.1 tag/ref。任何未来 G1.2b 远端失败只停止晋级并回退到上一可验证 ref，需另行 Owner 决策。
 
 ## 5. 维护、风险与跳过项
 
