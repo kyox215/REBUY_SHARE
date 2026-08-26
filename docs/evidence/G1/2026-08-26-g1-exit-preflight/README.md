@@ -116,6 +116,6 @@ G1.3-0 已满足 Local/Preview/Staging/Production 的边界合同、禁止共用
 - 最终文档检查（`docs/**/*.md`，2026-08-26）：38 个 Markdown 文件、404 个本地相对链接/fragment，目标文件与 fragment 全部可解析；围栏配对通过；敏感模式扫描 0；`git diff --check` 通过。扫描只证明文档完整性，不等于 CI、Preview 或 G1 Exit 通过。
 - 本批不重跑 typecheck、lint、build、E2E：prototype、package/lockfile、workflow 和配置未变，复用 G1.2a 同状态证据。
 - 不做 hash：无生成物或文件传输交付，已有 Git ref/tree/blob 证据足够。
-- 不启动独立审查：本批为 Owner 清单与本地预检证据；主代理后续可按里程碑要求进行独立只读审查。
+- 因 G1 Exit 属里程碑，已启动独立只读审查；发现 2 项高风险、1 项中风险、2 项低风险问题，均已纠正；未自动开启复审循环，由主代理完成定向复核。
 
 关联记录：[G1 Owner 验收清单](../../../stages/G1-Owner验收清单.md)、[G1 阶段合同](../../../stages/G1-工程底座与环境隔离.md)、[15 台账](../../../15-项目状态与阶段台账.md)、[阶段索引](../../../stages/README.md)。
