@@ -2,13 +2,13 @@
 
 阶段：G1 工程底座与环境隔离
 批次：G1.2 最小 CI 预检（G1.2a 候选准备 / G1.2b 远端真实运行拆分）
-状态：`preflight` / 规划证据，待 Owner Gate
-证据级别：本地静态
+状态：`preflight` 完成；Owner 已批准 G1.2a，G1.2a 本地 workflow/等价验证已完成；G1.2b 待 Owner Gate
+证据级别：本地静态 + 本地等价（G1.2a 接续记录）
 记录日期：2026-08-26（Europe/Rome）
-代码 ref：`8e09571`（当前本地 `main`，仅作为预检上下文；本批不修改 prototype）
+代码 ref：`a388348b81300ca00f669d0bd62b0748b9f191a5`（G1.2a 本地 workflow commit；prototype 未修改）
 远端 / CI / Preview ref：`N/A`
 
-> 本记录不是 CI 已创建、已运行或已通过的证明。当前项目没有 remote，也没有 `.github/` workflow；本批只把最小 CI 候选、证据矩阵、失败策略、安全边界和 Owner 决策点写成可审查的 G1.2 入口。
+> 本记录的原始内容是 G1.2 preflight；Owner 已批准 G1.2a 后，由[接续证据](../2026-08-26-g1-2a-local-workflow/README.md)记录本地 workflow 和等价验证。当前项目仍没有 remote，且没有远端 CI run；本记录与接续记录都不是远端 CI 通过证明。
 
 ## 1. 目标与边界
 
@@ -16,7 +16,7 @@ G1.2 的目标是在保持 G1.1 本地基线可回退的前提下，建立只验
 
 本批明确不做：
 
-- 不创建 `.github/`、workflow、remote、分支、tag、Preview、Staging 或 Production。
+- 不创建 remote、分支、tag、Preview、Staging 或 Production；本批获批范围仅允许一个本地 workflow 文件。
 - 不修改 `prototype/` 源码、`package.json`、lockfile、依赖、配置或生成物。
 - 不读取 `.env` 值、CI secrets、个人 shell 配置、真实 URL、PII 或生产日志。
 - 不执行 `curl` health 探针，不上传 artifact，不部署，不把本地脚本结果写成远端 CI 通过。
@@ -25,12 +25,12 @@ G1.2 的目标是在保持 G1.1 本地基线可回退的前提下，建立只验
 
 | 子批次 | 内容 | 当前状态 | 通过含义 |
 |---|---|---|---|
-| G1.2a 本地 workflow 配置 / 本地等价验证 | Owner 授权后，在本地创建最小 workflow 文件候选，并用相同 Node/pnpm、工作目录和命令进行本地等价验证 | 本记录仅完成 preflight；尚未创建 workflow，未执行本批专属等价验证 | 只证明候选文件和本地复现合同，不证明 GitHub runner 或远端 CI 通过 |
+| G1.2a 本地 workflow 配置 / 本地等价验证 | Owner 授权后，在本地创建最小 workflow 文件候选，并用相同 Node/pnpm、工作目录和命令进行本地等价验证 | 已完成；workflow commit 为 `a388348b81300ca00f669d0bd62b0748b9f191a5`，详见[接续证据](../2026-08-26-g1-2a-local-workflow/README.md) | 只证明文件合同和本地复现，不证明 GitHub runner 或远端 CI 通过 |
 | G1.2b 远端真实 CI run | Owner 另行批准 remote/平台后，在真实 GitHub Actions runner 上触发 pull request / `main` push，并保存最小脱敏运行证据 | 未开始；当前无 remote | 只有真实 run 的 job、runner、ref、日志摘要和失败/成功结果才能证明远端 CI 运行 |
 
-G1.1 已有的 Node `v22.12.0`、pnpm `10.33.3`、`pnpm install --frozen-lockfile`、`pnpm typecheck`、`pnpm lint` 与 `pnpm build` 隔离副本证据可以作为候选命令的输入参考，但不能替代 G1.2a workflow 等价验证或 G1.2b 真实 CI run。
+G1.1 已有的 Node `v22.12.0`、pnpm `10.33.3`、`pnpm install --frozen-lockfile`、`pnpm typecheck`、`pnpm lint` 与 `pnpm build` 隔离副本证据已在 G1.2a 接续批次中按同一命令合同复验；它仍不能替代 G1.2b 真实 CI run。
 
-## 3. 推荐候选（待 Owner 决定）
+## 3. 推荐候选与实施快照（G1.2b 待 Owner 决定）
 
 ### 3.1 Runner、工具链和工作目录
 
@@ -63,7 +63,7 @@ GitHub 的 workflow 权限语义下，未列出的权限保持 none；实施时�
 
 ### 3.3 动作版本固定策略
 
-截至 2026-08-26，主代理已沿 GitHub 官方 release → commit 链路核验以下不可变候选。下表和后面的 `uses:` 片段是预检记录，不是 workflow 文件、Owner 授权或 CI 通过：
+截至 2026-08-26，主代理已沿 GitHub 官方 release → commit 链路核验以下不可变候选。下表和后面的 `uses:` 片段是供应链快照；实际本地 workflow 已按同样的 pin 实施，但这不表示 Owner 已批准 G1.2b 或远端 CI 通过：
 
 | Action | 官方 release | 官方 commit | 完整 SHA 候选 |
 |---|---|---|---|
@@ -77,7 +77,7 @@ GitHub 的 workflow 权限语义下，未列出的权限保持 none；实施时�
 - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
 ```
 
-GitHub secure-use 指南明确完整 commit SHA 是当前唯一不可变引用方式：[Secure use reference](https://docs.github.com/en/actions/reference/security/secure-use)。实施当天仍必须从官方 release 页面进入对应 commit 页面再次核验；若 tag、release 或官方稳定候选发生漂移，先更新本证据和 Owner 决策，不得静默替换 SHA。完整 SHA 不改变 G1.2a 尚未获批、无 remote、无 workflow、无真实 CI run 的当前状态。
+GitHub secure-use 指南明确完整 commit SHA 是当前唯一不可变引用方式：[Secure use reference](https://docs.github.com/en/actions/reference/security/secure-use)。实施当天仍必须从官方 release 页面进入对应 commit 页面再次核验；若 tag、release 或官方稳定候选发生漂移，先更新本证据和 Owner 决策，不得静默替换 SHA。完整 SHA 不改变 G1.2b 待 Owner Gate、无 remote、无真实 CI run 的当前状态。
 
 官方参考：
 
@@ -86,7 +86,7 @@ GitHub secure-use 指南明确完整 commit SHA 是当前唯一不可变引用�
 - [Workflow syntax reference](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax)
 - [GitHub-hosted runners](https://docs.github.com/en/actions/reference/runners/github-hosted-runners)
 
-实施记录必须同时保存 action 名称、release/tag、完整 SHA、核对日期和核对来源。若官方 release/tag、commit 链路或 runner 标签无法复核，立即停止 G1.2a 实施准备；不得使用 abbreviated SHA、可变 tag 或未经核验的新版本。若 G1.2a 未来已创建本地 workflow，错误 pin 只能通过回退该 workflow commit 修复，不修改或删除 G1.1 ref/tag；若尚未创建 workflow，则只更新本预检和 Owner 决策记录。
+实施记录必须同时保存 action 名称、release/tag、完整 SHA、核对日期和核对来源。若官方 release/tag、commit 链路或 runner 标签无法复核，立即停止晋级；不得使用 abbreviated SHA、可变 tag 或未经核验的新版本。本次 G1.2a workflow 的错误 pin 只能通过删除或回退 workflow commit 修复，不修改或删除 G1.1 ref/tag；实施当天如发现漂移，先更新本预检和 Owner 决策记录。
 
 ## 4. 候选门的行为合同
 
@@ -104,13 +104,13 @@ GitHub secure-use 指南明确完整 commit SHA 是当前唯一不可变引用�
 
 | 证据项 | G1.1 已有本地证据 | G1.2a 需补证据 | G1.2b 未来远端证据 | 当前结论 |
 |---|---|---|---|---|
-| Git root / ref | `main`、初始基线和本地完成记录 | workflow 变更的本地 commit | 真实 run 的 commit/ref | G1.1 已满足；CI ref 未产生 |
-| Runner / Node | 隔离副本 `v22.12.0` | 本地等价环境声明与版本输出 | runner 名称、Node 输出、job 摘要 | 候选已定义，未运行 |
-| pnpm / lockfile | pnpm `10.33.3`、frozen install 退出 0 | Corepack / pnpm 输出与安装结果 | runner 安装日志摘要和 lockfile 结果 | 候选已定义，未运行 |
-| typecheck / lint / build | G1.1 隔离副本均退出 0 | 同一 workflow 候选顺序的本地等价结果 | 每个 job step 的 exit/result | 命令已有输入证据，G1.2 未通过 |
-| 触发与权限 | 无 remote / 无 workflow | 文件静态检查 | PR 与 `main` push run、权限摘要 | 未创建 |
+| Git root / ref | `main`、初始基线和本地完成记录 | workflow 变更的本地 commit | 真实 run 的 commit/ref | G1.1 已满足；本地 workflow ref 为 `a388348b`，远端 CI ref 未产生 |
+| Runner / Node | 隔离副本 `v22.12.0` | 本地等价环境声明与版本输出 | runner 名称、Node 输出、job 摘要 | 本地等价已完成；runner 未运行 |
+| pnpm / lockfile | pnpm `10.33.3`、frozen install 退出 0 | Corepack / pnpm 输出与安装结果 | runner 安装日志摘要和 lockfile 结果 | 本地等价已完成；远端未运行 |
+| typecheck / lint / build | G1.1 隔离副本均退出 0 | 同一 workflow 顺序的本地等价结果 | 每个 job step 的 exit/result | G1.2a 本地等价均退出 0；不等于远端通过 |
+| 触发与权限 | 无 remote | workflow 文件静态检查 | PR 与 `main` push run、权限摘要 | 本地静态已完成；远端未创建 |
 | secret / log 边界 | 未读取值 | 本地扫描和失败日志检查 | 真实 run 脱敏检查 | 规则已定义，未验证远端 |
-| 失败与回退 | G1.1 ref/tag 可回退 | 本地失败停止/恢复演练 | 失败 run、上一 ref、回退记录 | 未开始 |
+| 失败与回退 | G1.1 ref/tag 可回退 | 本地失败停止/基线回退检查 | 失败 run、上一 ref、回退记录 | G1.2a 本地检查已完成；远端未开始 |
 
 证据等级规则：`本地静态` 只能证明文件、候选和扫描；`本地等价` 只能证明相同命令合同在本地复现；只有真实 GitHub Actions run 才能填充远端 CI 证据。任一较弱证据不能升级为较强证据。
 
@@ -134,7 +134,7 @@ GitHub secure-use 指南明确完整 commit SHA 是当前唯一不可变引用�
 
 - G1.2a 若 Owner 通过后创建本地 workflow，错误 workflow 只通过删除或回退该本地 workflow commit 恢复；不修改、不删除、不重写 G1.1 已记录的 ref/tag。
 - G1.2b 若未来 remote/CI 已获单独授权，失败 run 只停止晋级并回退到上一可验证 ref；不得在无 Owner 决定时删除 remote、覆盖分支或删除审计证据。
-- 本批没有 workflow commit、remote、run 或 Preview，因此当前回退动作仅为保留本记录并等待 Owner 决定。
+- 本地 workflow commit 为 `a388348b81300ca00f669d0bd62b0748b9f191a5`；如本地合同有误，可删除或回退该 commit 到 `f05c5f8375143909ae8e01d87b4267a321b590ad`。当前仍没有 remote、远端 run 或 Preview；G1.2b 需另行 Owner 决定。
 
 ### 维护
 
@@ -145,30 +145,40 @@ GitHub secure-use 指南明确完整 commit SHA 是当前唯一不可变引用�
 
 ## 9. Owner 决策点与推荐授权语句
 
-Owner 需要明确：
+G1.2a 的 Owner 决策已经明确；以下范围已按授权完成本地实施。G1.2b 仍需单独决定：
 
 1. 是否接受 GitHub Actions 作为 G1.2 候选平台。
 2. 是否接受 `ubuntu-24.04`、Node `22.12.0`、pnpm `10.33.3`/Corepack、`prototype` working-directory 和 15 分钟 timeout。
 3. 是否接受 `pull_request` + `push main`，并明确禁止 `pull_request_target`。
 4. 是否接受只读权限、不注入 secrets、首次关闭 cache、无 health/artifact/deploy 的最小边界。
-5. 是否授权 G1.2a 在本地创建 workflow 并做本地等价验证；这项授权不包含 remote、push、远端 CI、Preview、Supabase 或生产。
+5. 是否授权 G1.2b 添加 remote、push 并运行真实 GitHub Actions；这项授权不包含 Supabase、数据库或生产，且必须另行记录。
 
 推荐 Owner 授权语句：
 
 > `批准进入G1.2a：采用GitHub Actions候选，在本地创建只读最小CI工作流并做本地等价验证；暂不添加remote、不push、不运行远端CI、不部署Preview、不接Supabase或生产。`
 
-当前 Gate：`待 Owner Gate`。在获得上述明确授权前，不创建 `.github/` workflow，不执行 G1.2a；在 G1.2a 完成后，仍需另行决定 G1.2b 的 remote 和真实 CI 运行。
+当前 Gate：`G1.2a 已完成；G1.2b 待 Owner Gate`。本地 workflow 不扩大 remote、push、远端 CI、Preview、Supabase 或生产权限。
 
 ## 10. 本批验证与跳过项
 
 | 检查 | 结果 | 说明 |
 |---|---|---|
 | 原型源码、package、lockfile | 未修改 | 复用 G1.1 证据；本批只写 Markdown |
-| `.github/**` | 无结果 | 只读确认当前仍未创建 CI |
+| `.github/**` | 仅有 `.github/workflows/prototype-quality.yml` | 唯一 workflow 已按 Owner 批准的 G1.2a 范围创建；无其他 CI 文件 |
 | remote / Preview / Supabase / Production | 未创建、未连接 | 本批禁止外部写入 |
 | G1.1 install/typecheck/lint/build | 复用既有证据 | source/config/lockfile 未变化；不把复用写成 G1.2 CI 通过 |
-| G1.2a workflow 等价验证 | 未运行 | 等 Owner 授权创建 workflow |
+| G1.2a workflow 等价验证 | 已完成 | 详见[接续证据](../2026-08-26-g1-2a-local-workflow/README.md)：Corepack/版本、frozen install、typecheck、lint、build 均退出 0 |
 | G1.2b 真实 CI run | 未运行 | 当前无 remote 且本批未授权 |
 | Markdown 链接、fragment、围栏、状态一致性和敏感模式 | 待本批提交后运行 | 仅覆盖文档变更；不得扩大为代码或 CI 验证 |
 
-本证据记录完成后，G1 仍为“执行中（G1.1 已完成，G1.2 预检完成，待 Owner Gate）”；G1 Exit 未通过，G2-A0/G2-A1/P2–P8 仍未打开。
+本记录及接续证据完成后，G1 为“执行中（G1.1 已完成，G1.2a 已完成，G1.2b 待 Owner Gate）”；这不是远端 CI 通过，G1 Exit 未通过，G2-A0/G2-A1/P2–P8 仍未打开。
+
+## 11. 追加纠正
+
+### 2026-08-26｜Owner 批准 G1.2a 并完成本地 workflow 等价验证
+
+- Owner 已批准原推荐语句：`批准进入G1.2a：采用GitHub Actions候选，在本地创建只读最小CI工作流并做本地等价验证；暂不添加remote、不push、不运行远端CI、不部署Preview、不接Supabase或生产。`
+- 已创建唯一 workflow：[prototype-quality.yml](../../../../.github/workflows/prototype-quality.yml)，提交 `a388348b81300ca00f669d0bd62b0748b9f191a5`；使用固定 runner、Node/pnpm、权限、动作 SHA、命令顺序和失败停止合同。
+- 隔离副本中 Corepack `0.29.4` / pnpm `10.33.3`、frozen install、typecheck、lint、build 均退出 0；`unrs-resolver@1.12.2` ignored build-script warning 保留，未执行 approve-builds/allowlist。无缓存 Corepack 探针的 registry DNS 失败仅记录为网络/沙箱限制，未绕过完整性签名。
+- 静态 YAML/策略、失败停止、基线回退和 `prototype/**` 无差异检查均完成；未运行 actionlint、远端 CI、Preview、health、artifact、部署、Supabase 或生产。
+- 详见[G1.2a 接续证据](../2026-08-26-g1-2a-local-workflow/README.md)。G1.2b 仍待 Owner Gate；G1 Exit 未通过。
