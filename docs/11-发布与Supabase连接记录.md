@@ -1,13 +1,13 @@
 # 发布与 Supabase 连接记录
 
-文档状态：A1 独立测试连接骨架；当前未连接 Supabase 项目
+文档状态：本地连接骨架；G2-A1 尚未开始；本工作范围未连接 Supabase 项目，外部实际存在性 unknown
 
 ## 1. A1 边界
 
 本记录只描述 GitHub/Vercel/Supabase 独立测试环境的连接骨架，不代表已经创建或连接任何外部项目。
 
 - GitHub 仓库可见性保持用户指定的现状；本记录不执行可见性变更、提交、推送或部署。
-- 尚未创建 Supabase 项目。
+- 本工作范围未创建或连接 Supabase 项目；外部项目实际存在性 unknown。
 - 尚未配置 Vercel 环境变量。
 - 尚未启用真实登录、OAuth 或 SMTP。
 - 不连接 production，不写入真实业务数据，不使用真实客户、商家或员工 PII。

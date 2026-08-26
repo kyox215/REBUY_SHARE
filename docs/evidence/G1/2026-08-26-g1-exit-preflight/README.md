@@ -26,7 +26,7 @@
 
 “设置目标并根据规划完成全部目标”这类一般性请求不能解释为解除前述 remote、push、Preview、Supabase/Auth、数据库或 Production 禁令；任何越界动作仍需对应的明确 Owner Gate。
 
-## 2. 当前本地 Git 与 ref 事实
+## 2. 预检时本地 Git 与 ref 快照
 
 - `git rev-parse HEAD`：`9ba0f8e0f56c5711dc04ac83daf7051e863b2ecc`；分支 `main`；预检开始时 `git status --short --branch` 为 clean。
 - `git remote -v`：无输出，当前项目未配置 remote；这不能证明外部仓库或部署资源不存在。

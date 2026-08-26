@@ -254,7 +254,7 @@ Rebuy 的视觉气质是“可信、清楚、快速比较、面向真实交易�
 - 底部/桌面一级“分类”必须进入目录根页：只显示本地化品类列表/目录，不显示商品卡、结果数、筛选或排序。品类按钮至少 44px，支持键盘焦点和清晰的当前操作反馈。
 - 点击品类进入该品类商品列表：显示本地化品类标题、结果数、筛选/排序和“返回全部分类”；不使用 `REBUY / ...`、面包屑/path label 或装饰数字。全局搜索可以直接进入搜索结果；首页快速分类和桌面侧栏具体品类可以直接进入对应列表。桌面侧栏中的品类是快捷入口/当前已知品类子集，不替代“分类”一级导航打开的完整目录根页。
 - 从商品列表进入详情、返回时保留来源品类结果上下文；五项买家导航、二手成色/缺陷/电池/保修、批发身份自动定价、多商家分组和 zh/it/en 不因目录层级改变。
-- 当前状态：分类目录 IA 修订及主代理本地浏览器复验已完成，Owner 最新决定已将 G0/P1 更新为“已通过并冻结”，G1 Entry 已恢复并进入“准备中”。点击搜索已通过，直接 Enter 键盘提交未验证成功并转入后续键盘/无障碍专项，不阻塞本次冻结。本条是设计合同，不替代专项或工程 Gate；证据见[分类目录 IA 记录](./evidence/G0-P1/2026-08-25-category-directory-ia/README.md)与[G1 Entry 基线](./evidence/G1/2026-08-25-entry-baseline/README.md)。
+- 分类目录 IA 修订及主代理本地浏览器复验已完成，Owner 最新决定已将 G0/P1 更新为“已通过并冻结”。点击搜索已通过，直接 Enter 键盘提交未验证成功并转入后续键盘/无障碍专项，不阻塞本次冻结。本条是设计合同，不替代专项或工程 Gate；当前阶段与授权以[项目状态与阶段台账](./15-项目状态与阶段台账.md)为准。证据见[分类目录 IA 记录](./evidence/G0-P1/2026-08-25-category-directory-ia/README.md)与[G1 Entry 基线](./evidence/G1/2026-08-25-entry-baseline/README.md)。
 
 ### 8.2 按钮和控件
 
@@ -286,12 +286,12 @@ Rebuy 的视觉气质是“可信、清楚、快速比较、面向真实交易�
 - 语义必须是 button + `aria-haspopup="menu"`/`aria-expanded`/`aria-controls`，弹层 `role="menu"`，选项 `role="menuitemradio"` + `aria-checked`；支持当前项聚焦、ArrowUp/ArrowDown、Home/End、Enter/Space、Escape、Tab 自然移焦和点击外部关闭。
 - 弹层应安全贴合入口、右对齐时不越出视口，移动端宽度/高度受视口约束；触发器和选项操作区至少 44×44px。浅色/深色均使用同一语义 token，不改变排序值、语言值或筛选业务。
 
-#### 8.4.2 统一选择器本轮实测与当前 Gate（2026-08-25）
+#### 8.4.2 统一选择器本轮实测与历史批次 Gate（2026-08-25）
 
 - Owner 原话：`这个点击打开的选项卡不统一 帮我为项目制作统一风格的`。本轮已用共享 `SelectMenu<T extends string>` 替换排序/语言原生选择器，主代理实时浏览器复验结果见[证据 manifest](./evidence/G0-P1/2026-08-25-unified-select/README.md)。
 - 499×862 浅色分类排序菜单实测为 3 项、1 项选中、`212×150`、圆角 14px、每项 44px、视口内且无系统蓝色；390×844 深色菜单视口内、`scrollWidth=clientWidth=390`，背景/边框为主题化中性面；1440×900 语言菜单右对齐不越界，zh-CN/it/en 键盘切换并同步标题。
 - ArrowDown+Enter、End、Home、Escape、筛选 Sheet 联动及 Tab/Shift+Tab 均实测；390/1440 的 Tab 一次关闭并按正常文档顺序移焦，不落 BODY。控制台无 warning/error；typecheck/lint 通过；原生 `<select>` 扫描为 0。
-- 本批是 G0 低风险视觉/交互修订；统一选择器与分类目录 IA 的主代理本地浏览器证据均已完成，Owner 已决定 G0/P1 通过并冻结；点击搜索已通过，直接 Enter 键盘提交未验证成功并转入后续专项。G1 Entry 已恢复，但当前只准备 G1.1，未运行本批或 G1 工程 build/E2E，未启动额外独立审查代理；分类目录证据见[记录](./evidence/G0-P1/2026-08-25-category-directory-ia/README.md)，G1 基线见[Entry 证据](./evidence/G1/2026-08-25-entry-baseline/README.md)。
+- 本批是 G0 低风险视觉/交互修订；统一选择器与分类目录 IA 的主代理本地浏览器证据均已完成，Owner 已决定 G0/P1 通过并冻结；点击搜索已通过，直接 Enter 键盘提交未验证成功并转入后续专项。G1 Entry 已在该历史批次恢复；当时未运行本批或 G1 工程 build/E2E，未启动额外独立审查代理；当前阶段与授权以[项目状态与阶段台账](./15-项目状态与阶段台账.md)为准。分类目录证据见[记录](./evidence/G0-P1/2026-08-25-category-directory-ia/README.md)，G1 基线见[Entry 证据](./evidence/G1/2026-08-25-entry-baseline/README.md)。
 
 ### 8.5 Sheet、Modal、状态和图表
 

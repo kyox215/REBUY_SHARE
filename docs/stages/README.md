@@ -32,3 +32,7 @@ GOV-1 的阶段事实见其[独立记录](./GOV-1-治理文档与状态台账.md
 ## 3. 证据和状态速查
 
 状态枚举、证据枚举、Owner Gate 规则和生产边界以 [15 台账](../15-项目状态与阶段台账.md) 为准。GOV-1 已通过；G0/P1 当前为“已通过并冻结”，checkpoint 16 为通过；点击搜索已通过，直接 Enter 键盘提交未在本轮验证成功，转入后续专项。G1 当前为“执行中（G1.1 已完成，G1.2a 已完成，G1.2b 待 Owner Gate）”；G1.2a 以 Corepack `0.34.6` exact bootstrap 的 workflow/等价验证已完成（当前 ref `b0681d58`），G1.3-0 本地环境隔离/回退预检已完成但 G1.3 实施未开始；G1 Exit 本地预检结论为 NO-GO，仍无 remote/远端 CI/Preview，Exit Gate 未通过前不可进入 G2-A0。详见[G1 Owner 验收清单](./G1-Owner验收清单.md)和[G1 Exit 预检](../evidence/G1/2026-08-26-g1-exit-preflight/README.md)。
+
+## 4. 2026-08-26 当前状态去漂移维护
+
+本批对非权威文档的陈旧当前时态做了最小纠正，并保留带日期的历史决定；GOV-1/G0/P1/G1 当前状态与 [15 台账](../15-项目状态与阶段台账.md) 一致。完整范围、发现、验证与回退边界见[GOV-1 当前状态去漂移审计](../evidence/GOV-1/2026-08-26-current-state-drift-audit/README.md)。本批不改变 G1/G2 Gate，不修改代码、依赖、workflow 或外部状态。
