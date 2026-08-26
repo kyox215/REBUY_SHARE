@@ -27,7 +27,7 @@ export default function ProductCard({
   const stateKey = state === "in-stock" ? "product.inStock" : state === "low-stock" ? "product.lowStock" : "product.outOfStock";
 
   return (
-    <article className="product-card">
+    <article className={`product-card ${product.kind === "used" ? "product-card--used" : ""}`}>
       <button type="button" className="product-card__visual-button" onClick={onOpen} aria-label={`${tr(locale, "buttons.view")}: ${product.name[locale]}`}>
         <SpriteImage variant={product.sprite} alt={product.name[locale]} priority={product.id === "charger"} />
       </button>

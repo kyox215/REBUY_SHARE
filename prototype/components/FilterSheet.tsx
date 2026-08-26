@@ -1,5 +1,7 @@
 import { Check, SlidersHorizontal } from "lucide-react";
+import { useEffect, useMemo, useRef } from "react";
 import { tr, type Locale } from "@/lib/data";
+import SelectMenu, { type SelectMenuOption } from "@/components/SelectMenu";
 
 export type CatalogFilter = "all" | "new" | "used" | "inStock";
 export type SortOrder = "featured" | "priceLow" | "priceHigh";
@@ -9,7 +11,7 @@ type FilterSheetProps = {
   open: boolean;
   filter: CatalogFilter;
   sort: SortOrder;
-  onToggle: () => void;
+  onOpenChange: (open: boolean) => void;
   onFilterChange: (filter: CatalogFilter) => void;
   onSortChange: (sort: SortOrder) => void;
   onClear: () => void;
@@ -22,40 +24,90 @@ const filterOptions: Array<{ value: CatalogFilter; label: string }> = [
   { value: "inStock", label: "filter.inStock" },
 ];
 
+const filterSheetId = "rebuy-filter-sheet";
+const filterSheetTitleId = "rebuy-filter-sheet-title";
+
 export default function FilterSheet({
   locale,
   open,
   filter,
   sort,
-  onToggle,
+  onOpenChange,
   onFilterChange,
   onSortChange,
   onClear,
 }: FilterSheetProps) {
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const firstControlRef = useRef<HTMLButtonElement>(null);
+  const sortOptions = useMemo<Array<SelectMenuOption<SortOrder>>>(() => [
+    { value: "featured", label: tr(locale, "catalog.sort") },
+    { value: "priceLow", label: tr(locale, "catalog.sortLow") },
+    { value: "priceHigh", label: tr(locale, "catalog.sortHigh") },
+  ], [locale]);
+
+  useEffect(() => {
+    if (open) {
+      firstControlRef.current?.focus();
+    }
+  }, [open]);
+
+  const closeSheet = () => {
+    onOpenChange(false);
+    triggerRef.current?.focus();
+  };
+
+  const handleTriggerClick = () => {
+    if (open) {
+      closeSheet();
+      return;
+    }
+
+    onOpenChange(true);
+  };
+
   return (
     <div className="filter-area">
       <div className="filter-toolbar">
-        <button type="button" className={`button button--secondary ${open ? "is-active" : ""}`} onClick={onToggle} aria-expanded={open}>
+        <button
+          ref={triggerRef}
+          type="button"
+          className={`button button--secondary ${open ? "is-active" : ""}`}
+          onClick={handleTriggerClick}
+          aria-controls={filterSheetId}
+          aria-expanded={open}
+          aria-haspopup="dialog"
+        >
           <SlidersHorizontal size={17} aria-hidden="true" />
           {tr(locale, "catalog.filter")}
         </button>
-        <label className="sort-control">
-          <span className="sr-only">{tr(locale, "catalog.sort")}</span>
-          <select value={sort} onChange={(event) => onSortChange(event.target.value as SortOrder)}>
-            <option value="featured">{tr(locale, "catalog.sort")}</option>
-            <option value="priceLow">{tr(locale, "catalog.sortLow")}</option>
-            <option value="priceHigh">{tr(locale, "catalog.sortHigh")}</option>
-          </select>
-        </label>
+        <SelectMenu<SortOrder>
+          value={sort}
+          options={sortOptions}
+          onChange={onSortChange}
+          ariaLabel={tr(locale, "catalog.sort")}
+          className="sort-control"
+          align="end"
+        />
       </div>
       {open ? (
-        <section className="filter-sheet" aria-label={tr(locale, "catalog.filterTitle")}>
+        <section
+          id={filterSheetId}
+          className="filter-sheet"
+          role="dialog"
+          aria-labelledby={filterSheetTitleId}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              event.preventDefault();
+              closeSheet();
+            }
+          }}
+        >
           <div className="filter-sheet__header">
             <div>
               <span className="eyebrow">{tr(locale, "catalog.filterApplied")}</span>
-              <h2>{tr(locale, "catalog.filterTitle")}</h2>
+              <h2 id={filterSheetTitleId}>{tr(locale, "catalog.filterTitle")}</h2>
             </div>
-            <button type="button" className="text-button" onClick={onClear}>
+            <button ref={firstControlRef} type="button" className="text-button" onClick={onClear}>
               {tr(locale, "catalog.clear")}
             </button>
           </div>
@@ -73,7 +125,7 @@ export default function FilterSheet({
               </button>
             ))}
           </div>
-          <button type="button" className="button button--primary filter-sheet__apply" onClick={onToggle}>
+          <button type="button" className="button button--primary filter-sheet__apply" onClick={closeSheet}>
             {tr(locale, "buttons.apply")}
           </button>
         </section>

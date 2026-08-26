@@ -1,6 +1,6 @@
 # A0 账号架构 ADR 与威胁模型
 
-文档状态：Owner 已批准进入 A0 执行，待 A0 验收  
+文档状态：G2-A0 账号安全合同输入；G1 Exit 前未打开，待独立安全审查与 Owner Gate
 适用范围：Rebuy 多商家、批发与零售平台的身份、组织、权限、经营资格、文件和隐私信任边界  
 证据边界：本文是 A0 架构决定和威胁模型执行合同，不代表已连接 Supabase、OAuth、SMTP、Storage、数据库或生产环境。  
 关联文档：[完整账号系统规划](./07-完整账号系统规划.md)、[账号系统思维导图](./08-账号系统思维导图.md)、[A1 Auth spike 执行合同](./10-A1-Auth-Spike执行合同.md)。
@@ -13,7 +13,7 @@ A0 要锁定账号系统在 A1 之前不能再被实现代理自行改变的安�
 - 组织/店铺是租户边界，服务端授权和 Postgres RLS/Storage policy 默认拒绝。
 - 商家入驻、批发申请、批发当前资格和证明文件具有不同生命周期和归属规则。
 - 邀请接受先证明目标邮箱控制权；Apple relay、Google identity 和姓名不能被用来猜测账号归属。
-- MFA 恢复只采用不同设备/安全位置的备用 TOTP 因子或受审计人工恢复，不采用静态一次性恢复材料。
+- Entry preflight 候选建议（待 G2-A0 Owner 确认）：MFA 恢复采用不同设备/安全位置的备用 TOTP 因子或受审计人工恢复，建议 V1 不采用静态一次性恢复材料；供应商能力仍待 A1 验证，Owner 未确认前不作为现行政策。
 - 会话能力必须根据 Supabase 实测校准；未验证的设备列表、单设备撤销和即时 access token 失效不得被写成承诺。
 - OAuth 短时材料一次性消费，不持久保存原值，只留下必要的脱敏安全事件。
 - support、reviewer、auditor、platform admin 的读写和决定权限分离。
@@ -51,6 +51,27 @@ A0 要锁定账号系统在 A1 之前不能再被实现代理自行改变的安�
 - 意大利/EU GDPR、税务留存、删除/匿名化、legal hold、跨境传输和处理者合同的最终法律意见。
 - 批发资格的商业条件、有效期、审核 SLA、申诉和价格/订单快照规则。
 - 真实客户、真实商家、真实证件、真实邮箱、真实订单、生产 PII 或生产业务写入。
+
+## 3.1 2026-08-26 Entry preflight 安全补充（待 G2-A0 Owner Gate）
+
+本节是独立只读安全预检的合同补充，不是 Owner 已批准的现行 ADR，也不代表已连接 Supabase/Auth、数据库、Storage 或任何外部项目。G1 Exit 仍为 NO-GO；本节只有在 G1 Exit 通过并经 Owner 明确 Gate 后，才能进入正式 G2-A0 审查。完整记录见[G2-A0 Entry preflight 证据](./evidence/G2-A0/2026-08-26-entry-preflight/README.md)。
+
+官方页面只作为 2026-08-26 的规划依据，实施时须按实际版本、区域和项目重新核验： [Securing your API](https://supabase.com/docs/guides/api/securing-your-api)、[Row Level Security](https://supabase.com/docs/guides/database/postgres/row-level-security)、[Database Functions](https://supabase.com/docs/guides/database/functions)、[Storage Access Control](https://supabase.com/docs/guides/storage/security/access-control)、[SSR client](https://supabase.com/docs/guides/auth/server-side/creating-a-client)、[sessions](https://supabase.com/docs/guides/auth/sessions)、[MFA](https://supabase.com/docs/guides/auth/auth-mfa) 和 [managed schema restrictions](https://supabase.com/changelog/34270-restricting-access-on-auth-storage-and-realtime-schemas-on-april-21-2025)。本批只读官方网页，不执行 provider/project 连接。
+
+| 预检控制 | 合同补充 | 后续责任与证据 |
+|---|---|---|
+| 删除、暂停、撤销与 session/token 窗口 | 删除或暂停用户、membership、组织、店铺或资格前后，不把旧 access token 视为即时失效；现有 token 可能持续到 `exp`，高风险请求按风险实时校验 `session_id`、user、membership、scope 和资格，刷新 token 的窗口、退出和通知也要记录。 | A1 观察 session/token 时间窗口、`signOut`、删除/暂停前后行为和并发；A3/A4 验证成员/资格撤销后的业务拒绝与跨租户负向；不承诺未实测的即时踢出。 |
+| Data API grants、RLS 与 exposed allowlist | grants 决定 `anon`/`authenticated`/服务端角色能否到达暴露对象，RLS 决定可见/可修改行；两层都必须最小化，暴露表、view、function 使用显式 allowlist，不能因有 RLS 或 publishable key 就跳过 grants/服务端授权。 | A1 做最小对象/角色核验；A3/A4 验证完整业务对象、跨租户查询和拒绝路径。 |
+| UPDATE 的三项条件 | 每个可更新对象必须先有相应 `SELECT` 能力，并同时约束旧行 `USING` 与新行 `WITH CHECK`；缺任何一项都不能进入业务实现。 | A3/A4 用跨租户、改 owner/org 的负向测试和 policy 审查证明；本节不提供 SQL 实现。 |
+| view 的 RLS 边界 | 暴露 view 默认不能被当成自动继承表级 RLS；优先采用 `security_invoker`，否则放入非暴露 schema 并建立等价拒绝/授权证据。 | A3/A4 验证 view 的角色、行范围和字段 DTO；未验证前不暴露 view。 |
+| SECURITY DEFINER/function 权限 | 默认使用 invoker；只有有理由时才使用 `SECURITY DEFINER`，并固定 `search_path`、显式 schema-qualified 引用，撤销 `PUBLIC EXECUTE`，再向明确角色 allowlist 授权；不以它绕过 RLS 修复权限问题。 | A3/A4 做 function 调用、角色切换、search_path 和越权负向测试；A0 只锁定原则，不创建函数。 |
+| Storage upsert | 允许对象替换的 `upsert` 必须同时满足 `INSERT`、`SELECT`、`UPDATE` 的 Storage policy/权限；桶保持私有，文件归属和签名 URL 仍按申请/组织边界校验。 | A4 验证上传、替换、读取、删除、对象 key 和跨租户拒绝；未实测不承诺 upsert。 |
+| managed `auth`/`storage`/`realtime` schema | 不在供应商 managed schema 创建/删除表或函数，不修改其迁移表或做破坏性写入；自有表、函数和迁移放在自有受控 schema，能引用 managed 表但不接管其对象。 | A1/A3/A4 复核迁移和 schema 约束；实现当天按官方 breaking-change 页面重验，不连接当前项目。 |
+| SSR 每请求 client、Proxy/cookie refresh 与并发 | 浏览器和服务端 client 都使用工厂按调用创建；SSR 每请求建立新 client，未来 Proxy 负责刷新 token 并写回 request/response cookies；并发请求、过期 session、刷新竞态和用户串线必须实测。 | A1 在独立测试环境运行并发/过期矩阵；当前仓库只有连接骨架，没有 Proxy 运行证据。 |
+| provider/plan/region/session 矩阵 | provider、plan、region、session lifetime、single-session、refresh delay 必须作为同一矩阵记录版本、配置、观察窗口和限制；不凭文档或默认值推断产品能力，不在本批选定具体供应商/区域/时长。 | A1 实测并由 Owner 选择；结果影响 signOut、设备管理和高风险授权，不提前承诺。 |
+| V1 MFA 范围 | Entry preflight 候选建议（待 G2-A0 Owner 确认）：建议 V1 不采用 phone/SMS MFA；正式因子候选为 TOTP、不同设备/安全位置的备用因子和受审计人工恢复。Owner 采纳后 A1 才可不测试 phone/SMS；若不采纳，必须先修订 A1 合同并重新评审。 | A1 验证 TOTP、恢复、AAL/会话重置、通知和审计；phone/SMS 是否测试取决于 Owner 对候选边界的决定。 |
+| publishable key 与授权 | publishable key 可以出现在浏览器，但只是连接/API key，不是授权边界；服务端 permission layer、grants、RLS、Storage policy 和业务状态才共同决定授权。`service_role`/secret 永不进浏览器、bundle、日志或 URL。 | A1/A3/A4 做 bundle、Network、grants/RLS 和服务端授权检查；不读取或写入任何真实 key。 |
+| 静态恢复码政策 | Entry preflight 候选建议（待 G2-A0 Owner 确认）：建议 Rebuy V1 不采用静态恢复码；供应商能力仍待 A1 验证。任何供应商界面命名都不能替代备用 TOTP、身份核验、职责分离、AAL/会话重置、通知和审计。 | Owner 先确认产品边界；A1 记录实际因子/恢复能力，A5 复核高风险恢复；未确认前不写成现行政策。 |
 
 ## 4. 数据流与生命周期
 

@@ -9,6 +9,7 @@ import {
   CircleUserRound,
   Clock3,
   Languages,
+  Laptop,
   Moon,
   PackageCheck,
   ReceiptText,
@@ -35,6 +36,7 @@ import {
   formatCurrency,
   makeLocalOrder,
   minimumQuantity,
+  localeToHtmlLang,
   priceForProduct,
   products,
   statusLabel,
@@ -52,7 +54,8 @@ import {
   type StockState,
 } from "@/lib/data";
 
-type CategoryFilter = "all" | "electronics" | "accessories" | "used";
+type CategoryFilter = "all" | "electronics" | "accessories" | "used" | "computers";
+type CatalogMode = "directory" | "results";
 type Theme = "dark" | "light";
 
 const primaryViews: PrimaryView[] = ["home", "catalog", "orders", "cart", "profile"];
@@ -69,7 +72,12 @@ const categoryItems: Array<{ value: Exclude<CategoryFilter, "all">; label: strin
   { value: "electronics", label: "category.electronics", icon: Smartphone },
   { value: "accessories", label: "category.accessories", icon: Cable },
   { value: "used", label: "category.used", icon: Recycle },
+  { value: "computers", label: "category.computers", icon: Laptop },
 ];
+
+const homeFeaturedProducts = (["charger", "headphones", "phone"] as const)
+  .map((productId) => products.find((product) => product.id === productId))
+  .filter((product): product is Product => Boolean(product));
 
 const roleItems: Array<{ value: Role; label: string; status: string; icon: typeof CircleUserRound }> = [
   { value: "guest", label: "profile.guest", status: "profile.guestStatus", icon: CircleUserRound },
@@ -92,6 +100,7 @@ function productMatchesCategory(product: Product, category: CategoryFilter): boo
   if (category === "all") return true;
   if (category === "used") return product.kind === "used";
   if (category === "accessories") return product.id === "charger" || product.id === "headphones";
+  if (category === "computers") return product.id === "laptop";
   return product.id === "phone" || product.id === "headphones" || product.id === "laptop";
 }
 
@@ -113,7 +122,8 @@ export default function PrototypeApp() {
   const [locale, setLocale] = useState<Locale>("zh");
   const [role, setRole] = useState<Role>("retail");
   const [theme, setTheme] = useState<Theme>("light");
-  const [reducedMotion, setReducedMotion] = useState(true);
+  const [reducedMotion, setReducedMotion] = useState(false);
+  const [systemReducedMotion, setSystemReducedMotion] = useState(false);
   const reducedMotionRef = useRef(reducedMotion);
   const [view, setView] = useState<AppView>("home");
   const [detailOrigin, setDetailOrigin] = useState<PrimaryView>("home");
@@ -121,6 +131,7 @@ export default function PrototypeApp() {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [selectedMerchantOrderId, setSelectedMerchantOrderId] = useState<string | null>(null);
   const [detailQuantity, setDetailQuantity] = useState(1);
+  const [catalogMode, setCatalogMode] = useState<CatalogMode>("directory");
   const [searchDraft, setSearchDraft] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
@@ -194,8 +205,20 @@ export default function PrototypeApp() {
     : undefined;
 
   useEffect(() => {
-    reducedMotionRef.current = reducedMotion;
-  }, [reducedMotion]);
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const syncSystemPreference = () => setSystemReducedMotion(mediaQuery.matches);
+    syncSystemPreference();
+    mediaQuery.addEventListener("change", syncSystemPreference);
+    return () => mediaQuery.removeEventListener("change", syncSystemPreference);
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.lang = localeToHtmlLang(locale);
+  }, [locale]);
+
+  useEffect(() => {
+    reducedMotionRef.current = reducedMotion || systemReducedMotion;
+  }, [reducedMotion, systemReducedMotion]);
 
   useEffect(() => {
     if (!toast) return;
@@ -220,6 +243,7 @@ export default function PrototypeApp() {
     setSearchDraft(value);
     setSearchQuery(value.trim());
     setCategoryFilter("all");
+    setCatalogMode("results");
     setView("catalog");
   };
 
@@ -227,6 +251,21 @@ export default function PrototypeApp() {
     setCategoryFilter(category);
     setSearchDraft("");
     setSearchQuery("");
+    setCatalogFilter("all");
+    setSortOrder("featured");
+    setFilterOpen(false);
+    setCatalogMode("results");
+    setView("catalog");
+  };
+
+  const openCategoryDirectory = () => {
+    setCatalogMode("directory");
+    setCategoryFilter("all");
+    setSearchDraft("");
+    setSearchQuery("");
+    setCatalogFilter("all");
+    setSortOrder("featured");
+    setFilterOpen(false);
     setView("catalog");
   };
 
@@ -266,6 +305,10 @@ export default function PrototypeApp() {
   };
 
   const handleNavigate = (nextView: PrimaryView) => {
+    if (nextView === "catalog") {
+      openCategoryDirectory();
+      return;
+    }
     setView(nextView);
   };
 
@@ -344,7 +387,7 @@ export default function PrototypeApp() {
       setIsSubmitting(false);
       setView("orders");
       showToast("toast.orderCreated");
-    }, reducedMotion ? 80 : 280);
+    }, reducedMotion || systemReducedMotion ? 80 : 280);
   };
 
   const openOrder = (orderId: string, merchantOrderId?: string) => {
@@ -375,10 +418,30 @@ export default function PrototypeApp() {
         <p>{tr(locale, "home.subtitle")}</p>
       </section>
 
+      <section className="section-block" aria-labelledby="home-recommended-title">
+        <div className="section-heading">
+          <div>
+            <h2 id="home-recommended-title">{tr(locale, "home.recommended")}</h2>
+          </div>
+        </div>
+        <div className="product-grid">
+          {homeFeaturedProducts.map((product) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              role={role}
+              locale={locale}
+              cartQuantity={cart.find((item) => item.productId === product.id)?.quantity ?? 0}
+              onOpen={() => openProduct(product.id)}
+              onAdd={() => addToCart(product.id)}
+            />
+          ))}
+        </div>
+      </section>
+
       <section className="section-block" aria-labelledby="home-categories-title">
         <div className="section-heading">
           <div>
-            <span className="eyebrow">01</span>
             <h2 id="home-categories-title">{tr(locale, "home.categories")}</h2>
           </div>
         </div>
@@ -395,21 +458,86 @@ export default function PrototypeApp() {
         </div>
       </section>
 
-      <section className="section-block" aria-labelledby="home-recommended-title">
-        <div className="section-heading">
-          <div>
-            <span className="eyebrow">02</span>
-            <h2 id="home-recommended-title">{tr(locale, "home.recommended")}</h2>
+      <StatusBanner>{tr(locale, "notice.demo")}</StatusBanner>
+    </>
+  );
+
+  const renderCatalog = () => {
+    if (catalogMode === "directory") {
+      return (
+        <section className="page-section catalog-directory" aria-labelledby="catalog-directory-title">
+          <div className="page-heading">
+            <div>
+              <h1 id="catalog-directory-title">{tr(locale, "catalog.directoryTitle")}</h1>
+              <p className="page-heading__note">{tr(locale, "catalog.directoryNote")}</p>
+            </div>
           </div>
-          <button type="button" className="text-button" onClick={() => handleNavigate("catalog")}>
-            {tr(locale, "home.viewAll")}
-            <ChevronRight size={16} aria-hidden="true" />
-          </button>
+          <div className="category-grid catalog-directory__grid">
+            {categoryItems.map(({ value, label, icon: Icon }) => (
+              <button type="button" className="category-tile" key={value} onClick={() => selectCategory(value)}>
+                <span className="category-tile__icon">
+                  <Icon size={22} aria-hidden="true" />
+                </span>
+                <span>{tr(locale, label)}</span>
+                <ChevronRight size={17} aria-hidden="true" />
+              </button>
+            ))}
+          </div>
+        </section>
+      );
+    }
+
+    const activeCategoryLabel =
+      categoryFilter !== "all"
+        ? tr(locale, categoryItems.find((item) => item.value === categoryFilter)?.label ?? "category.electronics")
+        : null;
+
+    return (
+      <section className="page-section catalog-results">
+        <div className="page-heading">
+          <div>
+            <h1>{activeCategoryLabel ?? tr(locale, "catalog.title")}</h1>
+            {searchQuery ? <p className="page-heading__note">“{searchQuery}”</p> : null}
+          </div>
+          <span className="page-heading__count">
+            {filteredProducts.length} {tr(locale, "catalog.results")}
+          </span>
         </div>
-        <div className="product-grid">
-          {products
-            .filter((product) => product.id === "charger" || product.id === "phone" || product.id === "headphones")
-            .map((product) => (
+
+        <button type="button" className="catalog-back-button" onClick={openCategoryDirectory}>
+          <ChevronRight size={17} aria-hidden="true" />
+          {tr(locale, "catalog.backToCategories")}
+        </button>
+
+        <div className="catalog-context">
+          {activeCategoryLabel ? <span className="context-label">{activeCategoryLabel}</span> : null}
+        </div>
+
+        <FilterSheet
+          locale={locale}
+          open={filterOpen}
+          filter={catalogFilter}
+          sort={sortOrder}
+          onOpenChange={setFilterOpen}
+          onFilterChange={setCatalogFilter}
+          onSortChange={setSortOrder}
+          onClear={clearAllConditions}
+        />
+
+        {filteredProducts.length === 0 ? (
+          <section className="empty-state empty-state--catalog">
+            <div className="empty-state__icon">
+              <Smartphone size={24} aria-hidden="true" />
+            </div>
+            <h2>{tr(locale, "catalog.noResults")}</h2>
+            <p>{tr(locale, "catalog.noResultsNote")}</p>
+            <button type="button" className="button button--secondary" onClick={clearAllConditions}>
+              {tr(locale, "catalog.clear")}
+            </button>
+          </section>
+        ) : (
+          <div className="product-grid">
+            {filteredProducts.map((product) => (
               <ProductCard
                 key={product.id}
                 product={product}
@@ -420,73 +548,11 @@ export default function PrototypeApp() {
                 onAdd={() => addToCart(product.id)}
               />
             ))}
-        </div>
-      </section>
-
-      <StatusBanner>{tr(locale, "notice.demo")}</StatusBanner>
-    </>
-  );
-
-  const renderCatalog = () => (
-    <section className="page-section">
-      <div className="page-heading">
-        <div>
-          <span className="eyebrow">Rebuy / catalog</span>
-          <h1>{tr(locale, "catalog.title")}</h1>
-        </div>
-        <span className="page-heading__count">
-          {filteredProducts.length} {tr(locale, "catalog.results")}
-        </span>
-      </div>
-
-      <div className="catalog-context">
-        {categoryFilter !== "all" ? (
-          <span className="context-label">
-            {tr(locale, categoryItems.find((item) => item.value === categoryFilter)?.label ?? "category.electronics")}
-          </span>
-        ) : null}
-        {searchQuery ? <span className="context-label">“{searchQuery}”</span> : null}
-      </div>
-
-      <FilterSheet
-        locale={locale}
-        open={filterOpen}
-        filter={catalogFilter}
-        sort={sortOrder}
-        onToggle={() => setFilterOpen((current) => !current)}
-        onFilterChange={setCatalogFilter}
-        onSortChange={setSortOrder}
-        onClear={clearAllConditions}
-      />
-
-      {filteredProducts.length === 0 ? (
-        <section className="empty-state empty-state--catalog">
-          <div className="empty-state__icon">
-            <Smartphone size={24} aria-hidden="true" />
           </div>
-          <h2>{tr(locale, "catalog.noResults")}</h2>
-          <p>{tr(locale, "catalog.noResultsNote")}</p>
-          <button type="button" className="button button--secondary" onClick={clearAllConditions}>
-            {tr(locale, "catalog.clear")}
-          </button>
-        </section>
-      ) : (
-        <div className="product-grid">
-          {filteredProducts.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              role={role}
-              locale={locale}
-              cartQuantity={cart.find((item) => item.productId === product.id)?.quantity ?? 0}
-              onOpen={() => openProduct(product.id)}
-              onAdd={() => addToCart(product.id)}
-            />
-          ))}
-        </div>
-      )}
-    </section>
-  );
+        )}
+      </section>
+    );
+  };
 
   const renderDetail = () => {
     if (!detailProduct) {
@@ -506,7 +572,7 @@ export default function PrototypeApp() {
       : 1;
 
     return (
-      <section className="detail-page">
+      <section className={`detail-page ${detailProduct.kind === "used" ? "detail-page--used" : ""}`}>
         <div className="detail-layout">
           <div className="detail-media">
             <SpriteImage variant={detailProduct.sprite} alt={detailProduct.name[locale]} priority />
@@ -525,7 +591,7 @@ export default function PrototypeApp() {
               <span>{tr(locale, stockCopyKey(state))}</span>
               {detailProduct.inventory > 0 ? (
                 <span className="muted">
-                  · {detailProduct.inventory} {detailProduct.unit[locale]}
+                  · {detailProduct.kind === "used" ? tr(locale, "cart.singleItem") : `${detailProduct.inventory} ${detailProduct.unit[locale]}`}
                 </span>
               ) : null}
             </div>
@@ -534,6 +600,7 @@ export default function PrototypeApp() {
                 {tr(locale, "price.minimum")} {minimum} {detailProduct.unit[locale]} · {tr(locale, "product.lowStock")}
               </StatusBanner>
             ) : null}
+            {detailProduct.kind === "used" ? <UsedFacts product={detailProduct} locale={locale} /> : null}
             <div className="detail-buy">
               <div>
                 <span className="eyebrow">{tr(locale, "details.quantity")}</span>
@@ -576,13 +643,10 @@ export default function PrototypeApp() {
           </div>
         </div>
 
-        {detailProduct.kind === "used" ? <UsedFacts product={detailProduct} locale={locale} /> : null}
-
         <div className="detail-sections">
           <section className="info-section">
             <div className="section-heading">
               <div>
-                <span className="eyebrow">01</span>
                 <h2>{tr(locale, "details.specs")}</h2>
               </div>
             </div>
@@ -604,7 +668,6 @@ export default function PrototypeApp() {
           <section className="info-section">
             <div className="section-heading">
               <div>
-                <span className="eyebrow">02</span>
                 <h2>{tr(locale, "details.delivery")}</h2>
               </div>
             </div>
@@ -630,7 +693,6 @@ export default function PrototypeApp() {
       <section className="page-section">
         <div className="page-heading">
           <div>
-            <span className="eyebrow">Rebuy / cart</span>
             <h1>{tr(locale, "cart.title")}</h1>
           </div>
           <span className="page-heading__count">{cartItemCount}</span>
@@ -684,7 +746,6 @@ export default function PrototypeApp() {
             <section className="info-section">
               <div className="section-heading">
                 <div>
-                  <span className="eyebrow">01</span>
                   <h2>{tr(locale, "checkout.demoAddress")}</h2>
                 </div>
               </div>
@@ -702,7 +763,6 @@ export default function PrototypeApp() {
             <section className="info-section">
               <div className="section-heading">
                 <div>
-                  <span className="eyebrow">02</span>
                   <h2>{tr(locale, "checkout.summary")}</h2>
                 </div>
                 <button type="button" className="text-button" onClick={() => setView("cart")}>
@@ -762,7 +822,6 @@ export default function PrototypeApp() {
     <section className="page-section">
       <div className="page-heading">
         <div>
-          <span className="eyebrow">Rebuy / orders</span>
           <h1>{tr(locale, "orders.title")}</h1>
         </div>
         <span className="page-heading__count">{orders.length}</span>
@@ -845,7 +904,6 @@ export default function PrototypeApp() {
         <section className="info-section">
           <div className="section-heading">
             <div>
-              <span className="eyebrow">01</span>
               <h2>{tr(locale, "orders.timeline")}</h2>
             </div>
           </div>
@@ -867,7 +925,6 @@ export default function PrototypeApp() {
         <section className="info-section">
           <div className="section-heading">
             <div>
-              <span className="eyebrow">02</span>
               <h2>{tr(locale, "orders.suborder")}</h2>
             </div>
           </div>
@@ -900,7 +957,6 @@ export default function PrototypeApp() {
     <section className="page-section profile-page">
       <div className="page-heading">
         <div>
-          <span className="eyebrow">Rebuy / local sample</span>
           <h1>{tr(locale, "profile.title")}</h1>
         </div>
         <CircleUserRound size={28} aria-hidden="true" />
@@ -911,7 +967,6 @@ export default function PrototypeApp() {
       <section className="profile-section">
         <div className="section-heading">
           <div>
-            <span className="eyebrow">01</span>
             <h2>{tr(locale, "profile.identity")}</h2>
           </div>
         </div>
@@ -941,7 +996,6 @@ export default function PrototypeApp() {
       <section className="profile-section">
         <div className="section-heading">
           <div>
-            <span className="eyebrow">02</span>
             <h2>{tr(locale, "profile.language")}</h2>
           </div>
           <Languages size={20} aria-hidden="true" />
@@ -964,7 +1018,6 @@ export default function PrototypeApp() {
       <section className="profile-section">
         <div className="section-heading">
           <div>
-            <span className="eyebrow">03</span>
             <h2>{tr(locale, "profile.appearance")}</h2>
           </div>
         </div>
@@ -1056,6 +1109,10 @@ export default function PrototypeApp() {
         onCart={() => setView("cart")}
         onSearchChange={handleSearchChange}
         onSearchSubmit={handleSearchSubmit}
+        onCategorySelect={selectCategory}
+        onLocaleChange={setLocale}
+        theme={theme}
+        onThemeToggle={() => setTheme((current) => (current === "dark" ? "light" : "dark"))}
       >
         {renderCurrentView()}
       </AppShell>

@@ -1,0 +1,54 @@
+name: Prototype quality
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  prototype-quality:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: prototype
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22.12.0
+          package-manager-cache: false
+
+      - name: Bootstrap compatible Corepack
+        run: |
+          corepack_prefix="${RUNNER_TEMP}/corepack"
+          npm install --global --prefix "${corepack_prefix}" --ignore-scripts --no-audit --no-fund corepack@0.34.6
+          echo "${corepack_prefix}/bin" >> "${GITHUB_PATH}"
+          "${corepack_prefix}/bin/corepack" --version
+          test "$("${corepack_prefix}/bin/corepack" pnpm@10.33.3 --version)" = "10.33.3"
+
+      - name: Verify Corepack and pnpm
+        run: |
+          corepack --version
+          test "$(corepack pnpm@10.33.3 --version)" = "10.33.3"
+
+      - name: Install dependencies
+        run: corepack pnpm@10.33.3 install --frozen-lockfile
+
+      - name: Typecheck
+        run: corepack pnpm@10.33.3 typecheck
+
+      - name: Lint
+        run: corepack pnpm@10.33.3 lint
+
+      - name: Build
+        run: corepack pnpm@10.33.3 build
