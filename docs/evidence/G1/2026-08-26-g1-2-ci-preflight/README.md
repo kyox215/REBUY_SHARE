@@ -70,7 +70,7 @@ GitHub 的 workflow 权限语义下，未列出的权限保持 none；实施时�
 | `actions/checkout` | [v7.0.1 release](https://github.com/actions/checkout/releases/tag/v7.0.1) | [commit](https://github.com/actions/checkout/commit/3d3c42e5aac5ba805825da76410c181273ba90b1) | `3d3c42e5aac5ba805825da76410c181273ba90b1` |
 | `actions/setup-node` | [v7.0.0 release](https://github.com/actions/setup-node/releases/tag/v7.0.0) | [commit](https://github.com/actions/setup-node/commit/820762786026740c76f36085b0efc47a31fe5020) | `820762786026740c76f36085b0efc47a31fe5020` |
 
-建议的 `uses:` 形式（实际文件已创建，当前实现 ref 为 `b0681d5b`）：
+建议的 `uses:` 形式（实际文件已创建，当前实现 ref 为 `b0681d58`）：
 
 ```yaml
 - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -105,7 +105,7 @@ GitHub secure-use 指南明确完整 commit SHA 是当前唯一不可变引用�
 
 | 证据项 | G1.1 已有本地证据 | G1.2a 需补证据 | G1.2b 未来远端证据 | 当前结论 |
 |---|---|---|---|---|
-| Git root / ref | `main`、初始基线和本地完成记录 | workflow 修正 commit `b0681d5b`；初版 `a388348b` 作为历史 | 真实 run 的 commit/ref | G1.1 已满足；当前 workflow ref 为 `b0681d5b`，远端 CI ref 未产生 |
+| Git root / ref | `main`、初始基线和本地完成记录 | workflow 修正 commit `b0681d58`；初版 `a388348b` 作为历史 | 真实 run 的 commit/ref | G1.1 已满足；当前 workflow ref 为 `b0681d58`，远端 CI ref 未产生 |
 | Runner / Node | 隔离副本 `v22.12.0` | 本地等价环境声明与版本输出 | runner 名称、Node 输出、job 摘要 | 本地等价已完成；runner 未运行 |
 | pnpm / lockfile | pnpm `10.33.3`、frozen install 退出 0 | Corepack `0.34.6` exact bootstrap、pnpm 输出与安装结果 | runner 安装日志摘要和 lockfile 结果 | fresh 本地等价已完成；远端未运行 |
 | typecheck / lint / build | G1.1 隔离副本均退出 0 | 同一 workflow 顺序的本地等价结果 | 每个 job step 的 exit/result | G1.2a 本地等价均退出 0；不等于远端通过 |
