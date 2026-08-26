@@ -42,11 +42,11 @@
 
 | 编号 | 发现 | 本批处理 | 未关闭证据 |
 |---|---|---|---|
-| H-01 | 删除/暂停用户、membership 或资格后，旧 access token 的 `exp` 窗口和 session 撤销语义容易被写成即时失效 | 09/07/08 明确高风险实时检查 `session_id`、user、membership、scope 和资格；不承诺即时踢出 | A1 删除/暂停前后与并发时间线；A3/A4 业务负向 |
+| H-01 | 删除/暂停用户、membership 或资格后，旧 access token 的 `exp` 窗口和 session 撤销语义容易被写成即时失效 | 09/07/08 明确高风险实时检查 `session_id`、user、membership、scope 和资格；不承诺即时踢出 | A1 观察 session/token 时间窗口与并发时间线；A3/A4 验证业务拒绝与跨租户负向 |
 | H-02 | Data API grants 与 RLS 是两层控制；exposed object allowlist、view/function 权限不能只靠 RLS 或 key | 09/07/08/10 增加 grants、RLS、allowlist 和客户端边界 | A1 基础 reachability；A3/A4 完整对象与跨租户负向 |
 | H-03 | UPDATE、view、SECURITY DEFINER、Storage upsert 的默认权限可能产生静默越权或失败 | 09 增加 SELECT + USING + WITH CHECK、`security_invoker`、固定 `search_path`、撤销 `PUBLIC EXECUTE`、角色 allowlist、Storage 三权限合同 | A3/A4 policy/function/view/Storage 实测 |
 | H-04 | managed `auth`/`storage`/`realtime` schema 的平台限制可能被错误迁移或自定义对象破坏 | 09/10 增加禁止写 managed schema、自有对象使用受控 schema 的边界 | A1/A3/A4 按实施版本核对迁移 |
-| H-05 | publishable key、静态恢复码和 phone/SMS MFA 的产品/供应商语义容易被混写 | 07/08/09/10/11 明确 key 非授权边界、V1 不采用 phone/SMS MFA、静态恢复码是 Rebuy 产品政策且供应商能力待 A1 | Owner 产品政策确认；A1 供应商实际能力 |
+| H-05 | publishable key、静态恢复码和 phone/SMS MFA 的产品/供应商语义容易被混写 | 07/08/09/10 明确 key 非授权边界；Entry preflight 仅提出 phone/SMS MFA 与静态恢复码候选建议，待 G2-A0 Owner 确认；供应商能力仍待 A1 | Owner 确认候选产品边界；A1 验证供应商实际能力 |
 
 ### 中风险
 
@@ -60,14 +60,14 @@
 
 | 编号 | 发现 | 本批处理 | 未关闭证据 |
 |---|---|---|---|
-| L-01 | “供应商不支持静态恢复码”是未经 A1 验证的能力断言 | 07/08/09 改为“Rebuy V1 产品政策不采用静态恢复码；供应商能力待 A1 验证” | Owner 政策签署、A1 能力记录 |
+| L-01 | “供应商不支持静态恢复码”是未经 A1 验证的能力断言 | 07/08/09 统一改为 Entry preflight 候选建议，待 G2-A0 Owner 确认；供应商能力仍待 A1 验证 | Owner 产品边界确认、A1 能力记录 |
 | L-02 | A0 Entry 文档缺少稳定的 Owner checklist 与正式审查前置说明 | 新增清单、证据和 15/阶段索引入口 | G1 Exit 通过与 Owner Gate |
 
 ## 4. 本批控制补充摘要
 
 | 控制 | 当前证据 | 后续阶段 |
 |---|---|---|
-| 删除/暂停/撤销后的 token/session 窗口 | 规划补充，未运行 | A1 + A3/A4 |
+| 删除/暂停/撤销后的 token/session 窗口 | 规划补充，未运行；A1 观察 session/token 时间窗口 | A1 观察窗口 + A3/A4 业务拒绝/跨租户负向 |
 | Data API grants、RLS、exposed allowlist | 规划补充，未连接 | A1 基础 + A3/A4 完整 |
 | UPDATE 的 SELECT、USING、WITH CHECK | 规划补充，未实现 | A3/A4 |
 | view `security_invoker` | 规划补充，未实现 | A3/A4 |
@@ -76,9 +76,9 @@
 | managed schema 限制 | 官方规划依据，未连接项目 | A1/A3/A4 |
 | SSR 每请求新 client、Proxy/cookie refresh、并发/过期 session | 本地骨架边界，未运行 | A1 |
 | provider/plan/region/session lifetime/single-session/refresh delay | 矩阵合同，未选择/实测 | A1 + Owner |
-| V1 不采用 phone/SMS MFA | Rebuy 产品范围合同 | 新 Owner 决定才能改变 |
+| phone/SMS MFA 边界 | Entry preflight 候选建议，待 G2-A0 Owner 确认 | Owner 采纳后 A1 才可不测试；不采纳则修订 A1 合同并重新评审 |
 | publishable key 非授权边界 | 规划补充，未连接 | A1/A3/A4 |
-| 静态恢复码产品政策 | Rebuy V1 政策补充，供应商能力未知 | Owner + A1 |
+| 静态恢复码边界 | Entry preflight 候选建议，待 G2-A0 Owner 确认；供应商能力未知 | Owner 先确认产品边界，A1 验证供应商能力 |
 
 ## 5. 文件变更与本地验证边界
 

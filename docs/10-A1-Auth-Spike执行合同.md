@@ -149,7 +149,7 @@ user 状态必须使用 `pending_identity_verification`，而不是只表达邮�
 | 责任边界 | support 不得单独批准或解除 MFA；人工恢复不得仅凭姓名、工单文本或未验证邮箱 | API/角色/字段负向测试 |
 | 恢复后状态 | 旧高风险会话按策略失效/降级；重新 enrollment 和高风险动作重新认证 | 旧/新 session、AAL、membership 和通知对照 |
 
-A1 不以静态一次性码为恢复路径。若供应商界面或 API 出现相近命名，必须记录其实际语义、生命周期、存储和安全风险，不能把它当作本合同的备用因子替代。
+Entry preflight 候选建议（待 G2-A0 Owner 确认）：建议 A1 不以静态一次性码作为恢复路径；若 Owner 不采纳，必须先修订本 A1 合同并重新评审。若供应商界面或 API 出现相近命名，A1 仍必须记录其实际语义、生命周期、存储和安全风险，不能把它当作未经验证的备用因子替代。
 
 ## 11. 会话与退出能力合同
 
@@ -182,13 +182,13 @@ A1 不以静态一次性码为恢复路径。若供应商界面或 API 出现相
 |---|---|---|---|
 | provider、plan、region | 记录候选 provider、计划、区域、版本、环境归属和日期，比较实际限制 | 检查业务数据、租户和 Storage 是否仍在独立资源 | 配置摘要和 Owner 选择；无法证明隔离或区域/计划限制时停止 |
 | session lifetime、single-session、refresh delay | 实测 JWT/session lifetime、刷新延迟、单/多设备和 `signOut` local/global/others 的观察窗口 | 验证成员/资格撤销后的业务拒绝和并发一致性 | 时间线、配置摘要、并发结果；不把默认值或页面状态写成即时失效 |
-| 删除/暂停与 token 窗口 | 观察用户删除/暂停、退出、refresh token 和旧 access token 在 `exp` 前后的行为 | 验证高风险请求实时检查 `session_id`、user、membership、scope 和资格 | 删除/暂停前后脱敏时间线；若旧 token 仍可执行高风险动作，立即停止并修正 |
+| 删除/暂停与 token 窗口 | 观察 session/token 时间窗口、用户删除/暂停、退出、refresh token 和旧 access token 在 `exp` 前后的行为 | 验证删除/暂停后的业务拒绝、membership/资格状态和跨租户负向；高风险请求实时检查 `session_id`、user、scope 和资格 | A1 时间线与 A3/A4 业务拒绝/跨租户负向证据；若旧 token 仍可执行高风险动作，立即停止并修正 |
 | SSR client 与 cookie refresh | 每请求创建新 browser/server client；验证未来 Proxy 刷新 request/response cookie、过期 session、并发请求和用户串线 | 验证业务页面/数据不跨用户复用并与服务端授权一致 | 运行记录和并发负向；当前连接骨架无运行证明，未通过前不开放受保护页面 |
 | Data API grants、RLS、exposed allowlist | 可做最小公开/认证角色和对象 reachability 核验，确认 grants 与 RLS 是两层 | 覆盖所有业务表、view、function、跨租户读取/写入和拒绝路径 | A1 只提供候选基础证据；完整业务 RLS 归 A3/A4，缺 allowlist 或任一层绕过即停止 |
 | UPDATE / view / function 控制 | 记录需要在 A3/A4 验证的候选规则：UPDATE 的 SELECT + USING + WITH CHECK、view `security_invoker` | 实测 view 行范围、function invoker/definer、固定 search_path、撤销 PUBLIC EXECUTE、角色 allowlist | policy/function/view 负向和权限记录；不以客户端隐藏或 publishable key 代替授权 |
 | Storage policy 与 upsert | 若 A1 不需要业务文件则不启用；只记录接口/权限问题 | A4 验证私有桶、申请三元组、签名 URL，以及 upsert 的 INSERT + SELECT + UPDATE | 上传/替换/读取/删除和跨租户拒绝；任一对象公开或权限过宽即停止 |
 | managed schema 限制 | 记录当前官方限制与迁移边界，不创建 `auth`/`storage`/`realtime` 自定义对象 | A3/A4 复核自有 schema、迁移和业务对象不依赖 managed schema 写入 | 按官方文档复核；发现破坏性 managed schema 操作即停止 |
-| MFA 范围 | A1 只验证 TOTP、备用因子、人工恢复、AAL/会话重置；V1 不采用 phone/SMS MFA | A5 后续验证高风险业务动作与恢复审查 | phone/SMS 只有新 Owner 决定才可纳入；恢复缺少职责分离、通知或审计即停止 |
+| MFA 范围 | Entry preflight 候选建议（待 G2-A0 Owner 确认）：建议 V1 不采用 phone/SMS MFA；Owner 采纳后 A1 才可不测试该路径，若不采纳必须先修订本合同并重新评审；A1 继续验证 TOTP、备用因子、人工恢复、AAL/会话重置 | A5 后续验证高风险业务动作与恢复审查 | phone/SMS 测试取决于 Owner 决定；恢复缺少职责分离、通知或审计即停止 |
 
 责任分配不替代 Owner Gate：A1 结果必须脱敏并记录实际 provider/plan/region、版本、配置、观察窗口和失败分类；A3/A4 结果必须记录对象、租户、角色、权限、policy、view/function/Storage 和跨租户负向证据。任何能力不能从官方网页或本地骨架直接推断为实现。
 
