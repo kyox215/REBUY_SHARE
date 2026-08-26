@@ -52,20 +52,23 @@
 | G1-09 | Actions enabled、默认 workflow 权限、selected-actions | unknown | [G1.2b-0 权限审计](../2026-08-26-g1-2b-0-remote-target-audit/README.md) | 权限 GET 因 gh 认证无效为 401；不读取 secrets |
 | G1-10 | Local 边界、`.gitignore`、`.env.example`、secret/log 规则 | 已满足（本地） | [G1.3-0 预检](../2026-08-26-g1-3-0-local-environment-preflight/README.md)；[11 连接边界](../../../11-发布与Supabase连接记录.md) | 只证明本地规则和变量名；不证明外部环境 |
 | G1-11 | Preview 项目/owner/ref/Node/root/访问/变量/health/日志/停止入口 | 缺失 | [G1.3-0 四环境合同](../2026-08-26-g1-3-0-local-environment-preflight/README.md) | 未建立 provider/project；不得造 URL/project id |
-| G1-12 | Staging 资源、账号、数据、Storage、变量、角色隔离 | 缺失 | [G1.3-0 四环境合同](../2026-08-26-g1-3-0-local-environment-preflight/README.md) | 未打开；不得与 Production 共用 |
-| G1-13 | Production 资产盘点、专用 secret、访问、监控、备份、恢复 | unknown | [G1.3-0 四环境合同](../2026-08-26-g1-3-0-local-environment-preflight/README.md) | 本地未连接不等于外部不存在；需独立资产盘点和书面 Gate |
-| G1-14 | Preview 实际部署来自 CI 通过的可追溯 ref | 缺失 | G1.3-0 只做 archive 预检 | 当前无 Preview 部署；不能把本地预览写成部署 |
-| G1-15 | bad ref → good ref 在线 Preview 回退与恢复 | 缺失 | G1.3-0 回退手册；无在线证据 | 需隔离 Preview 和 Owner 授权后演练 |
-| G1-16 | 脱敏证据、维护责任、回退/恢复记录 | 预检完成/实施缺失 | [G1.2b-1](../2026-08-26-g1-2b-1-local-integration-rehearsal/README.md)；[G1.3-0](../2026-08-26-g1-3-0-local-environment-preflight/README.md) | 真实 CI/Preview/Staging/Production 证据缺失 |
-| G1-17 | Owner 明确 G1 Exit 决定并签署日期/ref | 缺失 | [G1 Owner 清单](../../../stages/G1-Owner验收清单.md) | 当前未签署，不生成虚假日期 |
+| G1-12 | Staging 隔离边界合同（资源、secret、数据、Storage、角色和日志不得共用） | 已满足（本地） | [G1.3-0 四环境合同](../2026-08-26-g1-3-0-local-environment-preflight/README.md) | G1 只验收边界合同；实际资源/账号/Auth/DB/RLS/PII 实施属于 G2-A1/P2 后续专项，不是 G1 Exit 前置 |
+| G1-13 | Production 隔离边界合同（专用资源、secret、访问、监控、备份、恢复和回退不得与其他环境共用） | 已满足（本地） | [G1.3-0 四环境合同](../2026-08-26-g1-3-0-local-environment-preflight/README.md) | G1 只验收边界合同；实际 Production 资产、监控、备份/恢复和 PII 实施属于 P7/Production 后续专项，不是 G1 Exit 前置 |
+| G1-14 | Staging/Production 实际资源创建、Auth/DB/RLS/PII、监控、备份和恢复实施 | 不适用 | [G1.3-0 四环境合同](../2026-08-26-g1-3-0-local-environment-preflight/README.md) | 标记为不适用（G1）；由 G2-A1/P2/P7/Production 专项另行授权和验收，不作为 G1 实施前置 |
+| G1-15 | 外部 provider/资产认证只读盘点（选择 Preview provider 前） | unknown | G1.3-0 仅记录本地未绑定事实，无认证外部资产清单 | 这是未来选择 Preview provider 的安全前置；不得据此创建、连接或推断外部资源不存在 |
+| G1-16 | Preview 实际部署来自 CI 通过的可追溯 ref | 缺失 | G1.3-0 只做 archive 预检 | 当前无 Preview 部署；不能把本地预览写成部署 |
+| G1-17 | bad ref → good ref 在线 Preview 回退与恢复 | 缺失 | G1.3-0 回退手册；无在线证据 | 需隔离 Preview 和 Owner 授权后演练 |
+| G1-18 | 脱敏证据、维护责任、回退/恢复记录 | 预检完成/实施缺失 | [G1.2b-1](../2026-08-26-g1-2b-1-local-integration-rehearsal/README.md)；[G1.3-0](../2026-08-26-g1-3-0-local-environment-preflight/README.md) | 真实 CI/Preview 证据缺失；真实 secret 只记录 commit/path/category，不复制值；Staging/Production 由后续专项维护 |
+| G1-19 | Owner 明确 G1 Exit 决定并签署日期/ref | 缺失 | [G1 Owner 清单](../../../stages/G1-Owner验收清单.md) | 当前未签署，不生成虚假日期 |
 
 ## 4. 当前结论：NO-GO
 
 G1.1、G1.2a 的本地项目底座、工具链、workflow 和等价命令证据已具备；G1.3-0 的本地隔离合同、忽略规则和 archive 取回预检已具备。但以下 Exit 必要项仍未满足：
 
 - G1.2b 真实 GitHub Actions run 缺失；canonical repo、无共同祖先历史策略和 Actions permissions 仍未由 Owner/有效认证确认。
-- Preview 尚未建立或部署；Staging/Production 资源、数据、Storage、secret、访问、日志、监控、备份和回退均无实施证据。
-- bad ref → good ref 的在线 Preview 回退未演练；Owner 尚未对 G1 Exit 作出明确原话和签署日期/ref。
+- Preview 尚未建立或部署；bad ref → good ref 的在线 Preview 回退未演练；Owner 尚未对 G1 Exit 作出明确原话和签署日期/ref。
+
+G1.3-0 已满足 Local/Preview/Staging/Production 的边界合同、禁止共用资源/secret/数据/角色/日志和未来门禁设计；Staging/Production 实际资源、Auth/DB/RLS/PII、监控、备份和恢复属于后续 G2-A1/P2/P7/Production 专项，不构成 G1 Exit 缺口。外部 provider/资产认证只读盘点仍为 `unknown`，仅是未来选择 Preview provider 前的安全前置，不授权创建或连接资源。
 
 因此当前必须保持：`G1 执行中（G1.1 已完成，G1.2a 已完成，G1.2b 待 Owner Gate）；G1.3-0 preflight 已完成，G1.3 实施未开始；G1 Exit 未通过；G2-A0 不打开。`
 
@@ -75,14 +78,16 @@ G1.1、G1.2a 的本地项目底座、工具链、workflow 和等价命令证据�
 
 ### 5.1 G1.2b
 
-1. 确认 canonical repository 与无共同祖先的历史策略。
-2. 恢复 gh 登录后只读核验 repo/default branch/Actions permissions/workflow/run；不得读取 secrets。
-3. 仅创建 integration 新分支和 PR，禁止 force push、删除远端分支或直推远端 `main`。
-4. 仅在明确授权下运行一次真实 Actions，保存 job/ref/runner/退出结果的脱敏证据。
+1. 确认 canonical repo 为 `kyox215/REBUY_SHARE`，并书面采用保留远端 `main` 与本地 `main` 双方历史的 `integration` 分支/PR 策略。
+2. 允许通过浏览器恢复 gh 登录；先只读核验 repo/default branch/Actions permissions/workflows/runs，不读取 secrets。
+3. 上述核验通过后，允许在当前本地仓库添加该 canonical remote、只读 fetch、构造并 push **一个新的** `integration/g1-2b` 分支、创建 **一个** PR，并让该 PR 触发 **一次**真实 GitHub Actions。
+4. 禁止直接 push 或 merge `main`、force-push、删除/覆盖远端分支或改写历史；暂不部署 Preview、连接 Supabase/Auth/DB 或 Production。
 
 推荐授权语句：
 
-> `批准进入G1.2b：在确认 canonical repository 与无共同祖先历史策略后，恢复 gh 只读认证；仅创建 integration 分支/PR（禁止 force push/直推 main），运行一次真实 GitHub Actions 并保存脱敏证据；暂不部署 Preview、接 Supabase/Auth/数据库或生产。`
+> `确认 canonical repo 为 kyox215/REBUY_SHARE，并采用保留远端 main 与本地 main 双方历史的 integration 分支/PR 策略；允许通过浏览器恢复 gh 登录，先只读核验 repo/default branch/Actions permissions/workflows/runs，不读取 secrets；核验通过后，允许在当前本地仓库添加该 canonical remote、只读 fetch、构造并 push 一个新的 integration/g1-2b 分支、创建一个 PR，并让该 PR 触发一次真实 GitHub Actions；禁止直接 push 或 merge main、force-push、删除/覆盖远端分支、改写历史；暂不部署 Preview、连接 Supabase/Auth/DB 或 Production。`
+
+该语句只有在 Owner 明确采纳后才生效；当前 G1.2b 仍待 Owner Gate，不能把本证据的推荐语句视为已授权执行。
 
 ### 5.2 G1.3
 
@@ -107,6 +112,8 @@ G1.1、G1.2a 的本地项目底座、工具链、workflow 和等价命令证据�
 ## 7. 本批验证与跳过项
 
 - 已只读核对当前 HEAD/branch/tags/remote、G1 输入文件和全部既有 G1 evidence 路径；Owner 清单与本证据文件作为本批新增记录。
+- 独立审查发现并纠正：原矩阵把 Staging/Production 实际实施误列为 G1 Exit 缺口，并把“只读认证”后的 G1.2b 写入边界描述为矛盾；本次拆分为本地边界合同、后续专项实施和 provider 资产 `unknown` 三类，并写入一条明确解除旧禁令范围的 Owner 授权语句。Owner 签署栏和 G1.2b/G1.3 当前 Gate 未改变。
+- 最终文档检查（`docs/**/*.md`，2026-08-26）：38 个 Markdown 文件、404 个本地相对链接/fragment，目标文件与 fragment 全部可解析；围栏配对通过；敏感模式扫描 0；`git diff --check` 通过。扫描只证明文档完整性，不等于 CI、Preview 或 G1 Exit 通过。
 - 本批不重跑 typecheck、lint、build、E2E：prototype、package/lockfile、workflow 和配置未变，复用 G1.2a 同状态证据。
 - 不做 hash：无生成物或文件传输交付，已有 Git ref/tree/blob 证据足够。
 - 不启动独立审查：本批为 Owner 清单与本地预检证据；主代理后续可按里程碑要求进行独立只读审查。
