@@ -14,11 +14,12 @@ GOV-1 的阶段事实见其[独立记录](./GOV-1-治理文档与状态台账.md
 
 ## 1.1 后续计划记录（未打开）
 
-以下记录只描述 G1.2/G1.3 等后续工程合同；G1.1 已完成，但不改变“Exit 未通过”的边界：
+以下记录只描述 G1.2/G1.3/G2-A0 等后续合同；G1.1 已完成，但不改变“Exit 未通过”的边界：
 
 | 阶段 | 状态 | 证据级别 | 计划合同 |
 |---|---|---|---|
 | G1.2/G1.3 后续工程门 | G1.2a 已完成；G1.2b 待 Owner Gate；G1.3-0 preflight 已完成，G1.3 实施未开始；G1 Exit NO-GO | 本地静态/本地等价/archive 预检/规划 | [G1-工程底座与环境隔离](./G1-工程底座与环境隔离.md)；[G1 Owner 验收清单](./G1-Owner验收清单.md)；[G1 Exit 本地预检](../evidence/G1/2026-08-26-g1-exit-preflight/README.md)；[G1.2a 本地 workflow/等价证据](../evidence/G1/2026-08-26-g1-2a-local-workflow/README.md)；[G1.2 CI 预检证据](../evidence/G1/2026-08-26-g1-2-ci-preflight/README.md)；[G1.2b-1 演练证据](../evidence/G1/2026-08-26-g1-2b-1-local-integration-rehearsal/README.md)；[G1.3-0 本地环境预检](../evidence/G1/2026-08-26-g1-3-0-local-environment-preflight/README.md)；[G1.1 本地基线证据](../evidence/G1/2026-08-25-g1-1-local-baseline/README.md) |
+| G2-A0 Entry preflight | 未开始；G1 Exit NO-GO | 规划/本地静态 | [G2-A0 Owner 验收清单](./G2-A0-Owner验收清单.md)；[G2-A0 Entry preflight 证据](../evidence/G2-A0/2026-08-26-entry-preflight/README.md)；[A0 ADR 与威胁模型](../09-A0-账号架构ADR与威胁模型.md) |
 
 ## 2. 命名与追加规则
 
