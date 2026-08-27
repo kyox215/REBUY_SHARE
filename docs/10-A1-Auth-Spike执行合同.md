@@ -1,6 +1,6 @@
 # A1 Auth Spike 执行合同
 
-文档状态：G2-A1 未开始；G2-A0 Exit GO，远端 docs-only reconciliation 执行中（本次新 closeout head 待独立复审）；七项 Owner 政策已采纳；即使 Exit GO，也须另行完成独立资源/成本/secret 授权后，才可连接独立测试环境
+文档状态：G2-A1 未开始；G2-A0 Exit GO，远端 docs-only reconciliation 已获批、尚未执行（本次修复 closeout head 待独立复审）；七项 Owner 政策已采纳；即使 Exit GO，也须另行完成独立资源/成本/secret 授权后，才可连接独立测试环境
 适用范围：验证 Rebuy 三入口认证、OAuth callback、identity linking、邀请邮箱控制权、MFA、会话和最小服务端集成边界  
 当前允许：在 G2-A0 Exit 和独立资源授权完成前，仅可准备文档、接口草图、测试用例和合成 fixture；不得以此改变已冻结的 G0/P1 UI。
 当前不允许：不得把 A1 标记为“技术验证通过”，不得初始化或连接 Supabase/OAuth/SMTP，不得连接 production、真实业务数据、真实客户邮箱或真实证件；本 A1 合同不授予资源、费用或 secret。
@@ -329,6 +329,6 @@ A0 通过前可以继续制作无后端 UI 原型：
 
 ## 20. 2026-08-27 G2-A0 Exit closeout 当前状态
 
-- G2-A0 Exit 已由 Owner 以验收 ref=`140ea15d9c3f178a326709d35ad1750a156df0d1` 于 2026-08-27 明确 GO；当前为 `Exit GO；远端 docs-only reconciliation 执行中`。前一 exact-head 独立文档治理审查 findings=`none/GO`，不等于 Auth/MFA/DB/Storage 或运行时测试；本次 closeout 新 head 待独立复审。
+- G2-A0 Exit 已由 Owner 以验收 ref=`140ea15d9c3f178a326709d35ad1750a156df0d1` 于 2026-08-27 明确 GO；当前为 `Exit GO；远端 docs-only reconciliation 已获批、尚未执行`。前一 exact-head 独立文档治理审查 findings=`none/GO`，不等于 Auth/MFA/DB/Storage 或运行时测试；本次修复 closeout head 待独立复审。
 - 该状态承接紧前完整授权：允许公开本阶段 12 个 Markdown、相关 Git 历史、Owner 姓名、账号安全架构、威胁模型、角色权限和阶段治理信息到 `kyox215/REBUY_SHARE`，并在 docs-only、exact-head Actions 成功、独立复审通过后按非强制 branch push/PR/merge commit 边界执行；A1 的资源、费用、secret、Auth、DB、Storage、OAuth、SMTP、部署和 Production Gate 继续关闭。
 - G2-A1 仍为“未开始”。A0 Exit 只开放准备门；provider、plan、region、session、真实账号、真实 PII 和任何外部连接仍待独立资源授权与后续阶段证据，不得由本合同自动开始。

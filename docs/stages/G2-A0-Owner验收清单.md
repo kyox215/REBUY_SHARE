@@ -1,6 +1,6 @@
 # G2-A0 Owner 验收清单
 
-文档状态：G2-A0 Exit GO；远端 docs-only reconciliation 执行中（本地 closeout 已授权，远端写入尚未执行）；Entry 已授权，七项政策已由 Owner 采纳
+文档状态：G2-A0 Exit GO；远端 docs-only reconciliation 已获批、尚未执行（本地修复 closeout 待独立复审）；Entry 已授权，七项政策已由 Owner 采纳
 当前前置：G1 Exit 已由 Owner 于 2026-08-27 签署 GO；本清单只打开 docs-only A0 合同执行，不打开 G2-A1 实测或外部资源。
 证据边界：本清单是合同、审查和 Owner Gate 入口，不代表 Supabase/Auth、数据库、Storage、RLS 或任何外部环境已连接或实现。
 当前状态源：[项目状态与阶段台账](../15-项目状态与阶段台账.md)
@@ -8,10 +8,10 @@
 
 ## 1. 当前结论与 Entry / Exit 边界
 
-- G2-A0 当前状态为“执行中”（Exit GO；远端 docs-only reconciliation 执行中）。本批只整理安全合同、威胁模型一致性、阶段证据和 Owner 验收/closeout；不创建或连接 provider/project。
+- G2-A0 当前状态为“执行中”（Exit GO；远端 docs-only reconciliation 已获批、尚未执行）。本批只整理安全合同、威胁模型一致性、阶段证据和 Owner 验收/closeout；不创建或连接 provider/project。
 - G1 Exit 前置已满足：Owner 已签署 G1-19，G1 Exit=GO，日期=`2026-08-27`，验收 ref=`d51f1c7cb47e2fe2932b29bd39420f5d092a8160`。
 - G2-A0 Entry 已授权，但授权仅覆盖本地 docs-only 候选；不能解释为 Auth、数据库、Storage、真实账号、真实 PII、生产或外部资源授权。
-- G2-A0 Exit 已由 Owner 于 2026-08-27 明确签署 GO，验收 ref=`140ea15d9c3f178a326709d35ad1750a156df0d1`；前一 exact-head 的独立文档治理审查 findings=`none/GO`。本次 closeout 新 head 仍须独立复审后，才可执行远端 reconciliation；在此之前不得预写 PR、Actions run 或 merge 结果。
+- G2-A0 Exit 已由 Owner 于 2026-08-27 明确签署 GO，验收 ref=`140ea15d9c3f178a326709d35ad1750a156df0d1`；前一 exact-head 的独立文档治理审查 findings=`none/GO`。本次修复 closeout 新 head 仍须独立复审；远端 docs-only reconciliation 已获批但尚未执行，在复审和 exact-head Actions 条件满足前不得预写 PR、Actions run 或 merge 结果。
 - G2-A1 当前仍为“未开始”。A0 Exit 只打开 A1 准备门；Supabase project/plan/region、费用、OAuth、SMTP、secret 和任何连接仍需新的 non-production resource/cost/secret 授权。
 
 ## 2. G1 Exit 前置（已满足；不替代 A0 Exit）
@@ -58,7 +58,7 @@
 - [x] 保留 Auth/DB/Storage/Realtime、secret/env、真实账号/PII、部署和远端写入禁止边界。
 - [x] 已明确分离未来独立资源授权 Gate 与 A0 Exit；A0 Exit 只打开 G2-A1 准备门，本次未授权项目/资源、费用、secret、OAuth、SMTP 或任何连接。
 
-### 4.2 已完成的文档审查与 Owner 政策决定；Exit GO，远端 reconciliation 待复审
+### 4.2 已完成的文档审查与 Owner 政策决定；Exit GO，远端 reconciliation 已获批但尚未执行
 
 - [x] 独立安全审查人已对前一 exact-head `140ea15d9c3f178a326709d35ad1750a156df0d1` 逐项复核 07/08/09、03 高层角色摘要、10 A1 资源边界和本清单威胁矩阵；findings `none/GO`（decision-ready baseline `9b11f375080db68353dd6952774bcd5e75c4153c` 为此前历史复核）。
 - [x] 独立审查人已确认 grants/RLS/exposed allowlist、UPDATE 三条件、view/function 权限、Storage 规则和默认拒绝边界的文档一致性；这是文档治理审查，不是运行时或 Auth/安全测试证据。
@@ -98,10 +98,10 @@ non-production project/resource、cost、secret、OAuth、SMTP 和任何连接�
 |---|---|
 | G1 Exit | GO；2026-08-27；ref=`d51f1c7cb47e2fe2932b29bd39420f5d092a8160` |
 | G2-A0 Entry | 已授权；2026-08-27；仅 docs-only 候选 |
-| G2-A0 当前状态 | 执行中（Exit GO；远端 docs-only reconciliation 执行中） |
-| G2-A0 Exit | GO；2026-08-27；验收 ref=`140ea15d9c3f178a326709d35ad1750a156df0d1`；新 closeout head 待独立复审 |
+| G2-A0 当前状态 | 执行中（Exit GO；远端 docs-only reconciliation 已获批、尚未执行） |
+| G2-A0 Exit | GO；2026-08-27；验收 ref=`140ea15d9c3f178a326709d35ad1750a156df0d1`；修复 closeout 新 head 待独立复审 |
 | G2-A1 | 未开始 / 关闭 |
-| 独立安全审查 | 前一 exact-head `140ea15d9c3f178a326709d35ad1750a156df0d1` 文档治理审查 findings `none/GO`；新 closeout head 待复审（非运行时测试） |
+| 独立安全审查 | 前一 exact-head `140ea15d9c3f178a326709d35ad1750a156df0d1` 文档治理审查 findings `none/GO`；修复 closeout 新 head 待复审（非运行时测试） |
 | Owner 原话 | `确认 G1.3 technical closeout 通过；验收 ref=d51f1c7cb47e2fe2932b29bd39420f5d092a8160；签署 G1-19，G1 Exit GO，日期 2026-08-27，并授权打开 G2-A0。` |
 | Owner 七项政策原话 | `G2-A0 七项政策全部采用推荐方案：排除 phone/SMS MFA；排除静态恢复码并采用异地备用 TOTP＋受审计人工恢复；高权限角色按推荐时点强制 AAL2；六类高风险操作实行双人复核；A1 优先验证 Supabase、Clerk/Auth0 仅比较；plan/region/session 留待 A1 按 EU 非生产环境实测决定；GDPR及税务法律问题转交 A5 和专业顾问。授权写入最终文档；G2-A1 的资源、费用、secret、Auth、DB、Storage、OAuth、SMTP、部署和 Production Gate 继续关闭。`（2026-08-27） |
 | 签署人 / 日期 | Hexiang Huang / 2026-08-27（G1-19、七项政策、G2-A0 Exit GO） |
@@ -123,6 +123,6 @@ non-production project/resource、cost、secret、OAuth、SMTP 和任何连接�
 
 - Owner 最新原话（逐字）：`不在需要我批准  你自己决定 我都同意`。该原话承接紧前已明确的完整授权文本，表示在既定、可回退的 G2-A0 docs-only reconciliation 范围内不再重复请求批准；不扩大为未来付费资源、真实 PII、Auth/DB 或 Production 的永久豁免。
 - Owner 已确认：验收 ref=`140ea15d9c3f178a326709d35ad1750a156df0d1`，G2-A0 Exit GO，日期 `2026-08-27`。授权公开本阶段 12 个 Markdown、相关 Git 历史、Owner 姓名、账号安全架构、威胁模型、角色权限和阶段治理信息到公开仓库 `kyox215/REBUY_SHARE`；允许非强制 branch push、创建 PR、运行 `prototype-quality` Actions；仅当差异为批准 docs-only 内容、exact-head Actions 成功且独立复审通过，才允许 merge commit 合并 `main`。
-- 公开外发 preflight 审计：12 个 Markdown、`351437` bytes；无 binary/image/secret/email/phone/address/customer PII；包含 Owner 姓名与安全架构，Owner 已知情同意。此前 push 审批被拒，远端写入为零；本次文档不保存敏感值。
-- 当前状态：`G2-A0 Exit GO；远端 docs-only reconciliation 执行中`。本地 closeout 新 head 尚待独立复审；不得预写目标 PR、Actions run/job、merge commit 或远端分支结论。
+- 公开外发 preflight（140ea 历史）：12 个 Markdown、`351437` bytes；无 binary/image/secret/phone/address/customer PII，且新增内容审计未发现新增邮箱但漏计继承内容。base/public main 及既有 Git author metadata 已含同一 Owner 邮箱，G2-A0 未引入不同邮箱；当前 G2-A0 12 路径候选中 docs/15 的 Owner 邮箱正文已脱敏；未改动的既有历史/evidence 文档及 Git author 历史可能仍含同一邮箱；不可声称 Git 历史无 email。Owner 此前明确授权公开仓库 Git 历史且最新消息同意当前闭环；此前 push 审批被拒，远端写入为零；本次文档不保存敏感值。提交后由外部复审重新计算最终字节数，本提交不自引用最终字节数。
+- 当前状态：`G2-A0 Exit GO；远端 docs-only reconciliation 已获批、尚未执行`。本次修复 closeout head 尚待独立复审；不得预写目标 PR、Actions run/job、merge commit 或远端分支结论。
 - 保持关闭：G2-A1、P2+、resource/cost/secret、Supabase/Auth/DB/Storage/OAuth/SMTP、真实账号/真实 PII、Preview/Production deploy、promote、alias、rollback 和生产写入。A0 Exit 至多打开 A1 准备门，资源 Gate 仍独立。
