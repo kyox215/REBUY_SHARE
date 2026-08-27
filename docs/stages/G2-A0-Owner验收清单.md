@@ -102,7 +102,7 @@ non-production project/resource、cost、secret、OAuth、SMTP 和任何连接�
 | G2-A1 | 未开始 / 关闭 |
 | 独立安全审查 | 已完成 decision-ready baseline `9b11f375080db68353dd6952774bcd5e75c4153c` 文档治理审查；findings `none/GO`；新 exact-head 待复审（非运行时测试） |
 | Owner 原话 | `确认 G1.3 technical closeout 通过；验收 ref=d51f1c7cb47e2fe2932b29bd39420f5d092a8160；签署 G1-19，G1 Exit GO，日期 2026-08-27，并授权打开 G2-A0。` |
-| Owner 七项政策原话 | `G2-A0 七项政策全部采用推荐方案：排除 phone/SMS MFA；排除静态恢复码并采用异地备用 TOTP＋受审计人工恢复；高权限角色按推荐时点强制 AAL2；六类高风险操作实行双人复核；A1 优先验证 Supabase、Clerk/Auth0 仅比较；plan/region/session 留待 A1 按 EU 非生产环境实测决定；GDPR及税务法律问题转交 A5 和专业顾问。授权写入最终文档；G2-A1 的资源、费用、secret、Auth、DB、Storage、OAuth、SMTP、部署和 Production Gate 继续关闭。`（2026-08-27）` |
+| Owner 七项政策原话 | `G2-A0 七项政策全部采用推荐方案：排除 phone/SMS MFA；排除静态恢复码并采用异地备用 TOTP＋受审计人工恢复；高权限角色按推荐时点强制 AAL2；六类高风险操作实行双人复核；A1 优先验证 Supabase、Clerk/Auth0 仅比较；plan/region/session 留待 A1 按 EU 非生产环境实测决定；GDPR及税务法律问题转交 A5 和专业顾问。授权写入最终文档；G2-A1 的资源、费用、secret、Auth、DB、Storage、OAuth、SMTP、部署和 Production Gate 继续关闭。`（2026-08-27） |
 | 签署人 / 日期 | Hexiang Huang / 2026-08-27（G1-19、七项政策；G2-A0 Exit 尚未签署） |
 
 ## 7. 官方规划依据（2026-08-27 文档复核）

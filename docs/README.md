@@ -53,7 +53,7 @@
 
 ## 4. 当前下一步
 
-当前批准覆盖 GOV-1 治理体系和 G0/P1 本地视觉原型；Owner 最新原话 `分类目录IA通过，G0重新冻结，未覆盖项进入后续专项，恢复G1授权` 已将 G0/P1 更新为“已通过并冻结”。G1 已于 2026-08-27 完成 G1-19/G1 Exit=GO，验收 ref=`d51f1c7cb47e2fe2932b29bd39420f5d092a8160`；main merge 与 exact-head Actions 证据见[G1 final closeout](./evidence/G1/2026-08-27-g1-final-closeout/README.md)。G2-A0 当前为“执行中”，仅执行 docs-only 安全合同、威胁模型一致性、Owner 决策矩阵和阶段 Gate；七项政策已采纳，decision-ready baseline 文档治理审查已完成（findings `none/GO`，不等于运行时测试），新的 exact-head 复审与 A0 Exit 签署尚未完成，G2-A1 和 P2 仍未打开。执行顺序是：
+历史批准（2026-08-25）：Owner 当时作出分类目录 IA 决定，原话为 `分类目录IA通过，G0重新冻结，未覆盖项进入后续专项，恢复G1授权`，并据此将 G0/P1 更新为“已通过并冻结”。当前状态为：G1 已于 2026-08-27 完成 G1-19/G1 Exit=GO，验收 ref=`d51f1c7cb47e2fe2932b29bd39420f5d092a8160`；main merge 与 exact-head Actions 证据见[G1 final closeout](./evidence/G1/2026-08-27-g1-final-closeout/README.md)。G2-A0 当前为“执行中”，仅执行 docs-only 安全合同、威胁模型一致性、Owner 决策矩阵和阶段 Gate；七项政策已采纳，decision-ready baseline 文档治理审查已完成（findings `none/GO`，不等于运行时测试），新的 exact-head 复审与 A0 Exit 签署尚未完成，G2-A1 和 P2 仍未打开。执行顺序是：
 
 1. 按 [15 台账](./15-项目状态与阶段台账.md)和 [G0 阶段记录](./stages/G0-P1-视觉验收与UI冻结.md)保留 G0 冻结基线；未覆盖的键盘/无障碍事项进入后续专项。
 2. G1 已关闭并保留其 merge、Actions、Preview/Production 不变量及回退证据；后续文档不得把 G1 历史证据扩大为 Auth、DB 或生产能力。
