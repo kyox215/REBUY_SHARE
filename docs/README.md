@@ -19,17 +19,17 @@
 | 02 | [客户端 V1 页面线框图](./02-客户端V1页面线框图.md) | Owner 已批准低保真基线（2026-08-25；视觉原型历史入口） | 定义买家页面、购买流程、线框、边界状态、可用性任务和通过标准 | 设计基线约束 P1 本地视觉原型；视觉原型确认后才进入真实产品/后端实现；本文件不等同于生产实现 | 作为页面基线；当前 Gate 以[15 台账](./15-项目状态与阶段台账.md)为准 |
 | 03 | [平台角色与业务模块](./03-平台角色与业务模块.md) | 规划执行稿；G2-A0 高层角色摘要 | 定义平台、商家和客户端的高层职责、模块树、业务状态和客户资料边界 | 07/09 是账号安全与权限权威；Owner 审批角色、权限和状态变更；高风险权限后续需专项审查 | 进入 P2/P3/P4/P6 前作为模块映射合同 |
 | 04 | [技术架构与核心数据模型](./04-技术架构与核心数据模型.md) | 技术规划稿，未连接环境 | 定义模块化单体、边界、数据实体、RLS、审计、幂等、存储和环境隔离 | Owner 审批架构方向；数据库、隐私、生产写入需专项审查 | 仅作为后续实现设计输入，不执行数据库连接 |
-| 05 | [V1 实施路线与验证计划](./05-V1实施路线与验证计划.md) | 里程碑与验证合同 | 将工作拆成 P0–P8，并纳入 G1 工程底座、G2-A0/G2-A1 账号门，规定依赖、风险、最小验证、Owner Gate 和回退 | Owner 在每个里程碑门口决定继续、修订或暂停 | G0/P1 已通过并冻结；G1 已完成且 Exit=GO；G2-A0 Exit GO，远端 docs-only reconciliation 已获批、尚未执行，前一 exact-head 文档治理审查 findings=none/GO，本次修复 closeout head 待独立复审；G2-A1 尚未开始 |
+| 05 | [V1 实施路线与验证计划](./05-V1实施路线与验证计划.md) | 里程碑与验证合同 | 将工作拆成 P0–P8，并纳入 G1 工程底座、G2-A0/G2-A1 账号门，规定依赖、风险、最小验证、Owner Gate 和回退 | Owner 在每个里程碑门口决定继续、修订或暂停 | G0/P1 已通过并冻结；G1 已完成且 Exit=GO；G2-A0 Exit GO，远端 docs-only reconciliation 已完成；G2-A1 技术阶段未开始，无资源 Entry preparation 已完成/待审，resource/cost/secret Gate 关闭 |
 | 06 | [本地视觉原型执行合同](./06-本地视觉原型执行合同.md) | P1 原型已创建；分类目录 IA 已通过并冻结 | 限定本地无后端视觉原型的页面、数据、交互、资产、预览和验收 | Owner 已批准 P1 范围；本地证据不等于 Owner 或生产通过 | [G0 阶段记录](./stages/G0-P1-视觉验收与UI冻结.md)与[分类目录 IA 证据](./evidence/G0-P1/2026-08-25-category-directory-ia/README.md)记录本批复验；[G1.1 本地基线](./evidence/G1/2026-08-25-g1-1-local-baseline/README.md)记录 Git 基线及 Node22 可复现验证 |
-| 07 | [完整账号系统规划](./07-完整账号系统规划.md) | G2-A0 账号安全合同输入；G2-A0 Exit GO，远端 docs-only reconciliation 已获批、尚未执行；七项 Owner 政策已采纳 | 定义 identity、组织/店铺 membership、角色权限、商家/批发申请与资格、状态机、安全、隐私、页面、API 和 A0–A6 门禁 | 作为 G2-A0 权威输入；已同步采纳政策与 A1 资源边界；生产实现需另行审查，不等同于运行时证明 | 等本次修复 closeout head 独立复审及远端条件完成；继续保持 A1/资源 Gate 关闭 |
-| 08 | [账号系统思维导图](./08-账号系统思维导图.md) | G2-A0 账号安全合同输入；G2-A0 Exit GO，远端 docs-only reconciliation 已获批、尚未执行；七项 Owner 政策已采纳 | 以独立 Mermaid 思维导图、流程图和状态图呈现账号角色、邮箱邀请、批发申请/资格拆分、数据、安全、隐私和阶段 | 与 07/09 保持一致；已同步采纳政策状态；图示不等同于实现或生产验收 | 等本次修复 closeout head 独立复审及远端条件完成；继续保持 A1/资源 Gate 关闭 |
-| 09 | [A0 账号架构 ADR 与威胁模型](./09-A0-账号架构ADR与威胁模型.md) | G2-A0 Exit GO；远端 docs-only reconciliation 已获批、尚未执行；本次修复 closeout head 待独立复审 | 固化 A0-01～A0-15、日期化 Entry 补充、数据流、资产、信任边界、STRIDE/滥用场景、风险登记、G2-A0 验收和 Owner Gate | A0 Exit 只打开 G2-A1 准备门；文档和本地原型不是安全证明；A1 资源/费用/secret 需独立授权 | 当前仅维护已获批 docs-only reconciliation，不启动 Auth |
-| 10 | [A1 Auth spike 执行合同](./10-A1-Auth-Spike执行合同.md) | G2-A1 未开始；G2-A0 Exit GO，远端 docs-only reconciliation 已获批、尚未执行 | 定义 local/preview-staging Auth spike 的三入口、callback、linking、邀请邮箱验证、TOTP、会话、测试矩阵、停止条件和证据清单 | G2-A0 Exit 只打开 A1 准备；provider/plan/region/费用/OAuth/SMTP/secret/连接需新的 non-production 授权；绝不连接 production/真实 PII | 当前仅可准备文档、接口草图、测试用例和合成 fixture；不改变已冻结 G0/P1 UI |
+| 07 | [完整账号系统规划](./07-完整账号系统规划.md) | G2-A0 账号安全合同输入；G2-A0 Exit GO，远端 docs-only reconciliation 已完成；七项 Owner 政策已采纳 | 定义 identity、组织/店铺 membership、角色权限、商家/批发申请与资格、状态机、安全、隐私、页面、API 和 A0–A6 门禁 | 作为 G2-A0 权威输入；已同步采纳政策与 A1 资源边界；生产实现需另行审查，不等同于运行时证明 | 等 G2-A1 无资源 Entry preparation 审阅及新的 resource Gate 决定；继续保持 A1/资源 Gate 关闭 |
+| 08 | [账号系统思维导图](./08-账号系统思维导图.md) | G2-A0 账号安全合同输入；G2-A0 Exit GO，远端 docs-only reconciliation 已完成；七项 Owner 政策已采纳 | 以独立 Mermaid 思维导图、流程图和状态图呈现账号角色、邮箱邀请、批发申请/资格拆分、数据、安全、隐私和阶段 | 与 07/09 保持一致；已同步采纳政策状态；图示不等同于实现或生产验收 | 等 G2-A1 无资源 Entry preparation 审阅及新的 resource Gate 决定；继续保持 A1/资源 Gate 关闭 |
+| 09 | [A0 账号架构 ADR 与威胁模型](./09-A0-账号架构ADR与威胁模型.md) | G2-A0 Exit GO；远端 docs-only reconciliation 已完成 | 固化 A0-01～A0-15、日期化 Entry 补充、数据流、资产、信任边界、STRIDE/滥用场景、风险登记、G2-A0 验收和 Owner Gate | A0 Exit 只打开 G2-A1 准备门；文档和本地原型不是安全证明；A1 资源/费用/secret 需独立授权 | 当前维护 G2-A1 无资源 Entry preparation；不启动 Auth |
+| 10 | [A1 Auth spike 执行合同](./10-A1-Auth-Spike执行合同.md) | G2-A1 技术阶段未开始；无资源 Entry preparation 已完成/待审；G2-A0 Exit GO，远端 docs-only reconciliation 已完成 | 定义 local/preview-staging Auth spike 的三入口、callback、linking、邀请邮箱验证、TOTP、会话、测试矩阵、停止条件和证据清单 | G2-A0 Exit 只打开 A1 准备；provider/plan/region/费用/OAuth/SMTP/secret/连接需新的 non-production 授权；绝不连接 production/真实 PII | 当前仅可维护[G2-A1 准备与资源门禁](./stages/G2-A1-Auth-Spike准备与资源门禁.md)、接口草图、测试用例和合成 fixture 字段；不改变已冻结 G0/P1 UI |
 | 11 | [发布与 Supabase 连接记录](./11-发布与Supabase连接记录.md) | 本地连接骨架与依赖检查已有证据；Auth spike 未实施 | 记录独立测试连接骨架、依赖检查、健康探针和停止条件 | 不创建 Supabase 项目、不配置 Vercel env、不启用真实登录/OAuth/SMTP、不触碰 production/真实 PII；骨架不等于 Auth、Staging 或生产 | 作为 G2-A1 输入，保持独立测试边界 |
 | 12 | [Rebuy 统一 UI 设计系统](./12-Rebuy统一UI设计系统.md) | Owner 已批准统一 UI 设计文档并选定配色 D，配色已同步至本地 P1 视觉原型（2026-08-25） | 固化循环翡翠青品牌 token、浅深色、两套 Shell、组件规则、动效、三语和无障碍边界 | 仅是设计合同；不授权代码、后台、数据库或生产实现 | 作为买家端原型调整和未来商家后台设计映射的共享视觉基线 |
 | 13 | [买家端与商家后台页面及组件映射](./13-买家端与商家后台页面及组件映射.md) | Owner 已批准统一 UI 设计文档与配色 D；设计映射基线 | 映射买家页面、未来后台页面、PC/APP 响应关系、Prototype 组件复用、状态和验收矩阵 | 商家后台仍是未来设计映射，不是当前代码/后端授权；实现需单独 Owner Gate | 作为买家/后台映射基线；当前 Gate 以[15 台账](./15-项目状态与阶段台账.md)为准，P6 前另行进行权限/安全/后台审查 |
-| 14 | [全局执行总计划](./14-全局执行总计划.md) | 稳定权威路线 | 固化 GOV-1、G0、G1 工程底座、G2-A0/G2-A1、P2–P8 依赖链、产物、验证、Owner Gate 和回退 | 任何路线变化需 Owner 决策并追加记录 | 以 15 为唯一当前状态源，不在此维护每日状态；当前 G2-A0 Exit GO、docs-only reconciliation 已获批、尚未执行 |
-| 15 | [项目状态与阶段台账](./15-项目状态与阶段台账.md) | 唯一当前状态源（2026-08-27） | 记录阶段、状态、证据级别、依赖、Owner 决策、记录链接和下一动作 | 状态枚举与证据枚举固定；待验收不得写成已通过 | GOV-1 已通过；G0/P1 已通过并冻结；G1 已完成且 G1 Exit=GO；G2-A0 Exit GO、远端 docs-only reconciliation 已获批、尚未执行（验收 ref=`140ea15d…`，本次修复 closeout head 待独立复审）；G2-A1 未开始；以本台账为唯一当前状态 |
+| 14 | [全局执行总计划](./14-全局执行总计划.md) | 稳定权威路线 | 固化 GOV-1、G0、G1 工程底座、G2-A0/G2-A1、P2–P8 依赖链、产物、验证、Owner Gate 和回退 | 任何路线变化需 Owner 决策并追加记录 | 以 15 为唯一当前状态源，不在此维护每日状态；当前 G2-A0 Exit GO、docs-only reconciliation 已完成；G2-A1 技术阶段未开始，无资源 Entry preparation 已完成/待审，resource/cost/secret Gate 关闭 |
+| 15 | [项目状态与阶段台账](./15-项目状态与阶段台账.md) | 唯一当前状态源（2026-08-28） | 记录阶段、状态、证据级别、依赖、Owner 决策、记录链接和下一动作 | 状态枚举与证据枚举固定；待验收不得写成已通过 | GOV-1 已通过；G0/P1 已通过并冻结；G1 已完成且 G1 Exit=GO；G2-A0 Exit GO、远端 docs-only reconciliation 已完成；G2-A1 技术阶段未开始，无资源 Entry preparation 已完成/待审，resource/cost/secret Gate 关闭；以本台账为唯一当前状态 |
 
 ### 治理资料
 
@@ -40,9 +40,13 @@
 | [G1 Owner 验收清单](./stages/G1-Owner验收清单.md) | G1 Exit requirement-to-evidence 矩阵、NO-GO 缺口和 Owner Gate 执行顺序 |
 | [G1.2b main merge closeout](./evidence/G1/2026-08-27-g1-2b-main-merge/README.md) | PR #1 merge commit、main push Actions、双历史保留、分支与回退/维护边界 |
 | [G1.2b 远端 PR/CI 证据](./evidence/G1/2026-08-27-g1-2b-remote-ci/README.md) | canonical repo、PR #1、Actions run/job、远端只读设置、历史/敏感审计和边界记录 |
-| [G2-A0 Owner 验收清单](./stages/G2-A0-Owner验收清单.md) | G1 Exit 通过后的 A0 安全审查入口；G2-A0 Exit GO，远端 docs-only reconciliation 已获批、尚未执行，修复 closeout head 待独立复审 |
+| [G2-A0 Owner 验收清单](./stages/G2-A0-Owner验收清单.md) | G1 Exit 通过后的 A0 安全审查入口；G2-A0 Exit GO，远端 docs-only reconciliation 已完成；后续资源 Gate 仍关闭 |
 | [G2-A0 阶段记录](./stages/G2-A0-账号安全合同与威胁模型验收.md) | 记录本批 docs-only 执行、威胁矩阵、Owner 政策决定、验证、风险、回退、Exit GO 和远端 reconciliation 前置条件 |
 | [G2-A0 Entry preflight 证据](./evidence/G2-A0/2026-08-26-entry-preflight/README.md) | 只读官方依据与安全控制补充；不代表 provider/project 已连接 |
+| [G2-A1 准备与资源门禁](./stages/G2-A1-Auth-Spike准备与资源门禁.md) | G2-A1 无资源 Entry preparation；四批 Auth spike 合同、资源责任、停止/回退、官方来源刷新；resource/cost/secret Gate 关闭 |
+| [G2-A1 Entry preparation 证据](./evidence/G2-A1/2026-08-28-entry-preparation/README.md) | 记录 G2-A0 远端闭环、Vercel/Production 不变量、公开 Supabase 摘要、静态验证与本批边界 |
+| [G2-A1 资源成本与密钥 Gate 模板](./templates/G2-A1-资源成本与密钥Gate模板.md) | provider/project/plan/region/environment、exact cost、税费、Spend Cap、密钥责任、回退和清理字段 |
+| [G2-A1 Auth 实测矩阵模板](./templates/G2-A1-Auth实测矩阵模板.md) | Apple/Google/email OTP/Magic Link、callback、linking、MFA/TOTP、session、恢复、限流、SSR 和 secret scan 字段 |
 
 ## 3. 当前权威关系
 
@@ -53,11 +57,13 @@
 
 ## 4. 当前下一步
 
-历史批准（2026-08-25）：Owner 当时作出分类目录 IA 决定，原话为 `分类目录IA通过，G0重新冻结，未覆盖项进入后续专项，恢复G1授权`，并据此将 G0/P1 更新为“已通过并冻结”。当前状态为：G1 已于 2026-08-27 完成 G1-19/G1 Exit=GO，验收 ref=`d51f1c7cb47e2fe2932b29bd39420f5d092a8160`；main merge 与 exact-head Actions 证据见[G1 final closeout](./evidence/G1/2026-08-27-g1-final-closeout/README.md)。G2-A0 当前为 `Exit GO；远端 docs-only reconciliation 已获批、尚未执行`，验收 ref=`140ea15d9c3f178a326709d35ad1750a156df0d1`；前一 exact-head 文档治理审查 findings `none/GO`（不等于运行时测试），本次修复 closeout head 待独立复审；G2-A1 和 P2 仍未打开。执行顺序是：
+**2026-08-28 当前纠正：** G2-A0 Exit GO 的远端 docs-only reconciliation 已完成（merge=`fd9b712c7b07bf34399f9838eebb75846425c1d1`）。当前 G2-A1 技术阶段未开始；无资源 Entry preparation 已完成/待审；resource/cost/secret Gate 关闭。下一步是审阅[G2-A1 准备与资源门禁](./stages/G2-A1-Auth-Spike准备与资源门禁.md)、[Entry preparation 证据](./evidence/G2-A1/2026-08-28-entry-preparation/README.md)及两份模板，再决定是否另行打开资源 Gate。
+
+历史批准（2026-08-25）：Owner 当时作出分类目录 IA 决定，原话为 `分类目录IA通过，G0重新冻结，未覆盖项进入后续专项，恢复G1授权`，并据此将 G0/P1 更新为“已通过并冻结”。当前状态为：G1 已于 2026-08-27 完成 G1-19/G1 Exit=GO，验收 ref=`d51f1c7cb47e2fe2932b29bd39420f5d092a8160`；main merge 与 exact-head Actions 证据见[G1 final closeout](./evidence/G1/2026-08-27-g1-final-closeout/README.md)。G2-A0 当前为 `Exit GO；远端 docs-only reconciliation 已完成`，验收 ref=`140ea15d9c3f178a326709d35ad1750a156df0d1`，merge=`fd9b712c7b07bf34399f9838eebb75846425c1d1`；G2-A1 技术阶段未开始，无资源 Entry preparation 已完成/待审，resource/cost/secret Gate 关闭。执行顺序是：
 
 1. 按 [15 台账](./15-项目状态与阶段台账.md)和 [G0 阶段记录](./stages/G0-P1-视觉验收与UI冻结.md)保留 G0 冻结基线；未覆盖的键盘/无障碍事项进入后续专项。
 2. G1 已关闭并保留其 merge、Actions、Preview/Production 不变量及回退证据；后续文档不得把 G1 历史证据扩大为 Auth、DB 或生产能力。
-3. 完成[G2-A0 阶段记录](./stages/G2-A0-账号安全合同与威胁模型验收.md)中的 docs-only closeout、独立安全审查和远端 reconciliation；A0 Exit 已 GO但仅打开 G2-A1 准备门，A1 资源/费用/secret/连接仍需新授权。
+3. [G2-A0 阶段记录](./stages/G2-A0-账号安全合同与威胁模型验收.md)中的 docs-only closeout、独立安全审查和远端 reconciliation 已完成；A0 Exit 仅打开 G2-A1 准备门，A1 资源/费用/secret/连接仍需新授权。
 
 ## 5. 证据边界
 
@@ -68,12 +74,16 @@
 
 ## 6. 本轮明确不做
 
-此前文档整理批次不创建产品代码、网站脚手架、数据库、Storage bucket、部署、支付账户、外部 API 连接、真实业务写入或真实数据迁移。G1 的本地/远端证据和 exact-head Actions 已按阶段记录归档；当前 G2-A0 仅允许批准范围内的 docs-only closeout、威胁模型、Owner Gate 和导航同步。本地本批不修改 prototype 源码、package/lockfile、workflow 或环境配置；不连接 Supabase/Auth/DB/Storage/Realtime，不读取 secret/env/PII。后续远端 branch push/PR/Actions/条件式 merge commit 仍必须满足新 head 独立复审与 exact-head 条件；不部署、不 promote、不修改 Production。普通文档修改不做 hash；A0/A1 合同、G1 工程底座和后续高风险门槛见 [V1 实施路线与验证计划](./05-V1实施路线与验证计划.md)。
+此前文档整理批次不创建产品代码、网站脚手架、数据库、Storage bucket、部署、支付账户、外部 API 连接、真实业务写入或真实数据迁移。G1 的本地/远端证据和 exact-head Actions 已按阶段记录归档；G2-A0 已完成批准范围内的 docs-only closeout、威胁模型、Owner Gate 和远端 reconciliation。本轮 G2-A1 仅完成无资源 Entry preparation，不修改 prototype 源码、package/lockfile、workflow 或环境配置；不连接 Supabase/Auth/DB/Storage/Realtime，不读取 secret/env/PII。resource/cost/secret、Auth、Storage、SMTP、部署和 Production 仍关闭；普通文档修改不做 hash；A0/A1 合同、G1 工程底座和后续高风险门槛见 [V1 实施路线与验证计划](./05-V1实施路线与验证计划.md)。
 
 ## 7. 当前发布状态
 
-A1 独立测试连接骨架与依赖检查已在本地工作区有验证记录，Supabase 依赖的本地 typecheck、lint、build 与无 env health 503 证据仅属于本地静态边界；尚未实施 G2-A1 Auth spike，本工作范围内未创建/未连接远端 Auth/Staging 环境或 Supabase 项目，外部实际存在性 unknown；未启用真实登录/OAuth/SMTP，也没有本工作范围内的生产或真实 PII 边界变更。G2-A0 Exit 已 GO，当前只进行批准范围内的 docs-only reconciliation；新 closeout head 的独立复审和 exact-head Actions 仍是远端步骤前置条件。
+A1 独立测试连接骨架与依赖检查已在本地工作区有验证记录，Supabase 依赖的本地 typecheck、lint、build 与无 env health 503 证据仅属于本地静态边界；G2-A1 Auth spike 尚未实施，本工作范围内未创建/未连接远端 Auth/Staging 环境或 Supabase 项目，外部实际存在性 unknown；未启用真实登录/OAuth/SMTP，也没有本工作范围内的生产或真实 PII 边界变更。G2-A0 Exit 已 GO 且远端 docs-only reconciliation 已完成；当前进行 G2-A1 无资源 Entry preparation，resource/cost/secret Gate 保持关闭。
 
-## 8. 2026-08-27 G2-A0 Exit closeout 当前状态
+## 7.1 2026-08-28 当前纠正与 G2-A1 无资源 Entry preparation
 
-当前状态为 `G2-A0 Exit GO；远端 docs-only reconciliation 已获批，尚未执行`。公开外发范围限于原 12 个 Markdown 路径、相关 Git 历史、Owner 姓名、账号安全架构、威胁模型、角色权限和阶段治理信息；远端 preflight 为 `main=7ea1e45ad22ab29105910665baf4bbd7212241c5`、目标 branch/PR 无。140ea 历史 preflight 审计为 `351437` bytes，无 binary/image/secret/phone/address/customer PII；新增内容审计未发现新增邮箱但漏计继承内容，base/public main 及既有 Git author metadata 已含同一 Owner 邮箱，G2-A0 未引入不同邮箱。当前 G2-A0 12 路径候选中 docs/15 的 Owner 邮箱正文已脱敏；未改动的既有历史/evidence 文档及 Git author 历史可能仍含同一邮箱；不可声称 Git 历史无 email。Owner 此前明确授权公开仓库 Git 历史且最新消息同意当前闭环。该历史审计不包含当前修复 closeout 最终字节数；提交后由外部复审重新计算最终字节数，本提交不自引用最终字节数。前一 exact-head `140ea15d9c3f178a326709d35ad1750a156df0d1` 文档治理复审 findings=`none/GO`，本次修复 closeout head 待独立复审；G2-A1/P2+ 和 resource/cost/secret/Auth/DB/Storage/OAuth/SMTP/真实 PII/部署/Production Gate 继续关闭。
+G2-A0 远端 docs-only reconciliation 已完成：PR #7 merge=`fd9b712c7b07bf34399f9838eebb75846425c1d1`，main Actions run=`33122238997` / job=`98691703085` 全绿，merge SHA 的 GitHub deployments=`0`，来源分支保留。G2-A1 技术阶段未开始；无资源 Entry preparation 已完成/待审；resource/cost/secret Gate 关闭。当前仅允许文档、模板、接口草图、测试矩阵和 `.invalid` 合成字段，禁止资源创建、Auth/DB/Storage/OAuth/SMTP、secret/env/PII、部署或 Production。详见[G2-A1 准备与资源门禁](./stages/G2-A1-Auth-Spike准备与资源门禁.md)与[Entry preparation 证据](./evidence/G2-A1/2026-08-28-entry-preparation/README.md)。
+
+## 8. 2026-08-27 G2-A0 Exit closeout 历史快照
+
+在该日期的历史快照中，状态为 `G2-A0 Exit GO；远端 docs-only reconciliation 已获批，尚未执行`。公开外发范围限于原 12 个 Markdown 路径、相关 Git 历史、Owner 姓名、账号安全架构、威胁模型、角色权限和阶段治理信息；远端 preflight 为 `main=7ea1e45ad22ab29105910665baf4bbd7212241c5`、目标 branch/PR 无。140ea 历史 preflight 审计为 `351437` bytes，无 binary/image/secret/phone/address/customer PII；新增内容审计未发现新增邮箱但漏计继承内容，base/public main 及既有 Git author metadata 已含同一 Owner 邮箱，G2-A0 未引入不同邮箱。该段仅保留当时事实，不代表当前状态；当前事实见上方 2026-08-28 纠正。

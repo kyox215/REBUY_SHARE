@@ -1,10 +1,10 @@
 # A1 Auth Spike 执行合同
 
-文档状态：G2-A1 未开始；G2-A0 Exit GO，远端 docs-only reconciliation 已获批、尚未执行（本次修复 closeout head 待独立复审）；七项 Owner 政策已采纳；即使 Exit GO，也须另行完成独立资源/成本/secret 授权后，才可连接独立测试环境
+文档状态：**G2-A1 技术阶段未开始；无资源 Entry preparation 已完成/待审；resource/cost/secret Gate 关闭**；G2-A0 Exit GO，远端 docs-only reconciliation 已完成；七项 Owner 政策已采纳；即使 Exit GO，也须另行完成独立资源/成本/secret 授权后，才可连接独立测试环境
 适用范围：验证 Rebuy 三入口认证、OAuth callback、identity linking、邀请邮箱控制权、MFA、会话和最小服务端集成边界  
-当前允许：在 G2-A0 Exit 和独立资源授权完成前，仅可准备文档、接口草图、测试用例和合成 fixture；不得以此改变已冻结的 G0/P1 UI。
+当前允许：在独立 resource/cost/secret Gate 完成前，仅可准备文档、接口草图、测试用例和合成 fixture 字段；不得以此改变已冻结的 G0/P1 UI。
 当前不允许：不得把 A1 标记为“技术验证通过”，不得初始化或连接 Supabase/OAuth/SMTP，不得连接 production、真实业务数据、真实客户邮箱或真实证件；本 A1 合同不授予资源、费用或 secret。
-关联文档：[完整账号系统规划](./07-完整账号系统规划.md)、[账号系统思维导图](./08-账号系统思维导图.md)、[A0 账号架构 ADR 与威胁模型](./09-A0-账号架构ADR与威胁模型.md)。
+关联文档：[完整账号系统规划](./07-完整账号系统规划.md)、[账号系统思维导图](./08-账号系统思维导图.md)、[A0 账号架构 ADR 与威胁模型](./09-A0-账号架构ADR与威胁模型.md)、[G2-A1 准备与资源门禁](./stages/G2-A1-Auth-Spike准备与资源门禁.md)、[资源成本与密钥 Gate 模板](./templates/G2-A1-资源成本与密钥Gate模板.md)、[Auth 实测矩阵模板](./templates/G2-A1-Auth实测矩阵模板.md)。
 
 ## 1. 合同目的与入口条件
 
@@ -22,7 +22,7 @@ A1 的执行入口条件：
 
 ### 1.1 A0 Exit 与 A1 资源授权分离
 
-G2-A0 Exit 只表示账号安全合同、威胁模型、Owner 已采纳的七项政策和独立文档治理审查完成，并且至多打开 G2-A1 的准备门；它不创建或连接任何 provider/project，也不批准费用、计划、区域、OAuth、SMTP、Storage、secret 或真实账号。G2-A1 只有在新的 non-production resource/cost/secret Gate 明确通过后，才能从“未开始”进入“准备中/待资源授权”。当前 A0 Exit 已 GO（验收 ref=`140ea15d9c3f178a326709d35ad1750a156df0d1`），本次 closeout 新 head 待独立复审，远端 reconciliation 尚未执行。
+G2-A0 Exit 只表示账号安全合同、威胁模型、Owner 已采纳的七项政策和独立文档治理审查完成，并且至多打开 G2-A1 的准备门；它不创建或连接任何 provider/project，也不批准费用、计划、区域、OAuth、SMTP、Storage、secret 或真实账号。G2-A1 只有在新的 non-production resource/cost/secret Gate 明确通过后，才能从“准备中/待资源授权”进入技术执行。当前 A0 Exit 已 GO（验收 ref=`140ea15d9c3f178a326709d35ad1750a156df0d1`），远端 reconciliation 已以 PR #7 merge commit=`fd9b712c7b07bf34399f9838eebb75846425c1d1` 完成；无资源 Entry preparation 证据见[G2-A1 Entry preparation](./evidence/G2-A1/2026-08-28-entry-preparation/README.md)。
 
 | A1 provider 候选 | 本阶段定位 | A0 约束 |
 |---|---|---|
@@ -327,8 +327,15 @@ A0 通过前可以继续制作无后端 UI 原型：
 
 这些来源需要在 A1 执行时按当前版本、区域和实际配置重新复核；链接本身不是测试通过证据。
 
-## 20. 2026-08-27 G2-A0 Exit closeout 当前状态
+## 20. 2026-08-27 G2-A0 Exit closeout 历史状态
 
-- G2-A0 Exit 已由 Owner 以验收 ref=`140ea15d9c3f178a326709d35ad1750a156df0d1` 于 2026-08-27 明确 GO；当前为 `Exit GO；远端 docs-only reconciliation 已获批、尚未执行`。前一 exact-head 独立文档治理审查 findings=`none/GO`，不等于 Auth/MFA/DB/Storage 或运行时测试；本次修复 closeout head 待独立复审。
+- G2-A0 Exit 已由 Owner 以验收 ref=`140ea15d9c3f178a326709d35ad1750a156df0d1` 于 2026-08-27 明确 GO；**在该日的历史快照中**为 `Exit GO；远端 docs-only reconciliation 已获批、尚未执行`。前一 exact-head 独立文档治理审查 findings=`none/GO`，不等于 Auth/MFA/DB/Storage 或运行时测试；该历史快照不代表当前状态。
 - 该状态承接紧前完整授权：允许公开本阶段 12 个 Markdown、相关 Git 历史、Owner 姓名、账号安全架构、威胁模型、角色权限和阶段治理信息到 `kyox215/REBUY_SHARE`，并在 docs-only、exact-head Actions 成功、独立复审通过后按非强制 branch push/PR/merge commit 边界执行；A1 的资源、费用、secret、Auth、DB、Storage、OAuth、SMTP、部署和 Production Gate 继续关闭。
 - G2-A1 仍为“未开始”。A0 Exit 只开放准备门；provider、plan、region、session、真实账号、真实 PII 和任何外部连接仍待独立资源授权与后续阶段证据，不得由本合同自动开始。
+
+## 21. 2026-08-28 G2-A1 无资源 Entry preparation 当前状态
+
+- G2-A0 远端 reconciliation 已完成：PR #7 merge=`fd9b712c7b07bf34399f9838eebb75846425c1d1`，parents=`7ea1e45ad22ab29105910665baf4bbd7212241c5` + `1433e7c7c141df0f5498fff7cd645a8d5c92340c`；main Actions run=`33122238997` / job=`98691703085` 的 install/typecheck/lint/build 全部 success，merge SHA 的 GitHub deployments=`0`，来源分支保留。完整摘要见[G2-A1 Entry preparation 证据](./evidence/G2-A1/2026-08-28-entry-preparation/README.md)。
+- 当前正式状态为：**G2-A1 技术阶段未开始；无资源 Entry preparation 已完成/待审；resource/cost/secret Gate 关闭**。本批只允许文档、接口草图、测试矩阵和 `.invalid` 合成字段；不创建/连接 Supabase/Auth/DB/Storage/OAuth/SMTP，不读取 secret/env/PII，不部署或修改 Production。
+- A1 资源 Gate 字段与 Auth 矩阵分别见[资源成本与密钥 Gate 模板](./templates/G2-A1-资源成本与密钥Gate模板.md)和[Auth 实测矩阵模板](./templates/G2-A1-Auth实测矩阵模板.md)。只有 Owner 另行确认 provider/project/plan/region/environment、exact cost、recurrence、tax、Spend Cap、key owner 和 stop contact 后，才可打开技术阶段。
+- 2026-08-28 官方来源刷新、EU `eu-central-1` proposal、Node 20→22、OAuth 2xx、Data API grants/RLS 分离、Free SMTP 限制、Pro session 约束与 region/GDPR 边界见[G2-A1 准备与资源门禁](./stages/G2-A1-Auth-Spike准备与资源门禁.md)；这些是规划依据，不是实现证据。
