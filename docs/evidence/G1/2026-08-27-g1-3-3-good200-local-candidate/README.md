@@ -85,4 +85,11 @@ lineage：`origin/main@af6d7419956ce6640c0b4af5df4db0369e793f77` 为 base 祖先
 - final Preview 默认不重复：本次为 docs-only closeout，code/config/lock 未变化；Preview 上限为非强制上限，不新增 final deployment。
 - closeout lineage：本次 closeout 后继 SHA/run 不预写、不递归回写；任何 merge 前必须实时确认 PR 当前 head 及其新 Actions 的 install/typecheck/lint/build 全部成功，否则 STOP。
 
+### 8. 2026-08-27｜bad503 Draft PR closeout 与当前门禁
+
+- PR#4 closeout 已完成：状态为 `CLOSED`，仍为 `Draft`；head=`059c936c5ecdf4152141ed685fa64151b22e3326`，merge commit=`null`，comments=`0`；远端 bad 分支保留该 head。本条只关闭 bad 独立 Draft PR，不 Ready、不 merge、不删除分支。
+- provider closeout 不变量保持：deployment inventory（只读）仅包含 bad Preview `dpl_J9E3WThCmtqxAndfjQDKAW1G49EU`、good Preview `dpl_D2oNMJhvQsvbbyszgApm24aGLYnZ` 与旧 Production `dpl_DZSmbtizfp3z7x2X4itwdwyLGxrH`，共 `3` 项；三者均为各自目标的 `READY`，Production alias count=`2`，normalized mapping SHA-256=`c06eeb6c408c562d7d6906cf1ccd71776beea381afae47e94547c696133f79aa`；good Preview Protection=`all_except_custom_domains`、Preview env=`0`；不记录 alias 字符串、URL、token、cookie 或环境值。
+- PR#5 代码候选快照当时以 head=`b02715be` 保持 `OPEN`、非 Draft、`mergeable`；该 exact-head Actions run=`33084137265` / job=`98559030766` 的 install/typecheck/lint/build 已成功；`main=af6d7419956ce6640c0b4af5df4db0369e793f77` 未改变。该事实仅作为当时快照，不预写 docs-only closeout 后继 head/run。
+- 当前 Gate：close-bad 门已完成；当前仅待 docs-only closeout 后新 current-head Actions、independent merge review、Owner G1-19 与明确的 main merge 授权。不得预写 merge；本 closeout 后继 SHA/run 不预写、不递归回写。
+
 关联记录：[G1.3-2 Preview execution review](../2026-08-27-g1-3-2-preview-execution-review/README.md)、[G1 Owner 验收清单](../../../stages/G1-Owner验收清单.md)、[G1 阶段合同](../../../stages/G1-工程底座与环境隔离.md)、[15 项目状态与阶段台账](../../../15-项目状态与阶段台账.md)。

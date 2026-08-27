@@ -141,3 +141,10 @@ Owner 已明确采纳上述边界并完成一次受限流程；随后另行授�
 - 旧 production deployment `dpl_DZSmbtizfp3z7x2X4itwdwyLGxrH` 仍为 `target=production`、`READY`，latest production ID 相同；production aliases 数量 `2`，排序后 SHA-256=`c06eeb6c408c562d7d6906cf1ccd71776beea381afae47e94547c696133f79aa`。不记录 alias 字符串或 URL。
 - G1.3 external preflight 与 rehearsal Entry 门为 `GO`，仅表示 provider/隔离/执行入口可按合同继续；不表示 Preview 已部署、在线 bad→good 已完成或 G1 Exit 通过。G1 Exit 继续 `NO-GO`，G2-A0 不打开。
 - 未执行或伪造 login、push、PR、Actions、Preview、deploy 结果；未做 link、项目设置、env、Protection、alias、promote、rollback 或其他外部写入。临时 env 读取目录 `/private/tmp/rebuy-g13-preview-env-read-20260827-1050` 保留且不含敏感值记录。
+
+## 12. 2026-08-27｜G1.3 bad503 Draft PR closeout 完成
+
+- close-bad 门已完成：PR#4 状态为 `CLOSED`，仍为 `Draft`；head=`059c936c5ecdf4152141ed685fa64151b22e3326`，merge commit=`null`，comments=`0`；远端 bad 分支保留该 head；不 Ready、不 merge、不删除分支。
+- provider/Production 不变量保持：deployment inventory（只读）仅包含 bad Preview `dpl_J9E3WThCmtqxAndfjQDKAW1G49EU`、good Preview `dpl_D2oNMJhvQsvbbyszgApm24aGLYnZ` 与旧 Production `dpl_DZSmbtizfp3z7x2X4itwdwyLGxrH`，共 `3` 项且各自 `READY`；good Preview Protection=`all_except_custom_domains`、Preview env=`0`；Production alias count=`2`，normalized mapping SHA-256=`c06eeb6c408c562d7d6906cf1ccd71776beea381afae47e94547c696133f79aa`；不记录 alias 字符串、URL、token、cookie 或环境值。
+- PR#5 当时以 head=`b02715be` 保持 `OPEN`、非 Draft、`mergeable`；该 exact-head Actions run=`33084137265` / job=`98559030766` 的 install/typecheck/lint/build 已成功；`main=af6d7419956ce6640c0b4af5df4db0369e793f77` 未改变。该事实为代码候选快照，不预写 docs-only closeout 后继 head/run。
+- 当前仅待 docs-only closeout 后新 current-head Actions、independent merge review、Owner G1-19 与明确的 main merge 授权；不得预写 merge，当前结论保持 `NO-GO`，G2-A0 不打开。
