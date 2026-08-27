@@ -2,13 +2,13 @@
 
 阶段：G1 工程底座与环境隔离
 批次：G1 Exit requirement-to-evidence 矩阵与 Owner 验收清单预检
-状态：`G1.2b 真实 PR/CI 已完成；G1 Exit NO-GO；G1.3 实施证据缺失，Owner Exit 决定待明确`
-证据级别：本地静态 + 本地等价 + archive 预检 + 远端只读 + 远端 Actions；无 Preview/在线回退证据
+状态：`G1.2b 真实 PR/CI 已完成并合并 main；G1 Exit NO-GO；G1.3 实施证据缺失，Owner Exit 决定待明确`
+证据级别：本地静态 + 本地等价 + archive 预检 + 远端只读 + 远端 Actions + main merge closeout；无 Preview/在线回退证据
 记录日期：2026-08-27（Europe/Rome；保留 2026-08-26 预检事实）
 预检输入 HEAD（历史快照）：`9ba0f8e0f56c5711dc04ac83daf7051e863b2ecc`（`main`；开始时 clean）
 当前 remote ref：`kyox215/REBUY_SHARE`；deploy/environment ref：`N/A`（未部署 Preview、未连接外部环境）
 
-> 本记录只审计 G1 Exit 的证据完整性；G1.2b 真实 PR/Actions 现已补齐，但不把它写成 Preview、在线回退或 G1 通过。当前结论仍是 `NO-GO / G1 Exit 未通过`，G2-A0 不打开。
+> 本记录只审计 G1 Exit 的证据完整性；G1.2b 真实 PR/Actions 已补齐并经 PR #1 merge commit 合并 main，但不把它写成 Preview、在线回退或 G1 通过。当前结论仍是 `NO-GO / G1 Exit 未通过`，G2-A0 不打开。
 
 ## 1. Owner 边界与审计输入
 
@@ -24,7 +24,7 @@
 - [G1.1 基线](../2026-08-25-g1-1-local-baseline/README.md)、[G1.2 preflight](../2026-08-26-g1-2-ci-preflight/README.md)、[G1.2a 等价验证](../2026-08-26-g1-2a-local-workflow/README.md)、[G1.2b-0 远端目标审计](../2026-08-26-g1-2b-0-remote-target-audit/README.md)、[G1.2b-1 历史演练](../2026-08-26-g1-2b-1-local-integration-rehearsal/README.md)、[G1.3-0 本地环境预检](../2026-08-26-g1-3-0-local-environment-preflight/README.md)。
 - [G1 Owner 验收清单](../../../stages/G1-Owner验收清单.md)与当前 `.github/workflows/prototype-quality.yml`。
 
-随后 Owner 明确授权了一次受限 G1.2b：公开上传至 `kyox215/REBUY_SHARE`、推送 `integration/g1-2b`、创建 PR、运行 Actions，并在通过后非强制合并；同时禁止 force-push、删除远端历史、Preview、Supabase/Auth/DB 和生产。Workflow scope 仅限本仓库本次工作流。本批未合并 `main`，G1.3/Preview 仍需独立 Owner Gate。
+随后 Owner 明确授权了一次受限 G1.2b：公开上传至 `kyox215/REBUY_SHARE`、推送 `integration/g1-2b`、创建 PR、运行 Actions，并在通过和独立复审 GO 后非强制合并；同时禁止 force-push、删除远端历史、Preview、Supabase/Auth/DB 和生产。Workflow scope 仅限本仓库本次工作流。本批 PR #1 已通过 merge commit 合并 `main`，G1.3/Preview 仍需独立 Owner Gate。
 
 ## 2. 预检时本地 Git 与 ref 快照
 
@@ -47,8 +47,8 @@
 | G1-04 | lockfile frozen install 可复现 | 已满足（远端） | [G1.1 基线](../2026-08-25-g1-1-local-baseline/README.md)；[G1.2a 证据](../2026-08-26-g1-2a-local-workflow/README.md)；[G1.2b 远端证据](../2026-08-27-g1-2b-remote-ci/README.md) | GitHub runner 已验证 frozen install；仅 Preview runner/部署安装仍缺，ignored build-script warning 保持记录 |
 | G1-05 | 本地 typecheck/lint/build 通过 | 已满足（远端） | [G1.2a 等价验证](../2026-08-26-g1-2a-local-workflow/README.md)；[G1.2b 远端证据](../2026-08-27-g1-2b-remote-ci/README.md) | GitHub runner 已验证三项命令；仅 Preview runner/部署构建仍缺 |
 | G1-06 | 最小 workflow、失败停止、`contents: read`、action 完整 SHA | 已满足（远端） | [本地 workflow](../../../../.github/workflows/prototype-quality.yml)；[G1.2a 证据](../2026-08-26-g1-2a-local-workflow/README.md)；[G1.2b 远端证据](../2026-08-27-g1-2b-remote-ci/README.md) | workflow 静态边界与真实 PR check 已验证；仅 Preview runner/部署仍缺 |
-| G1-07 | G1.2b 真实 GitHub Actions run | 已满足（远端） | [G1.2b 远端 PR/CI 证据](../2026-08-27-g1-2b-remote-ci/README.md)；初始 run `33027593355` / job `98372467897`；当前 head `cce03ac` run `33029927182` / job `98379847069` | 两个 head 的 runner 检查均成功；不能写成 G1 Exit 通过 |
-| G1-08 | canonical repo、无共同祖先历史策略、分支/PR 入口 | 已满足（远端） | [G1.2b 远端证据](../2026-08-27-g1-2b-remote-ci/README.md)；PR #1 | `kyox215/REBUY_SHARE`、双 parent integration 策略和非强制 PR 入口已确认；不可覆盖或 force push 远端 `main` |
+| G1-07 | G1.2b 真实 GitHub Actions run | 已满足（远端） | [G1.2b 远端 PR/CI 证据](../2026-08-27-g1-2b-remote-ci/README.md)；初始 run `33027593355` / job `98372467897`；docs head `cce03ac` run `33029927182` / job `98379847069`；merge head `cba97eb` main run `33031297793` / job `98384190584`；[main merge closeout](../2026-08-27-g1-2b-main-merge/README.md) | PR head 与 merge 后 main 的 runner 检查均成功；不能写成 G1 Exit 通过 |
+| G1-08 | canonical repo、无共同祖先历史策略、分支/PR 入口 | 已满足（远端） | [G1.2b 远端证据](../2026-08-27-g1-2b-remote-ci/README.md)；[main merge closeout](../2026-08-27-g1-2b-main-merge/README.md)；PR #1 | `kyox215/REBUY_SHARE`、双 parent integration 策略、merge commit 入口和分支保留已确认；不可 direct push、force push 或改写远端 `main` |
 | G1-09 | Actions enabled、默认 workflow 权限、selected-actions | 已满足（远端只读） | [G1.2b 远端证据](../2026-08-27-g1-2b-remote-ci/README.md) | enabled=true、default read、allowed all、SHA enforcement=false；selected-actions 在 all 策略下 409；不读取 secrets |
 | G1-10 | Local 边界、`.gitignore`、`.env.example`、secret/log 规则 | 已满足（本地） | [G1.3-0 预检](../2026-08-26-g1-3-0-local-environment-preflight/README.md)；[11 连接边界](../../../11-发布与Supabase连接记录.md) | 只证明本地规则和变量名；不证明外部环境 |
 | G1-11 | Preview 项目/owner/ref/Node/root/访问/变量/health/日志/停止入口 | 缺失 | [G1.3-0 四环境合同](../2026-08-26-g1-3-0-local-environment-preflight/README.md) | 未建立 provider/project；不得造 URL/project id |
@@ -58,18 +58,18 @@
 | G1-15 | 外部 provider/资产认证只读盘点（选择 Preview provider 前） | unknown | G1.3-0 仅记录本地未绑定事实，无认证外部资产清单 | 这是未来选择 Preview provider 的安全前置；不得据此创建、连接或推断外部资源不存在 |
 | G1-16 | Preview 实际部署来自 CI 通过的可追溯 ref | 缺失 | G1.2b 已完成；G1.3-0 只做 archive 预检 | 当前无 Preview 部署；需 G1.3 Owner Gate 后建立隔离 Preview，不能把本地预览写成部署 |
 | G1-17 | bad ref → good ref 在线 Preview 回退与恢复 | 缺失 | G1.3-0 回退手册；无在线证据 | 需隔离 Preview 和 Owner 授权后演练 |
-| G1-18 | 脱敏证据、维护责任、回退/恢复记录 | 预检完成/实施缺失 | [G1.2b 远端证据](../2026-08-27-g1-2b-remote-ci/README.md)；[G1.3-0](../2026-08-26-g1-3-0-local-environment-preflight/README.md) | 真实 CI 证据已归档；Preview/在线回退仍缺；真实 secret 只记录 commit/path/category，不复制值；Staging/Production 由后续专项维护 |
+| G1-18 | 脱敏证据、维护责任、回退/恢复记录 | 预检完成/实施缺失 | [G1.2b 远端证据](../2026-08-27-g1-2b-remote-ci/README.md)；[G1.2b main merge closeout](../2026-08-27-g1-2b-main-merge/README.md)；[G1.3-0](../2026-08-26-g1-3-0-local-environment-preflight/README.md) | PR/main 真实 CI 与脱敏证据已归档；Preview/在线回退仍缺；真实 secret 只记录 commit/path/category，不复制值；Staging/Production 由后续专项维护 |
 | G1-19 | Owner 明确 G1 Exit 决定并签署日期/ref | 缺失 | [G1 Owner 清单](../../../stages/G1-Owner验收清单.md) | 当前未签署，不生成虚假日期 |
 
 ## 4. 当前结论：NO-GO
 
-G1.1、G1.2a 的本地项目底座、工具链、workflow 和等价命令证据已具备；G1.2b 的真实 PR/Actions、canonical repo/历史策略和只读权限设置也已归档；G1.3-0 的本地隔离合同、忽略规则和 archive 取回预检已具备。但以下 Exit 必要项仍未满足：
+G1.1、G1.2a 的本地项目底座、工具链、workflow 和等价命令证据已具备；G1.2b 的真实 PR/Actions、canonical repo/历史策略、PR #1 merge commit 和 main push 质量检查也已归档；G1.3-0 的本地隔离合同、忽略规则和 archive 取回预检已具备。但以下 Exit 必要项仍未满足：
 
 - Preview 尚未建立或部署；bad ref → good ref 的在线 Preview 回退未演练；Owner 尚未对 G1 Exit 作出明确原话和签署日期/ref。
 
 G1.3-0 已满足 Local/Preview/Staging/Production 的边界合同、禁止共用资源/secret/数据/角色/日志和未来门禁设计；Staging/Production 实际资源、Auth/DB/RLS/PII、监控、备份和恢复属于后续 G2-A1/P2/P7/Production 专项，不构成 G1 Exit 缺口。外部 provider/资产认证只读盘点仍为 `unknown`，仅是未来选择 Preview provider 前的安全前置，不授权创建或连接资源。
 
-因此当前必须保持：`G1 执行中（G1.1 已完成，G1.2a 已完成，G1.2b 真实 PR/CI 已完成，G1.3 未开始）；G1.3-0 preflight 已完成，G1 Exit 未通过；G2-A0 不打开。`
+因此当前必须保持：`G1 执行中（G1.1 已完成，G1.2a 已完成，G1.2b 真实 PR/CI 已完成并合并 main，G1.3 未开始）；G1.3-0 preflight 已完成，G1 Exit 未通过；G2-A0 不打开。`
 
 `/api/health/supabase` 在未配置变量时预期返回 HTTP `503`（`configured: false`）；该响应只能证明未配置处理路径，不能作为 G1 Preview 成功 health。Preview 健康门应使用根页面和关键无外部依赖页面，并在授权环境记录访问、日志和停止入口。
 
@@ -79,14 +79,14 @@ G1.3-0 已满足 Local/Preview/Staging/Production 的边界合同、禁止共用
 
 1. Owner 已确认 canonical repo 为 `kyox215/REBUY_SHARE`，并采用保留远端 `main` 与本地 `main` 双方历史的 `integration` 分支/PR 策略。
 2. gh 登录已通过浏览器 device flow 恢复；repo/default branch/Actions permissions/workflows/runs 均已只读核验，未读取 secrets。
-3. 已在当前本地仓库添加该 canonical remote、只读 fetch、推送 `integration/g1-2b`、创建 PR #1，并由该 PR 触发真实 GitHub Actions；初始 run/job 详见 G1.2b 远端证据。
-4. 禁止直接 push main、force-push、删除/覆盖远端分支或改写历史；最新 Owner override 仅允许在独立复审明确 GO 后进行非强制 PR merge，当前 PR 尚未合并；本批未部署 Preview、未连接 Supabase/Auth/DB 或 Production。
+3. 已在当前本地仓库添加该 canonical remote、只读 fetch、推送 `integration/g1-2b`、创建 PR #1，并由该 PR 触发真实 GitHub Actions；PR #1 后经独立复审 GO 以 merge commit 合并 main，main push run/job 另见 main merge closeout。
+4. 禁止直接 push main、force-push、删除/覆盖远端分支或改写历史；本次仅按最新 Owner override 通过非强制 PR merge 完成 main 写入，`integration/g1-2b` 仍保留；本批未部署 Preview、未连接 Supabase/Auth/DB 或 Production。
 
 历史推荐授权语句（执行前，保留原文）：
 
 > `确认 canonical repo 为 kyox215/REBUY_SHARE，并采用保留远端 main 与本地 main 双方历史的 integration 分支/PR 策略；允许通过浏览器恢复 gh 登录，先只读核验 repo/default branch/Actions permissions/workflows/runs，不读取 secrets；核验通过后，允许在当前本地仓库添加该 canonical remote、只读 fetch、构造并 push 一个新的 integration/g1-2b 分支、创建一个 PR，并让该 PR 触发一次真实 GitHub Actions；禁止直接 push 或 merge main、force-push、删除/覆盖远端分支、改写历史；暂不部署 Preview、连接 Supabase/Auth/DB 或 Production。`
 
-Owner 已明确采纳上述历史边界并完成一次受限 G1.2b 流程；随后另行授权在独立复审明确 GO 后以非强制方式合并 PR，当前不允许直接 push main、force-push、删除远端历史或改写历史。本次文档 head `cce03acfdf7eb4da5ce1f8bb7b559d8705332b0e` 的 PR check `33029927182` / job `98379847069` 已成功；不递归回写本证据初始 run ID。
+Owner 已明确采纳上述历史边界并完成一次受限 G1.2b 流程；随后另行授权在独立复审明确 GO 后以非强制方式合并 PR，当前 PR #1 已完成 merge commit 写入 main；仍不允许直接 push main、force-push、删除远端历史或改写历史。本次文档 head `cce03acfdf7eb4da5ce1f8bb7b559d8705332b0e` 的 PR check `33029927182` / job `98379847069` 已成功；main merge closeout 见[新增证据](../2026-08-27-g1-2b-main-merge/README.md)，不递归回写本证据初始 run ID。
 
 ### 5.2 G1.3
 
@@ -117,10 +117,17 @@ Owner 已明确采纳上述历史边界并完成一次受限 G1.2b 流程；随�
 - 不做 hash：无生成物或文件传输交付，已有 Git ref/tree/blob 证据足够。
 - 因 G1 Exit 属里程碑，已启动独立只读审查；发现 2 项高风险、1 项中风险、2 项低风险问题，均已纠正；未自动开启复审循环，由主代理完成定向复核。
 
-## 8. 2026-08-27｜G1.2b 远端事实补录与当前 Gate
+## 8. 2026-08-27｜G1.2b 远端事实补录与当前 Gate（合并前历史快照）
 
 - G1.2b 已按 Owner 授权完成一次受限公开仓库/PR/Actions 流程：canonical repo `kyox215/REBUY_SHARE`，PR #1 base=`main`、head=`integration/g1-2b`，保持 OPEN/CLEAN；远端 `main=366ad7f...` 未漂移，初始双 parent integration head 为 `f746dcacc0afc2d45b847346f20078a159c2e032`。
 - 初始真实 Actions run `33027593355`、job `98372467897` 均 SUCCESS，验证 install/typecheck/lint/build；Actions enabled=true、default workflow permissions=`read`、allowed actions=`all`、SHA enforcement=false、PR approval=false 已只读记录。完整脱敏证据见[G1.2b 远端 PR/CI](../2026-08-27-g1-2b-remote-ci/README.md)。
 - 本补录不把初始 run 写成当前文档 commit 的 check；上一份文档 head `cce03acfdf7eb4da5ce1f8bb7b559d8705332b0e` 的 PR check `33029927182` / job `98379847069` 已独立核验成功，不为追写 run ID 递归修改既有 evidence。G1.3-0 仍仅本地预检，G1.3 实施、Preview、在线回退和 Owner G1 Exit 签署仍缺失，故 G1 Exit 保持 `NO-GO`，G2-A0 不打开。
 
 关联记录：[G1 Owner 验收清单](../../../stages/G1-Owner验收清单.md)、[G1 阶段合同](../../../stages/G1-工程底座与环境隔离.md)、[15 台账](../../../15-项目状态与阶段台账.md)、[阶段索引](../../../stages/README.md)。
+
+## 9. 2026-08-27｜G1.2b main merge closeout 追加
+
+- 独立 merge reviewer 已对 PR #1 head `0bb5fb527d51a304b95b05794345bd23128e1534` 正式给出 GO；PR #1 随后通过 GitHub merge commit 合并 main，未使用 direct push main、squash、rebase 或 force-push，`integration/g1-2b` 仍保留。
+- 合并前 remote main 为 `366ad7f287a00f795c742d7f2df10a531fa42e7c`；merge commit 为 `cba97eb4e7c93e5c42ba496e4d2ddeac5b476c7c`，parent 1 为该 remote main、parent 2 为 `0bb5fb527d51a304b95b05794345bd23128e1534`，双历史保全。
+- merge 后 main push 的 run `33031297793` / job `98384190584` 已 SUCCESS，install、typecheck、lint、build 和收尾步骤全部通过；完整记录见[G1.2b main merge closeout](../2026-08-27-g1-2b-main-merge/README.md)。
+- 当前仍为 `G1 Exit NO-GO`：G1.3-0 仅本地预检，G1.3 实施、Preview、在线回退和 Owner Exit 签署仍缺失；G2-A0 不打开。Actions `allowed_actions=all`、SHA enforcement=`false` 的治理债务仍待后续专项。

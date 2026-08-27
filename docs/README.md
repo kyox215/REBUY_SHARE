@@ -19,7 +19,7 @@
 | 02 | [客户端 V1 页面线框图](./02-客户端V1页面线框图.md) | Owner 已批准低保真基线（2026-08-25；视觉原型历史入口） | 定义买家页面、购买流程、线框、边界状态、可用性任务和通过标准 | 设计基线约束 P1 本地视觉原型；视觉原型确认后才进入真实产品/后端实现；本文件不等同于生产实现 | 作为页面基线；当前 Gate 以[15 台账](./15-项目状态与阶段台账.md)为准 |
 | 03 | [平台角色与业务模块](./03-平台角色与业务模块.md) | 规划执行稿 | 定义平台、商家和客户端的角色、权限、模块树、业务状态和客户资料边界 | Owner 审批角色、权限和状态变更；高风险权限后续需专项审查 | 进入 P2/P3/P4/P6 前作为权限与模块合同 |
 | 04 | [技术架构与核心数据模型](./04-技术架构与核心数据模型.md) | 技术规划稿，未连接环境 | 定义模块化单体、边界、数据实体、RLS、审计、幂等、存储和环境隔离 | Owner 审批架构方向；数据库、隐私、生产写入需专项审查 | 仅作为后续实现设计输入，不执行数据库连接 |
-| 05 | [V1 实施路线与验证计划](./05-V1实施路线与验证计划.md) | 里程碑与验证合同 | 将工作拆成 P0–P8，并纳入 G1 工程底座、G2-A0/G2-A1 账号门，规定依赖、风险、最小验证、Owner Gate 和回退 | Owner 在每个里程碑门口决定继续、修订或暂停 | G0/P1 已通过并冻结；G1 执行中，G1.1 已完成；G1.2a（Corepack 0.34.6 exact bootstrap）本地 workflow/等价验证已完成，G1.2b 真实 PR/CI 已完成；G1.3-0 本地预检已完成，G1.3 实施未开始 |
+| 05 | [V1 实施路线与验证计划](./05-V1实施路线与验证计划.md) | 里程碑与验证合同 | 将工作拆成 P0–P8，并纳入 G1 工程底座、G2-A0/G2-A1 账号门，规定依赖、风险、最小验证、Owner Gate 和回退 | Owner 在每个里程碑门口决定继续、修订或暂停 | G0/P1 已通过并冻结；G1 执行中，G1.1 已完成；G1.2a（Corepack 0.34.6 exact bootstrap）本地 workflow/等价验证已完成，G1.2b 真实 PR/CI 已完成并合并 main；G1.3-0 本地预检已完成，G1.3 实施未开始 |
 | 06 | [本地视觉原型执行合同](./06-本地视觉原型执行合同.md) | P1 原型已创建；分类目录 IA 已通过并冻结 | 限定本地无后端视觉原型的页面、数据、交互、资产、预览和验收 | Owner 已批准 P1 范围；本地证据不等于 Owner 或生产通过 | [G0 阶段记录](./stages/G0-P1-视觉验收与UI冻结.md)与[分类目录 IA 证据](./evidence/G0-P1/2026-08-25-category-directory-ia/README.md)记录本批复验；[G1.1 本地基线](./evidence/G1/2026-08-25-g1-1-local-baseline/README.md)记录 Git 基线及 Node22 可复现验证 |
 | 07 | [完整账号系统规划](./07-完整账号系统规划.md) | G2-A0 账号安全合同输入，待 G2-A0 验收 | 定义 identity、组织/店铺 membership、角色权限、商家/批发申请与资格、状态机、安全、隐私、页面、API 和 A0–A6 门禁 | Owner 已批准八项账号修正作为 G2-A0 输入；生产实现需另行通过专项审查 | 与 08/09 一起提交 G2-A0 独立安全审查 |
 | 08 | [账号系统思维导图](./08-账号系统思维导图.md) | G2-A0 账号安全合同输入，待 G2-A0 验收 | 以独立 Mermaid 思维导图、流程图和状态图呈现账号角色、邮箱邀请、批发申请/资格拆分、数据、安全、隐私和阶段 | Owner 要求图示与 07/09 保持一致；图示不等同于实现或生产验收 | 与 07/09 一起用于 G2-A0 评审 |
@@ -29,7 +29,7 @@
 | 12 | [Rebuy 统一 UI 设计系统](./12-Rebuy统一UI设计系统.md) | Owner 已批准统一 UI 设计文档并选定配色 D，配色已同步至本地 P1 视觉原型（2026-08-25） | 固化循环翡翠青品牌 token、浅深色、两套 Shell、组件规则、动效、三语和无障碍边界 | 仅是设计合同；不授权代码、后台、数据库或生产实现 | 作为买家端原型调整和未来商家后台设计映射的共享视觉基线 |
 | 13 | [买家端与商家后台页面及组件映射](./13-买家端与商家后台页面及组件映射.md) | Owner 已批准统一 UI 设计文档与配色 D；设计映射基线 | 映射买家页面、未来后台页面、PC/APP 响应关系、Prototype 组件复用、状态和验收矩阵 | 商家后台仍是未来设计映射，不是当前代码/后端授权；实现需单独 Owner Gate | 作为买家/后台映射基线；当前 Gate 以[15 台账](./15-项目状态与阶段台账.md)为准，P6 前另行进行权限/安全/后台审查 |
 | 14 | [全局执行总计划](./14-全局执行总计划.md) | 稳定权威路线 | 固化 GOV-1、G0、G1 工程底座、G2-A0/G2-A1、P2–P8 依赖链、产物、验证、Owner Gate 和回退 | 任何路线变化需 Owner 决策并追加记录 | 以 15 为唯一当前状态源，不在此维护每日状态 |
-| 15 | [项目状态与阶段台账](./15-项目状态与阶段台账.md) | 唯一当前状态源（2026-08-27） | 记录阶段、状态、证据级别、依赖、Owner 决策、记录链接和下一动作 | 状态枚举与证据枚举固定；待验收不得写成已通过 | GOV-1 已通过；G0/P1 已通过并冻结；G1 执行中（G1.1 已完成、G1.2a 已完成、G1.2b 真实 PR/CI 已完成、G1.3 未开始），G1.3-0 本地预检已完成；PR 尚未合并 main，G1 Exit 仍 NO-GO；当前 workflow ref `b0681d58`，Corepack `0.34.6`，以本台账为唯一当前状态 |
+| 15 | [项目状态与阶段台账](./15-项目状态与阶段台账.md) | 唯一当前状态源（2026-08-27） | 记录阶段、状态、证据级别、依赖、Owner 决策、记录链接和下一动作 | 状态枚举与证据枚举固定；待验收不得写成已通过 | GOV-1 已通过；G0/P1 已通过并冻结；G1 执行中（G1.1 已完成、G1.2a 已完成、G1.2b 真实 PR/CI 已完成并合并 main、G1.3 未开始），G1.3-0 本地预检已完成；PR #1 已以 merge commit 合并 main、integration 分支仍保留，G1 Exit 仍 NO-GO；当前 workflow ref `b0681d58`，Corepack `0.34.6`，以本台账为唯一当前状态 |
 
 ### 治理资料
 
@@ -38,6 +38,7 @@
 | [阶段执行记录模板](./templates/阶段执行记录模板.md) | 新阶段/批次的元数据、影响、验证、回退、风险和 Owner Gate 模板 |
 | [阶段记录索引](./stages/README.md) | 阶段事实记录的索引、命名、追加和证据边界 |
 | [G1 Owner 验收清单](./stages/G1-Owner验收清单.md) | G1 Exit requirement-to-evidence 矩阵、NO-GO 缺口和 Owner Gate 执行顺序 |
+| [G1.2b main merge closeout](./evidence/G1/2026-08-27-g1-2b-main-merge/README.md) | PR #1 merge commit、main push Actions、双历史保留、分支与回退/维护边界 |
 | [G1.2b 远端 PR/CI 证据](./evidence/G1/2026-08-27-g1-2b-remote-ci/README.md) | canonical repo、PR #1、Actions run/job、远端只读设置、历史/敏感审计和边界记录 |
 | [G2-A0 Owner 验收清单](./stages/G2-A0-Owner验收清单.md) | G1 Exit 通过后的 A0 安全审查入口；当前为 Entry preflight，G2-A0 未开始 |
 | [G2-A0 Entry preflight 证据](./evidence/G2-A0/2026-08-26-entry-preflight/README.md) | 只读官方依据与安全控制补充；不代表 provider/project 已连接 |
@@ -51,10 +52,10 @@
 
 ## 4. 当前下一步
 
-当前批准覆盖 GOV-1 治理体系和 G0/P1 本地视觉原型；Owner 最新原话 `分类目录IA通过，G0重新冻结，未覆盖项进入后续专项，恢复G1授权` 已将 G0/P1 更新为“已通过并冻结”，checkpoint 16 为通过。点击搜索已通过，直接 Enter 键盘提交未验证成功，转入后续键盘/无障碍专项，不阻塞本次冻结或 G1 Entry。G1 当前为“执行中（G1.1 已完成，G1.2a 已完成，G1.2b 真实 PR/CI 已完成，G1.3 未开始）”，Node `22.12.0`/Corepack `0.34.6`/pnpm `10.33.3` fresh exact bootstrap 后隔离 frozen install/typecheck/lint/build 已通过；当前 workflow ref 为 `b0681d58`，公开 canonical repo `kyox215/REBUY_SHARE` 的 PR #1 已完成真实 Actions install/typecheck/lint/build，远端只读设置已归档；PR 尚未合并 `main`，无 Preview/在线回退；G1.3-0 本地预检已完成，G1.3 实施未开始，G1 Exit 未通过；G2-A0、G2-A1 和 P2 仍未打开。执行顺序是：
+当前批准覆盖 GOV-1 治理体系和 G0/P1 本地视觉原型；Owner 最新原话 `分类目录IA通过，G0重新冻结，未覆盖项进入后续专项，恢复G1授权` 已将 G0/P1 更新为“已通过并冻结”，checkpoint 16 为通过。点击搜索已通过，直接 Enter 键盘提交未验证成功，转入后续键盘/无障碍专项，不阻塞本次冻结或 G1 Entry。G1 当前为“执行中（G1.1 已完成，G1.2a 已完成，G1.2b 真实 PR/CI 已完成并合并 main，G1.3 未开始）”，Node `22.12.0`/Corepack `0.34.6`/pnpm `10.33.3` fresh exact bootstrap 后隔离 frozen install/typecheck/lint/build 已通过；当前 workflow ref 为 `b0681d58`，公开 canonical repo `kyox215/REBUY_SHARE` 的 PR #1 已完成真实 Actions install/typecheck/lint/build，并已通过 merge commit 写入 main，main push 的 install/typecheck/lint/build 也成功；远端只读设置已归档；无 Preview/在线回退；G1.3-0 本地预检已完成，G1.3 实施未开始，G1 Exit 未通过；G2-A0、G2-A1 和 P2 仍未打开。执行顺序是：
 
 1. 按 [15 台账](./15-项目状态与阶段台账.md)、[G0 阶段记录](./stages/G0-P1-视觉验收与UI冻结.md)、[Owner 视觉验收清单](./stages/G0-P1-Owner视觉验收清单.md) 和[分类目录 IA 证据](./evidence/G0-P1/2026-08-25-category-directory-ia/README.md)保留 G0 冻结基线；直接 Enter 键盘提交未验证成功的边界进入后续键盘/无障碍专项。
-2. G1 Entry 已恢复；项目根 `main`、repo-local identity 和初始 SHA 已建立，Node `v22.12.0`/Corepack `0.34.6`/pnpm `10.33.3` fresh exact bootstrap 后隔离 frozen install、typecheck、lint、build 已通过。G1.1 已完成；G1.2a 已按 Owner 授权创建本地只读 workflow 并完成等价验证，当前 workflow ref `b0681d58`；G1.2b 已在 `kyox215/REBUY_SHARE` PR #1 上完成真实 Actions 与只读设置核验，PR 尚未合并 `main`；G1.3-0 本地预检已完成，G1.3 实施未开始。G1 Exit 未通过，完成后才按顺序打开 G2-A0、G2-A1 和 P2，每一门都必须保留独立记录和回退证据。详见[G1.2b 远端证据](./evidence/G1/2026-08-27-g1-2b-remote-ci/README.md)、[G1.2a 证据](./evidence/G1/2026-08-26-g1-2a-local-workflow/README.md)、[G1.2 预检证据](./evidence/G1/2026-08-26-g1-2-ci-preflight/README.md)、[G1.3-0 预检证据](./evidence/G1/2026-08-26-g1-3-0-local-environment-preflight/README.md)与[G1.1 基线证据](./evidence/G1/2026-08-25-g1-1-local-baseline/README.md)。
+2. G1 Entry 已恢复；项目根 `main`、repo-local identity 和初始 SHA 已建立，Node `v22.12.0`/Corepack `0.34.6`/pnpm `10.33.3` fresh exact bootstrap 后隔离 frozen install、typecheck、lint、build 已通过。G1.1 已完成；G1.2a 已按 Owner 授权创建本地只读 workflow 并完成等价验证，当前 workflow ref `b0681d58`；G1.2b 已在 `kyox215/REBUY_SHARE` PR #1 上完成真实 Actions 与只读设置核验，并通过 merge commit 合并 `main`，main push 质量 workflow 已成功，`integration/g1-2b` 仍保留；G1.3-0 本地预检已完成，G1.3 实施未开始。G1 Exit 未通过，完成后才按顺序打开 G2-A0、G2-A1 和 P2，每一门都必须保留独立记录和回退证据。详见[G1.2b main merge closeout](./evidence/G1/2026-08-27-g1-2b-main-merge/README.md)、[G1.2b 远端证据](./evidence/G1/2026-08-27-g1-2b-remote-ci/README.md)、[G1.2a 证据](./evidence/G1/2026-08-26-g1-2a-local-workflow/README.md)、[G1.2 预检证据](./evidence/G1/2026-08-26-g1-2-ci-preflight/README.md)、[G1.3-0 预检证据](./evidence/G1/2026-08-26-g1-3-0-local-environment-preflight/README.md)与[G1.1 基线证据](./evidence/G1/2026-08-25-g1-1-local-baseline/README.md)。
 3. GOV-1 文档批次不执行网站代码、依赖、数据库、部署或外部连接；本地证据始终与生产验收分离。
 
 ## 5. 证据边界
@@ -66,7 +67,7 @@
 
 ## 6. 本轮明确不做
 
-此前文档整理批次不创建产品代码、网站脚手架、数据库、Storage bucket、部署、支付账户、外部 API 连接、真实业务写入或真实数据迁移。本轮 G1.1 仅初始化项目根本地 Git，并在隔离副本完成 Node22 frozen install/typecheck/lint/build；G1.2a 按 Owner 批准创建唯一 `.github/workflows/prototype-quality.yml`，当前 workflow ref `b0681d58`，并在全新 Corepack `0.34.6` prefix/`COREPACK_HOME` 隔离副本完成本地等价验证；随后仅按 Owner 一次性授权将源码、文档、历史和图片公开推送至 `kyox215/REBUY_SHARE` 的 `integration/g1-2b`、创建 PR #1 并运行真实 Actions，未合并 `main`，未 force-push、未部署 Preview、未连接 Supabase/Auth/DB 或 production。未修改 prototype 源码、package/lockfile；首次 offline 缺少 `@swc/helpers@0.5.23` 的历史阻塞和旧 Corepack `0.29.4` warmed-cache 覆盖不足已分别保留为历史诊断；G2-A0、G2-A1、P2 等高风险阶段必须另行进行独立安全/权限/环境审查。不做哈希检查；A0/A1 合同、G1 工程底座和后续高风险门槛见 [V1 实施路线与验证计划](./05-V1实施路线与验证计划.md)。
+此前文档整理批次不创建产品代码、网站脚手架、数据库、Storage bucket、部署、支付账户、外部 API 连接、真实业务写入或真实数据迁移。本轮 G1.1 仅初始化项目根本地 Git，并在隔离副本完成 Node22 frozen install/typecheck/lint/build；G1.2a 按 Owner 批准创建唯一 `.github/workflows/prototype-quality.yml`，当前 workflow ref `b0681d58`，并在全新 Corepack `0.34.6` prefix/`COREPACK_HOME` 隔离副本完成本地等价验证；随后仅按 Owner 一次性授权将源码、文档、历史和图片公开推送至 `kyox215/REBUY_SHARE` 的 `integration/g1-2b`、创建 PR #1 并运行真实 Actions，已在独立复审 GO 后通过 merge commit 合并 `main`，main push 质量 workflow 成功；未 force-push、未部署 Preview、未连接 Supabase/Auth/DB 或 production。未修改 prototype 源码、package/lockfile；首次 offline 缺少 `@swc/helpers@0.5.23` 的历史阻塞和旧 Corepack `0.29.4` warmed-cache 覆盖不足已分别保留为历史诊断；G2-A0、G2-A1、P2 等高风险阶段必须另行进行独立安全/权限/环境审查。不做哈希检查；A0/A1 合同、G1 工程底座和后续高风险门槛见 [V1 实施路线与验证计划](./05-V1实施路线与验证计划.md)。
 
 ## 7. 当前发布状态
 
