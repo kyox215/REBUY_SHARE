@@ -2,11 +2,11 @@
 
 阶段：G1 工程底座与环境隔离
 批次：G1.3-2 Preview 执行方案、环境保护与 bad→good 回退独立审查
-状态：`独立审查完成；原方案 NO-GO；修正后条件 GO 候选；Owner Gate 已批准（2026-08-27 10:33:59 CEST）；本审查阶段未执行外部动作；后续 G1.3-3 已记录 bad503 结果；历史代码候选快照 ref 5ce3723b73edcd7284f88b26d6faa0e31ed01b40 曾为 PR#5 head，首轮 Actions run 33074662873 / job 98525606734 的 install/typecheck/lint/build 已成功；本次 docs-only closeout 会生成后继 head，其 SHA/run 不预写、不递归回写；good Preview 仍待独立门禁；G1 Exit NO-GO`
-证据级别：文档审查 + provider 只读事实复用 + Owner Gate 授权记录；未执行 Preview/PR/Actions/deploy
+状态：`独立审查完成；原方案 NO-GO；修正后条件 GO 候选；Owner Gate 已批准（2026-08-27 10:33:59 CEST）；本审查阶段未执行外部动作；后续 G1.3-3 已记录 bad503 与 good Preview 结果；good Preview source ref=f4225397dc6c6b99e315d5ca4a7ecbc8695fb529（当时 PR#5 current head），exact-head Actions run 33078824609 / job 98540116896 的 install/typecheck/lint/build 已成功，随后部署 good Preview deployment dpl_D2oNMJhvQsvbbyszgApm24aGLYnZ，Target=Preview/READY、provider-resolved Node22，root/health 均 200、body 仅 status=healthy、Cache-Control 含 no-store；bad→good online recovery 技术 GO；历史代码候选快照 ref 5ce3723b73edcd7284f88b26d6faa0e31ed01b40 曾为 PR#5 head，首轮 Actions run 33074662873 / job 98525606734 的 install/typecheck/lint/build 已成功；本次 docs-only closeout 会生成后继 head，其 SHA/run 不预写、不递归回写；当前仅待 closeout 后 current-head Actions、关闭 bad Draft PR、merge 授权/复审与 Owner Exit 实时核验；final Preview 默认不重复（docs-only 且 code/config/lock 未变，上限非强制）；G1 Exit NO-GO`
+证据级别：文档审查 + provider 只读事实复用 + Owner Gate 授权记录 + 后续 G1.3-3 脱敏执行证据；本审查阶段未执行 Preview/PR/Actions/deploy，后续 good Preview 与 bad→good 技术恢复结果已由 G1.3-3 记录；good Preview 部署与在线恢复技术门已完成，当前仅待 docs-only closeout 后 current-head Actions、关闭 bad Draft PR、merge 授权/复审与 Owner Exit
 记录日期：2026-08-27（Europe/Rome）
 审查输入 ref：`main@af6d7419956ce6640c0b4af5df4db0369e793f77`（只作为未来精确 archive 输入）
-deploy/environment ref：`N/A`（本批未部署）
+deploy/environment ref：`f4225397dc6c6b99e315d5ca4a7ecbc8695fb529`（当时 PR#5 current head；exact-head Actions run 33078824609 / job 98540116896 的 install/typecheck/lint/build 已成功）→ `dpl_D2oNMJhvQsvbbyszgApm24aGLYnZ`（Target=Preview、READY、project=rebuy-share；provider-resolved Node22；root/health 200、healthy/no-store）
 
 > 本记录属于高风险独立审查，不是 Preview 执行结果。原执行草案因 Node 版本、`rootDirectory`、变量存在性、Deployment Protection、Production aliases 和回退 PR 边界不充分而判定 `NO-GO`；以下修正后仅形成条件 `GO` 候选。Owner 于 2026-08-27 10:33:59 CEST 回复 `我批准 ，下次无需我批准`，语义承接主线程上一条完整 G1.3 修正版授权语句；该授权已记录但不代表任何 login、push、PR、Actions 或 deploy 结果，G1 Exit 仍为 `NO-GO`。
 
@@ -33,14 +33,14 @@ deploy/environment ref：`N/A`（本批未部署）
 
 | 风险点 | 原方案结论 | 修正后的强制合同 | 当前证据 |
 |---|---|---|---|
-| Node 版本 | `NO-GO`：把 project Node24 当成必须先改的阻塞 | 按 Vercel 官方规则，`package.json` `engines.node=22.x` 覆盖 project Node24；默认不 PATCH project。新 Preview deployment 的 provider-resolved config `builds[0].config.nodeVersion=22.x` 必须存在且为 22.x；build log 仅作补强；resolved 缺失或非 22 立即 STOP并另开 Owner 决策 | 无新 Preview build log，尚未实证 |
+| Node 版本 | `NO-GO`：把 project Node24 当成必须先改的阻塞 | 按 Vercel 官方规则，`package.json` `engines.node=22.x` 覆盖 project Node24；默认不 PATCH project。新 Preview deployment 的 provider-resolved config `builds[0].config.nodeVersion=22.x` 必须存在且为 22.x；build log 仅作补强；resolved 缺失或非 22 立即 STOP并另开 Owner 决策 | 本审查阶段无新 Preview build log；后续 good deployment provider-resolved Node22 已记录，good source ref=f4225397dc6c6b99e315d5ca4a7ecbc8695fb529、exact-head run 33078824609 / job 98540116896 四步成功后部署 |
 | Root Directory | `NO-GO`：把执行 cwd 与 project 设置混写（历史快照） | 当前合同：provider `rootDirectory=prototype` 保持不变；从精确 archive SHA 的仓库根执行 `link/deploy`，禁止从 archive/prototype 执行，避免 `prototype/prototype` | 后续 preflight 已固定 provider 设置与 archive-root 入口 |
 | 环境变量 | `NO-GO`：未定义存在性停止门 | Preview 前只核对变量名称与 target，不读值；任一应用变量在 team/project/Preview target 中存在即停止，不删除、不修改、不继续 deploy | 只保留 `.env.example` 名称，未读值 |
-| Deployment Protection | `NO-GO`：没有安全访问入口 | 不关闭、不改弱 Deployment Protection；用 `vercel curl` 访问 Preview 根页和无外部依赖路径 | 未执行 `vercel curl` |
-| Production 不变量 | `NO-GO`：只写“alias 不变”不够可审计 | 部署前后只读检查旧 deployment 与 aliases，计算不暴露 alias/URL 值的 normalized mapping fingerprint；不一致即停止 | 前后 fingerprint 均 `N/A`，未执行 |
-| 回退 PR | `NO-GO`：bad/good 与长期路径混在一起 | `bad503` 使用独立演练分支和 `DO NOT MERGE` Draft PR，永不 Ready/merge，关闭 PR 但保留分支；`good200` 另从干净 main/最终集成分支进入普通 PR | 未创建分支或 PR |
+| Deployment Protection | `NO-GO`：没有安全访问入口 | 不关闭、不改弱 Deployment Protection；用 `vercel curl` 访问 Preview 根页和无外部依赖路径 | 本审查阶段未执行 `vercel curl`；后续 good Preview 保护为 `all_except_custom_domains`，Preview env=0；good recovery 技术 GO，当前仅待 closeout 后 Actions、关闭 bad Draft、merge 授权/复审与 Owner Exit |
+| Production 不变量 | `NO-GO`：只写“alias 不变”不够可审计 | 部署前后只读检查旧 deployment 与 aliases，计算不暴露 alias/URL 值的 normalized mapping fingerprint；不一致即停止 | 本审查阶段未执行；后续 bad→good 证据确认旧 Production、main 与保护/alias 不变量未变 |
+| 回退 PR | `NO-GO`：bad/good 与长期路径混在一起 | `bad503` 使用独立演练分支和 `DO NOT MERGE` Draft PR，永不 Ready/merge，关闭 PR 但保留分支；`good200` 另从干净 main/最终集成分支进入普通 PR | 本审查阶段未创建；后续 bad PR #4 保持 Draft，good source 曾经由 PR #5 普通路径完成；当前仅待关闭 bad Draft、merge 授权/复审与 Owner Exit |
 
-结论：原方案为 `NO-GO`；以上修正后为条件 `GO` 候选，仍须 Owner 逐字授权、实时 provider 证据和部署后脱敏证据，不能写成 G1.3 已通过。
+结论：原方案为 `NO-GO`；以上修正后曾为条件 `GO` 候选，后续 G1.3-3 已补充 good Preview READY 与 bad→good online recovery 技术 GO 的脱敏证据；good Preview 部署与在线恢复技术门已完成，当前仅待 docs-only closeout 后 current-head Actions、关闭 bad Draft PR、merge 授权/复审与 Owner Exit 实时核验；本审查记录仍不代表 G1 Exit 通过，final Preview 默认不重复。
 
 ## 4. 精确 archive、link/deploy 与访问草案（均未执行）
 
@@ -112,12 +112,12 @@ vercel curl / \
 |---|---|---|
 | Owner 外部执行授权 | `已批准（2026-08-27 10:33:59 CEST）`；仅限 §8 范围，不等于已执行 | 以实际执行证据核对 OAuth、分支/PR/Actions、最多三个 Target=Preview 及停止边界 |
 | CLI 登录与 provider access | `N/A`；未登录/不确认登录 | 只在授权后取得最小必要 access，不记录凭据 |
-| exact archive/ref | 输入固定为 `main@af6d741...`；未执行部署 | archive SHA、CI 成功、`prototype/` tree 可追溯 |
+| exact archive/ref | 输入固定为 `main@af6d741...`；后续 good source ref=`f4225397dc6c6b99e315d5ca4a7ecbc8695fb529`（当时 PR#5 current head），exact-head run 33078824609 / job 98540116896 四步成功后部署 | archive SHA、CI 成功、`prototype/` tree 可追溯 |
 | provider project rootDirectory | `prototype` 保持不变；未修改 | 从精确 archive 仓库根执行 CLI；禁止从 archive/prototype；link/deploy 前后只读核对 provider 设置 |
-| Node | 本地/CI Node22 已有证据；bad503 Preview 的 provider-resolved Node22 已由后续证据记录，good Preview 未验证 | deployment provider-resolved config `builds[0].config.nodeVersion=22.x` 为主证据，build log 仅作补强；resolved 缺失或非 22 立即 STOP |
-| Preview | 未部署 | Target=Preview、无应用变量、Protection 不变、根页/关键路径可访问 |
-| Production asset/aliases | 旧 deployment 只读事实已记录；fingerprint 未执行 | before/after fingerprint 相等 |
-| bad503/good200 | 未演练 | Draft PR 永不 Ready/merge、关闭保留分支、good 另走普通 PR |
+| Node | 本地/CI Node22 已有证据；bad503 与 good Preview 的 provider-resolved Node22 均已由后续证据记录，good source ref=`f4225397dc6c6b99e315d5ca4a7ecbc8695fb529` 的 exact-head run 33078824609 / job 98540116896 四步成功后部署 `dpl_D2oNMJhvQsvbbyszgApm24aGLYnZ` 为 Target=Preview/READY | deployment provider-resolved config `builds[0].config.nodeVersion=22.x` 为主证据，build log 仅作补强；resolved 缺失或非 22 立即 STOP |
+| Preview | bad503 与 good Preview 均已部署并 READY | good deployment `dpl_D2oNMJhvQsvbbyszgApm24aGLYnZ` 的 root/health 均 HTTP 200、body 仅 `{"status":"healthy"}`、Cache-Control 含 `no-store`；Protection=`all_except_custom_domains`、Preview env=0；bad PR #4 保持 Draft，bad ref、main 与 Production 不变量未变；PR current-head 及 docs-only closeout 后新 Actions 仍待实时核验；final Preview 默认不重复（docs-only 且 code/config/lock 未变，上限非强制） |
+| Production asset/aliases | 旧 deployment 只读事实已记录；部署前后 fingerprint 相等 | 旧 Production deployment、aliases 与 main 不变量保持不变；不 promote、不切 alias、不 rollback Production |
+| bad503/good200 | bad503 → good200 在线恢复技术 GO | bad PR #4 永不 Ready/merge、关闭保留分支；good Preview 已由独立路径完成，当前仅待 docs-only closeout 后 current-head Actions、关闭 bad Draft、merge 授权/复审与 Owner Exit；final Preview 默认不重复 |
 | G1 Exit | `NO-GO` | Preview、在线回退、Owner Exit 等后续证据完成并另行验收 |
 
 ## 7. 推荐 Owner 授权语句
@@ -140,6 +140,6 @@ vercel curl / \
 - 归档副本、`.vercel/` 和临时缓存完成后清理；当前 repo、Git refs、remote、workflow、package、lockfile 和 provider 设置不得因本审查改变。
 - 维护记录只保留 ref、target、时间、deployment id、步骤结论、fingerprint 和风险类别；不保存 secret、完整日志、alias/URL 值或 PII。
 - 审查时风险（历史快照）：Owner Gate 已批准但 Preview 尚未部署，在线 bad→good 尚未演练，Vercel Node24 project 显示与 Node22 应用合同尚未由 build log 证明，变量存在性和 aliases fingerprint 尚未实测；后续 bad503 Preview 的脱敏结果与 resolved Node22 配置由 G1.3-3 独立记录。
-- 后续 implementation 事实由独立 G1.3-3 evidence 追加：bad503 Preview 已有脱敏 READY/health 结果；历史代码候选快照 ref 5ce3723b73edcd7284f88b26d6faa0e31ed01b40 曾为 PR#5 head（当时为 OPEN/普通非 Draft），首轮 Actions run 33074662873 / job 98525606734 的 install/typecheck/lint/build 已成功；本次 docs-only closeout 会生成后继 head，其 SHA/run 不预写、不递归回写；good Preview 与在线回退仍待独立门禁，任何 deploy 前必须实时确认 PR 当前 head 及其新 Actions 的 install/typecheck/lint/build 全部成功，否则 STOP。本审查记录仍是历史合同与风险边界，不改写为 G1 Exit 通过。
+- 后续 implementation 事实由独立 G1.3-3 evidence 追加：bad503 与 good Preview 均有脱敏 READY/health 结果；good Preview deployment `dpl_D2oNMJhvQsvbbyszgApm24aGLYnZ` 为 Target=Preview/READY，provider-resolved Node22，root/health 均 HTTP 200、body 仅 `{"status":"healthy"}`、Cache-Control 含 `no-store`；Protection=`all_except_custom_domains`、Preview env=0；bad→good online recovery 技术 GO，bad PR #4 保持 Draft，bad ref、main 与 Production 不变量未变；历史代码候选快照 ref 5ce3723b73edcd7284f88b26d6faa0e31ed01b40 曾为 PR#5 head（当时为 OPEN/普通非 Draft），首轮 Actions run 33074662873 / job 98525606734 的 install/typecheck/lint/build 已成功；本次 docs-only closeout 会生成后继 head，其 SHA/run 不预写、不递归回写；PR current-head 及 closeout 后新 Actions 仍待实时核验；final Preview 默认不重复（docs-only 且 code/config/lock 未变，上限非强制）。本审查记录仍是历史合同与风险边界，不改写为 G1 Exit 通过。
 
 关联记录：[G1.3-1 provider/Preview preflight](../2026-08-27-g1-3-1-provider-preview-preflight/README.md)、[G1 Owner 验收清单](../../../stages/G1-Owner验收清单.md)、[G1 阶段合同](../../../stages/G1-工程底座与环境隔离.md)、[15 项目状态与阶段台账](../../../15-项目状态与阶段台账.md)、[Prototype quality workflow](../../../../.github/workflows/prototype-quality.yml)。
