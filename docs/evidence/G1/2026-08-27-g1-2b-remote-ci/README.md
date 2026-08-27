@@ -2,7 +2,7 @@
 
 阶段：G1 工程底座与环境隔离
 批次：G1.2b 受限 integration/PR/真实 CI 运行
-状态：`G1.2b 真实 PR/CI 已完成；PR 保持 OPEN；G1.3 未开始；G1 Exit 仍 NO-GO`
+状态：`G1.2b 真实 PR/CI 已完成；本文件保留 PR #1 合并前远端快照；PR #1 后续已 MERGED；G1.3 未开始；G1 Exit 仍 NO-GO`
 证据级别：远端 GitHub Actions + 远端只读设置 + 本地 Git/质量/发布前审计
 记录日期：2026-08-27（Europe/Rome）
 记录角色：远端执行代理整理；主代理独立复审
@@ -10,6 +10,8 @@ canonical repo：`kyox215/REBUY_SHARE`（public）
 当前环境：公开 GitHub PR；无 Preview、Supabase/Auth/DB、Staging、Production 连接
 
 > 本记录只证明一次受限的公开 integration 分支、PR 和真实 GitHub Actions run。它不证明 PR 已合并、G1 Exit 已通过、Preview/生产可用或任何 Supabase/Auth/DB 能力已实施。
+
+> 合并前快照的后续结果已另行记录：[G1.2b main merge closeout](../2026-08-27-g1-2b-main-merge/README.md)。PR #1 后经独立复审 GO 以 merge commit `cba97eb4e7c93e5c42ba496e4d2ddeac5b476c7c` 合并 main，main push run `33031297793` / job `98384190584` SUCCESS；本文件下文的 OPEN/未合并措辞均属于本快照时点，不回写历史。
 
 ## 1. Owner 授权与实际边界
 
@@ -21,7 +23,7 @@ CLI Workflow scope 授权原话：
 
 > `允许本次 GitHub CLI 为 kyox215 获取 Workflow scope，仅用于向 kyox215/REBUY_SHARE 推送 .github/workflows/prototype-quality.yml 并运行本次 Actions；不得用于其他仓库或修改其他工作流。`
 
-实际执行进一步保持复审边界：本批未合并 `main`，PR 仍保持 OPEN；不 force-push、不删除或改写远端历史，不读取 secrets，不部署 Preview，不连接 Supabase/Auth/DB、Staging 或 Production。公开源码、文档和图片已按上述授权进入 public repository。
+实际执行进一步保持复审边界（截至本快照）：本批未合并 `main`，PR 仍保持 OPEN；不 force-push、不删除或改写远端历史，不读取 secrets，不部署 Preview，不连接 Supabase/Auth/DB、Staging 或 Production。公开源码、文档和图片已按上述授权进入 public repository。后续 PR #1 merge 与 main push 结果见本文件顶部及 [main merge closeout](../2026-08-27-g1-2b-main-merge/README.md)。
 
 ## 2. 实时远端核对与历史保全
 
@@ -45,9 +47,9 @@ PR：[kyox215/REBUY_SHARE#1](https://github.com/kyox215/REBUY_SHARE/pull/1)
 | number / state | `1` / `OPEN` |
 | base | `main` @ `366ad7f287a00f795c742d7f2df10a531fa42e7c` |
 | head（初始 CI run） | `integration/g1-2b` @ `f746dcacc0afc2d45b847346f20078a159c2e032` |
-| merge state | `CLEAN`；本批不合并 |
+| merge state | `CLEAN`；截至本快照本批不合并（后续已由独立 GO 通过 PR #1 merge） |
 
-本证据提交会使 PR head 前进并触发后续 PR 检查。为避免“把最新 run ID 写回文档→再次触发 run”的递归，本记录固定保留初始 CI run 与其验证的 `f746dca`；更新后 head 的 PR 检查结果作为独立实时状态报告，不回写本文件。
+本证据提交会使 PR head 前进并触发后续 PR 检查。为避免“把最新 run ID 写回文档→再次触发 run”的递归，本记录固定保留初始 CI run 与其验证的 `f746dca`；更新后 head 的 PR 检查结果作为独立实时状态报告，不回写本文件。PR #1 后续 main merge 与 push check 见[main merge closeout](../2026-08-27-g1-2b-main-merge/README.md)。
 
 ## 3. 初始真实 Actions run
 
@@ -118,15 +120,16 @@ Job：[prototype-quality / 98372467897](https://github.com/kyox215/REBUY_SHARE/a
 
 ## 7. 风险、回退与维护
 
-### 风险
+### 风险（合并前快照）
 
 - PR 尚未合并，远端 `main` 仍保持 `366ad7f...`；G1.2b 已有初始真实 CI 成功，但 G1 Exit 仍缺 Preview 实际部署、在线 bad ref → good ref 回退和 Owner Exit 签署。
 - `allowed_actions=all`、SHA enforcement 为 `false`；仓库设置比项目 workflow 自身更宽，后续应由 Owner/治理专项决定是否收紧。
 - 公开上传已发生；本仓库源码、文档、Git 历史和图片按 Owner 授权公开可见。敏感审计不替代 GitHub secret scanning 或未来真实环境变量审查。
 - 本证据固定的是 run `33027593355` 对 `f746dca` 的结果；更新后的 docs head 必须单独确认 PR check，不能由本条预填成功。
 - 上一份文档 head `cce03acfdf7eb4da5ce1f8bb7b559d8705332b0e` 的 PR check run `33029927182` / job `98379847069` 已独立实时确认 SUCCESS；本次新增文档提交只追加纠正当前时态，不改写初始 run 事实。
+- 后续状态已从本快照推进为 PR #1 `MERGED`；merge commit、main push run/job、integration 分支保留和剩余 G1 风险见[main merge closeout](../2026-08-27-g1-2b-main-merge/README.md)。
 
-### 回退
+### 回退（合并前快照）
 
 - 本批不修改、不删除远端 `main`；若文档提交需撤回，只在 integration 分支通过后续普通 revert 形成可追溯回退，不 force-push、不改写历史。
 - PR 保持 OPEN，等待独立审查；不以关闭、删除分支或覆盖 `main` 作为默认回退。
@@ -138,7 +141,7 @@ Job：[prototype-quality / 98372467897](https://github.com/kyox215/REBUY_SHARE/a
 - action、Node、pnpm、runner、lockfile、package scripts 或 Actions 设置变化时，重新做官方 pin、权限、敏感和大文件审计；不静默替换版本或放宽权限。
 - 新 PR head 的 check 只作为本次文档提交的独立验证记录，不反复改写本文件；如出现新的实质风险，新增日期记录并关联新 run。
 
-## 8. 当前阶段结论与边界
+## 8. 当前阶段结论与边界（合并前快照）
 
 当前结论：`G1.2b 真实 PR/CI 已完成；PR #1 OPEN；G1.3 未开始；G1 Exit NO-GO；G2-A0 不打开`。
 
@@ -147,4 +150,8 @@ Job：[prototype-quality / 98372467897](https://github.com/kyox215/REBUY_SHARE/a
 - G1 Exit 尚未通过，G2-A0、G2-A1、P2–P8 不因本 run 自动打开。
 - 本批没有合并 `main`、部署 Preview、连接 Supabase/Auth/DB、读取 secrets、触碰 Staging/Production 或写入真实业务数据。
 
-关联记录：[G1 Owner 验收清单](../../../stages/G1-Owner验收清单.md)、[G1 阶段合同](../../../stages/G1-工程底座与环境隔离.md)、[G1 Exit 本地预检](../2026-08-26-g1-exit-preflight/README.md)、[15 台账](../../../15-项目状态与阶段台账.md)、[阶段索引](../../../stages/README.md)。
+关联记录：[G1 Owner 验收清单](../../../stages/G1-Owner验收清单.md)、[G1 阶段合同](../../../stages/G1-工程底座与环境隔离.md)、[G1 Exit 本地预检](../2026-08-26-g1-exit-preflight/README.md)、[G1.2b main merge closeout](../2026-08-27-g1-2b-main-merge/README.md)、[15 台账](../../../15-项目状态与阶段台账.md)、[阶段索引](../../../stages/README.md)。
+
+## 9. 后续 main merge closeout
+
+本文件的 PR/Actions 事实以合并前快照为准；PR #1 后续已按独立复审 GO 通过 merge commit 合并 main，main push run/job 已 SUCCESS。当前 G1 状态、merge 谱系、分支保留、回退/维护和禁止的 Preview/Supabase/Auth/DB/Production 边界，以[G1.2b main merge closeout](../2026-08-27-g1-2b-main-merge/README.md)及[15 台账](../../../15-项目状态与阶段台账.md)为准。
