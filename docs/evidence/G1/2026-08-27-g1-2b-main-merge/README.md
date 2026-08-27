@@ -96,7 +96,7 @@ Result：`SUCCESS`
 
 ## 7. 明确未执行事项
 
-本批未部署 Preview 或 Staging，未连接 Supabase/Auth/DB，未触碰 Production，未写入真实业务数据，未读取 secrets，未修改 `prototype/**`、package、lockfile 或 workflow，未创建第二 PR，未删除 integration 分支。G1.3 及 G1 Exit 仍需独立 Owner Gate 和对应证据。
+本批未部署 Preview 或 Staging，未连接 Supabase/Auth/DB，未触碰 Production，未写入真实业务数据，未读取 secrets，未修改 `prototype/**`、package、lockfile 或 workflow。PR #1 merge 执行阶段未创建替代合并入口；本 closeout 现通过 docs-only PR #2 提交，PR #2 当前保持 OPEN/未合并，不预写其结果；`integration/g1-2b` 未删除。G1.3 及 G1 Exit 仍需独立 Owner Gate 和对应证据。
 
 ## 8. 本次 docs-only closeout 质量门
 
