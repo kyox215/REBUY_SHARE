@@ -1,6 +1,6 @@
 # A1 Auth Spike 执行合同
 
-文档状态：G2-A1 未开始；G2-A0 执行中，A0 Exit 通过并完成独立资源/成本/secret 授权后，才可连接独立测试环境
+文档状态：G2-A1 未开始；G2-A0 执行中，七项 Owner 政策已采纳，A0 Exit 仍待新的 exact-head 复审与 Owner 签署；即使 Exit 通过，也须另行完成独立资源/成本/secret 授权后，才可连接独立测试环境
 适用范围：验证 Rebuy 三入口认证、OAuth callback、identity linking、邀请邮箱控制权、MFA、会话和最小服务端集成边界  
 当前允许：在 G2-A0 Exit 和独立资源授权完成前，仅可准备文档、接口草图、测试用例和合成 fixture；不得以此改变已冻结的 G0/P1 UI。
 当前不允许：不得把 A1 标记为“技术验证通过”，不得初始化或连接 Supabase/OAuth/SMTP，不得连接 production、真实业务数据、真实客户邮箱或真实证件；本 A1 合同不授予资源、费用或 secret。
@@ -12,7 +12,7 @@ A1 是短期、可回退、证据驱动的 Auth spike。它只回答“候选认
 
 A1 的执行入口条件：
 
-1. Owner 已完成 G2-A0 Exit，明确验收 09 的 A0-01～A0-15、日期化 Entry 补充、威胁模型和风险登记；未采纳候选不得视为政策。
+1. A1 开始前，Owner 必须完成 G2-A0 Exit，明确验收 09 的 A0-01～A0-15、日期化 Entry 补充、威胁模型和风险登记；本阶段使用的七项 MFA/AAL2/复核/provider/会话/法律边界政策已于 2026-08-27 采纳。
 2. Owner 已单独授权 non-production resource/cost/secret，并明确 provider、project、plan、region、环境、费用上限、密钥责任人和停止联系人；A0 Exit 本身不包含该授权。
 3. 测试项目、client、secret、SMTP、Storage、redirect 和域名均已证明不属于 production。
 4. 所有测试账号、邮箱、组织、申请、文件和订单均为合成或专用测试数据。
@@ -22,7 +22,7 @@ A1 的执行入口条件：
 
 ### 1.1 A0 Exit 与 A1 资源授权分离
 
-G2-A0 Exit 只表示账号安全合同、威胁模型、Owner 待决事项和独立审查完成，并且至多打开 G2-A1 的准备门；它不创建或连接任何 provider/project，也不批准费用、计划、区域、OAuth、SMTP、Storage、secret 或真实账号。G2-A1 只有在新的 non-production resource/cost/secret Gate 明确通过后，才能从“未开始”进入“准备中/待资源授权”。
+G2-A0 Exit 只表示账号安全合同、威胁模型、Owner 已采纳的七项政策和独立文档治理审查完成，并且至多打开 G2-A1 的准备门；它不创建或连接任何 provider/project，也不批准费用、计划、区域、OAuth、SMTP、Storage、secret 或真实账号。G2-A1 只有在新的 non-production resource/cost/secret Gate 明确通过后，才能从“未开始”进入“准备中/待资源授权”。当前 A0 Exit 仍待新的 exact-head 复审与 Owner 签署。
 
 | A1 provider 候选 | 本阶段定位 | A0 约束 |
 |---|---|---|
@@ -30,7 +30,7 @@ G2-A0 Exit 只表示账号安全合同、威胁模型、Owner 待决事项和独
 | Clerk | 仅作能力、限制、数据/区域和成本比较 | 不创建账号、项目或连接 |
 | Auth0 | 仅作能力、限制、数据/区域和成本比较 | 不创建账号、租户或连接 |
 
-候选比较至少记录三入口、MFA/恢复、会话/退出、SSR、linking、地区/计划限制、费用、secret 责任和迁移/回退影响。候选矩阵不是 Owner 选择，也不是 A1 运行证据。
+候选比较至少记录三入口、MFA/恢复、会话/退出、SSR、linking、地区/计划限制、费用、secret 责任和迁移/回退影响。候选矩阵不是最终 provider 选择，也不是 A1 运行证据；A1 按 Owner 已采纳的 Supabase 优先、Clerk/Auth0 仅比较范围执行。
 
 ## 2. 目标
 
@@ -42,6 +42,7 @@ G2-A0 Exit 只表示账号安全合同、威胁模型、Owner 待决事项和独
 - 验证同验证邮箱自动 linking 是否可用；验证手动 link/unlink、重新认证、至少保留一种可用登录方式和重复业务用户冲突路径。
 - 验证员工邀请先证明目标邮箱控制权；当前 Apple/Google identity 邮箱不精确匹配时拒绝；验证目标邮箱 OTP→link OAuth 与撤销重发两条允许路径。
 - 验证平台/商家高权限的 AAL2/TOTP、主因子与备用 TOTP 因子、不同设备/安全位置约束、受审计人工恢复、通知和会话重置。
+- 按 Owner 已采纳政策，为 MFA 人工恢复、owner 转移、角色/权限策略变更、敏感导出、隐私删除/导出、证明文件高风险访问六类动作保留双人复核/禁止自审的后续验证接口；第二责任人和业务映射由对应阶段细化。
 - 若 A1 选择 Supabase，先校准其原生 `signOut` 的 `local`、`global`、`others`；无论选择何种候选，都要调查 session 可见性、服务端权限、字段和单设备列表/撤销实现边界。
 - 形成足够证据供 Owner 选择供应商、锁定 A2 入口和开启后续专项审查；未通过时提供明确停止/回退建议。
 
@@ -161,7 +162,7 @@ user 状态必须使用 `pending_identity_verification`，而不是只表达邮�
 | 责任边界 | support 不得单独批准或解除 MFA；人工恢复不得仅凭姓名、工单文本或未验证邮箱 | API/角色/字段负向测试 |
 | 恢复后状态 | 旧高风险会话按策略失效/降级；重新 enrollment 和高风险动作重新认证 | 旧/新 session、AAL、membership 和通知对照 |
 
-Entry preflight 候选建议（待 G2-A0 Owner 确认）：建议 A1 不以静态一次性码作为恢复路径；若 Owner 不采纳，必须先修订本 A1 合同并重新评审。若供应商界面或 API 出现相近命名，A1 仍必须记录其实际语义、生命周期、存储和安全风险，不能把它当作未经验证的备用因子替代。
+Owner 已于 2026-08-27 采纳 A1 不以静态一次性码作为恢复路径；A1 验证不同设备/安全位置备用 TOTP、受审计人工恢复及供应商实际语义、生命周期、存储和安全风险，不能把相近界面命名当作未经验证的备用因子替代。
 
 ## 11. 会话与退出能力合同
 
@@ -200,7 +201,7 @@ Entry preflight 候选建议（待 G2-A0 Owner 确认）：建议 A1 不以静�
 | UPDATE / view / function 控制 | 记录需要在 A3/A4 验证的候选规则：UPDATE 的 SELECT + USING + WITH CHECK、view `security_invoker` | 实测 view 行范围、function invoker/definer、固定 search_path、撤销 PUBLIC EXECUTE、角色 allowlist | policy/function/view 负向和权限记录；不以客户端隐藏或 publishable key 代替授权 |
 | Storage policy 与 upsert | 若 A1 不需要业务文件则不启用；只记录接口/权限问题 | A4 验证私有桶、申请三元组、签名 URL，以及 upsert 的 INSERT + SELECT + UPDATE | 上传/替换/读取/删除和跨租户拒绝；任一对象公开或权限过宽即停止 |
 | managed schema 限制 | 记录当前官方限制与迁移边界，不创建 `auth`/`storage`/`realtime` 自定义对象 | A3/A4 复核自有 schema、迁移和业务对象不依赖 managed schema 写入 | 按官方文档复核；发现破坏性 managed schema 操作即停止 |
-| MFA 范围 | Entry preflight 候选建议（待 G2-A0 Owner 确认）：建议 V1 不采用 phone/SMS MFA；Owner 采纳后 A1 才可不测试该路径，若不采纳必须先修订本合同并重新评审；A1 继续验证 TOTP、备用因子、人工恢复、AAL/会话重置 | A5 后续验证高风险业务动作与恢复审查 | phone/SMS 测试取决于 Owner 决定；恢复缺少职责分离、通知或审计即停止 |
+| MFA 范围 | Owner 已于 2026-08-27 采纳 V1 排除 phone/SMS MFA 与静态恢复码；A1 继续验证 TOTP、不同设备/安全位置备用因子、受审计人工恢复、AAL/会话重置 | A5 后续验证高风险业务动作与恢复审查；六类高风险动作双人复核且禁止自审 | 按已采纳范围不测试 phone/SMS/静态恢复码路径；恢复缺少职责分离、通知或审计即停止 |
 
 责任分配不替代 Owner Gate：A1 结果必须脱敏并记录实际 provider/plan/region、版本、配置、观察窗口和失败分类；A3/A4 结果必须记录对象、租户、角色、权限、policy、view/function/Storage 和跨租户负向证据。任何能力不能从官方网页或本地骨架直接推断为实现。
 

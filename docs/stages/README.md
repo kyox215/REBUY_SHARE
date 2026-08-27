@@ -11,7 +11,7 @@
 | G1 工程底座与环境隔离 | 已通过 | 本地静态 + 本地等价 + archive 预检 + 远端只读 + 远端 Actions + main merge closeout + Owner Gate | [G1 Owner 验收清单](./G1-Owner验收清单.md)；[G1 final closeout](../evidence/G1/2026-08-27-g1-final-closeout/README.md)；[G1.2b main merge closeout](../evidence/G1/2026-08-27-g1-2b-main-merge/README.md)；[G1.3-0 本地环境预检](../evidence/G1/2026-08-26-g1-3-0-local-environment-preflight/README.md)；[G1 阶段合同](./G1-工程底座与环境隔离.md) |
 | G2-A0 账号安全合同与威胁模型 | 执行中 | 本地静态（docs-only） | [G2-A0 阶段记录](./G2-A0-账号安全合同与威胁模型验收.md)；[G2-A0 Owner 验收清单](./G2-A0-Owner验收清单.md)；[A0 ADR 与威胁模型](../09-A0-账号架构ADR与威胁模型.md) |
 
-GOV-1 的阶段事实见其[独立记录](./GOV-1-治理文档与状态台账.md)，当前状态已由 Owner 于 2026-08-25 18:58:57 CEST 确认为“已通过”；G0/P1 的路径/装饰标题、统一选择器和分类目录 IA 修订已完成，当前 G0/P1 为“已通过并冻结”。G1 已于 2026-08-27 完成 G1-19/G1 Exit=GO，验收 ref=`d51f1c7cb47e2fe2932b29bd39420f5d092a8160`；merge main 与 exact-head Actions 证据见[G1 final closeout](../evidence/G1/2026-08-27-g1-final-closeout/README.md)。G2-A0 已获 Entry 授权，当前仅执行 docs-only 安全合同候选；独立安全审查与 Owner Exit 尚未完成，G2-A1 保持“未开始”。当前状态必须与 [15 台账](../15-项目状态与阶段台账.md) 一致；本索引只做导航，不复制记录细节。
+GOV-1 的阶段事实见其[独立记录](./GOV-1-治理文档与状态台账.md)，当前状态已由 Owner 于 2026-08-25 18:58:57 CEST 确认为“已通过”；G0/P1 的路径/装饰标题、统一选择器和分类目录 IA 修订已完成，当前 G0/P1 为“已通过并冻结”。G1 已于 2026-08-27 完成 G1-19/G1 Exit=GO，验收 ref=`d51f1c7cb47e2fe2932b29bd39420f5d092a8160`；merge main 与 exact-head Actions 证据见[G1 final closeout](../evidence/G1/2026-08-27-g1-final-closeout/README.md)。G2-A0 已获 Entry 授权，当前仅执行 docs-only 安全合同；七项 Owner 政策已采纳，decision-ready baseline 文档治理审查已完成（findings `none/GO`，不等于运行时测试），新的 exact-head 复审与 Owner Exit 尚未完成，G2-A1 保持“未开始”。当前状态必须与 [15 台账](../15-项目状态与阶段台账.md) 一致；本索引只做导航，不复制记录细节。
 
 ## 1.1 其他阶段计划记录（G2-A1 及后续未打开）
 
@@ -20,7 +20,7 @@ GOV-1 的阶段事实见其[独立记录](./GOV-1-治理文档与状态台账.md
 | 阶段 | 状态 | 证据级别 | 计划合同 |
 |---|---|---|---|
 | G1.2/G1.3 工程门（已归档） | G1.2a/G1.2b/G1.3 已按证据完成，G1 Exit 已于 2026-08-27 通过 | 本地静态/本地等价/archive 预检/远端只读/远端 Actions/main merge closeout/Owner Gate | [G1-工程底座与环境隔离](./G1-工程底座与环境隔离.md)；[G1 Owner 验收清单](./G1-Owner验收清单.md)；[G1 final closeout](../evidence/G1/2026-08-27-g1-final-closeout/README.md)；[G1.2b main merge closeout](../evidence/G1/2026-08-27-g1-2b-main-merge/README.md)；[G1.3-0 本地环境预检](../evidence/G1/2026-08-26-g1-3-0-local-environment-preflight/README.md) |
-| G2-A0 账号安全合同与威胁模型 | 执行中；Entry 已授权，Exit 待独立审查与 Owner | 本地静态（docs-only） | [G2-A0 阶段记录](./G2-A0-账号安全合同与威胁模型验收.md)；[G2-A0 Owner 验收清单](./G2-A0-Owner验收清单.md)；[G2-A0 Entry preflight 证据](../evidence/G2-A0/2026-08-26-entry-preflight/README.md)；[A0 ADR 与威胁模型](../09-A0-账号架构ADR与威胁模型.md) |
+| G2-A0 账号安全合同与威胁模型 | 执行中；Entry 已授权，七项政策已采纳，baseline 文档治理审查完成，Exit 待新 exact-head/Owner 签署 | 本地静态（docs-only） | [G2-A0 阶段记录](./G2-A0-账号安全合同与威胁模型验收.md)；[G2-A0 Owner 验收清单](./G2-A0-Owner验收清单.md)；[G2-A0 Entry preflight 证据](../evidence/G2-A0/2026-08-26-entry-preflight/README.md)；[A0 ADR 与威胁模型](../09-A0-账号架构ADR与威胁模型.md) |
 
 ## 2. 命名与追加规则
 
@@ -33,7 +33,7 @@ GOV-1 的阶段事实见其[独立记录](./GOV-1-治理文档与状态台账.md
 
 ## 3. 证据和状态速查
 
-状态枚举、证据枚举、Owner Gate 规则和生产边界以 [15 台账](../15-项目状态与阶段台账.md) 为准。GOV-1 已通过；G0/P1 当前为“已通过并冻结”；G1 已于 2026-08-27 以 G1-19/G1 Exit=GO 完成，ref=`d51f1c7cb47e2fe2932b29bd39420f5d092a8160`。G2-A0 当前为“执行中”，仅执行 docs-only 安全合同、威胁模型一致性和 Owner Gate 准备；独立安全审查尚未完成，G2-A1 保持“未开始”。详见[G1 final closeout](../evidence/G1/2026-08-27-g1-final-closeout/README.md)、[G2-A0 阶段记录](./G2-A0-账号安全合同与威胁模型验收.md)和[G2-A0 Owner 验收清单](./G2-A0-Owner验收清单.md)。
+状态枚举、证据枚举、Owner Gate 规则和生产边界以 [15 台账](../15-项目状态与阶段台账.md) 为准。GOV-1 已通过；G0/P1 当前为“已通过并冻结”；G1 已于 2026-08-27 以 G1-19/G1 Exit=GO 完成，ref=`d51f1c7cb47e2fe2932b29bd39420f5d092a8160`。G2-A0 当前为“执行中”，七项 Owner 政策已采纳，decision-ready baseline 文档治理审查已完成（findings `none/GO`，不等于运行时测试），新的 exact-head 复审与 Owner Exit 尚未完成；G2-A1 保持“未开始”。详见[G1 final closeout](../evidence/G1/2026-08-27-g1-final-closeout/README.md)、[G2-A0 阶段记录](./G2-A0-账号安全合同与威胁模型验收.md)和[G2-A0 Owner 验收清单](./G2-A0-Owner验收清单.md)。
 
 ## 4. 2026-08-26 当前状态去漂移维护
 
@@ -49,4 +49,4 @@ GOV-1 的阶段事实见其[独立记录](./GOV-1-治理文档与状态台账.md
 
 ## 7. 2026-08-27 G2-A0 docs-only 执行启动
 
-G1-19/G1 Exit=GO 后，Owner 已授权打开 G2-A0。当前阶段仅更新账号安全合同、ADR/威胁模型一致性、Owner 待决矩阵、阶段台账和导航；07/08 仅同步状态头，不修改 Owner 政策；独立安全审查与 G2-A0 Exit 尚未完成。G2-A1 保持“未开始”，不创建或连接 Supabase/Auth/DB/Storage/Realtime，不读取 secret/env/PII，不修改代码、依赖、lockfile、workflow、环境配置，不执行 push、PR、远端 Actions、Preview、部署、promote、alias 或 Production 操作。详细记录见[G2-A0 阶段记录](./G2-A0-账号安全合同与威胁模型验收.md)。
+G1-19/G1 Exit=GO 后，Owner 已授权打开 G2-A0。当前阶段仅更新账号安全合同、ADR/威胁模型一致性、Owner 决策矩阵、阶段台账和导航；七项政策已采纳，07/08 同步其政策与状态，独立 decision-ready 文档治理审查已完成，新的 exact-head 复审与 G2-A0 Exit 尚未完成。G2-A1 保持“未开始”，不创建或连接 Supabase/Auth/DB/Storage/Realtime，不读取 secret/env/PII，不修改代码、依赖、lockfile、workflow、环境配置，不执行 push、PR、远端 Actions、Preview、部署、promote、alias 或 Production 操作。详细记录见[G2-A0 阶段记录](./G2-A0-账号安全合同与威胁模型验收.md)。

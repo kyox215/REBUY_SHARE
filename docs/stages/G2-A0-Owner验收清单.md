@@ -1,6 +1,6 @@
 # G2-A0 Owner 验收清单
 
-文档状态：Entry 已授权 / G2-A0 执行中；Exit 待独立安全审查与 Owner 验收
+文档状态：Entry 已授权 / G2-A0 执行中；七项政策已由 Owner 采纳；decision-ready 文档治理审查已完成，Exit 待 Owner 以新的 exact-head 签署
 当前前置：G1 Exit 已由 Owner 于 2026-08-27 签署 GO；本清单只打开 docs-only A0 合同执行，不打开 G2-A1 实测或外部资源。
 证据边界：本清单是合同、审查和 Owner Gate 入口，不代表 Supabase/Auth、数据库、Storage、RLS 或任何外部环境已连接或实现。
 当前状态源：[项目状态与阶段台账](../15-项目状态与阶段台账.md)
@@ -11,7 +11,7 @@
 - G2-A0 当前状态为“执行中”。本批只整理安全合同、威胁模型一致性、阶段证据和 Owner 验收准备；不创建或连接 provider/project。
 - G1 Exit 前置已满足：Owner 已签署 G1-19，G1 Exit=GO，日期=`2026-08-27`，验收 ref=`d51f1c7cb47e2fe2932b29bd39420f5d092a8160`。
 - G2-A0 Entry 已授权，但授权仅覆盖本地 docs-only 候选；不能解释为 Auth、数据库、Storage、真实账号、真实 PII、生产或外部资源授权。
-- G2-A0 Exit 尚未发生。独立安全审查、Owner 待决矩阵和 Owner 明确 Exit 签署完成前，不得把本阶段标为“已通过”。
+- G2-A0 Exit 尚未发生。七项政策虽已由 Owner 于 2026-08-27 采纳，仍须由主代理安排新的 exact-head 复审并取得 Owner 明确 Exit 签署；在此之前不得把本阶段标为“已通过”。
 - G2-A1 当前仍为“未开始”。A0 Exit 将来至多打开 A1 准备门；Supabase project/plan/region、费用、OAuth、SMTP、secret 和任何连接仍需新的 non-production resource/cost/secret 授权。
 
 ## 2. G1 Exit 前置（已满足；不替代 A0 Exit）
@@ -20,28 +20,28 @@
 |---|---|---|---|
 | G1 final technical main merge / exact-head CI | 已满足 | PR #5 merge=`d51f1c7cb47e2fe2932b29bd39420f5d092a8160`；main Actions run=`33089108238` / job=`98576781415`，install/typecheck/lint/build success | 允许继续 G2-A0 Entry；不替代 A0 安全审查 |
 | G1.3 technical closeout | 已满足 | Owner 验收 ref=`d51f1c7cb47e2fe2932b29bd39420f5d092a8160`；G1-19/G1 Exit GO | 允许打开 A0 docs-only 入口；不授权 Auth/DB/部署 |
-| G1 Exit Owner 决定 | 已满足 | Owner 原话、日期、签署和 ref 已记入 [15 台账](../15-项目状态与阶段台账.md) | Entry 通过；A0 Exit 仍待独立审查与 Owner |
+| G1 Exit Owner 决定 | 已满足 | Owner 原话、日期、签署和 ref 已记入 [15 台账](../15-项目状态与阶段台账.md) | Entry 通过；A0 Exit 仍待新的 exact-head 复审与 Owner |
 | A0 文档权威输入 | 已满足 | [07](../07-完整账号系统规划.md)、[08](../08-账号系统思维导图.md)、[09](../09-A0-账号架构ADR与威胁模型.md) | 本批复用并做状态/术语一致性同步 |
 
 ## 3. Requirement-to-evidence 矩阵
 
-状态含义固定使用：`既有合同已覆盖` 只表示 07/08/09 已有设计不变量；`A0 执行中待审查` 表示本批已整理但尚未独立审查或 Owner 签署；`A1 实测（未开始）` 与 `A3/A4 实测（未开始）` 不表示已有运行证据。
+状态含义固定使用：`既有合同已覆盖` 只表示 07/08/09 已有设计不变量；`A0 文档审查已完成` 仅表示 decision-ready 文档治理审查通过，不是运行时或 Auth/安全测试证据；`A0 Exit 待签署` 表示仍缺新的 exact-head 复审/Owner 签署；`A1 实测（未开始）` 与 `A3/A4 实测（未开始）` 不表示已有运行证据。
 
 | 要求 | 当前状态 | 证据/归属 | G2-A0 Exit 前的缺口 |
 |---|---|---|---|
-| identity、membership、authorization、verification 四层分离；默认拒绝；职责分离 | 既有合同已覆盖 | [07](../07-完整账号系统规划.md)、[08](../08-账号系统思维导图.md)、[09](../09-A0-账号架构ADR与威胁模型.md) | 独立审查与 Owner Exit |
-| 用户删除/暂停/成员撤销后的 session、access token、refresh token 窗口；高风险实时检查 `session_id` | A0 执行中待审查 | [09 Entry 补充](../09-A0-账号架构ADR与威胁模型.md#31-2026-08-26-entry-preflight-安全补充待-g2-a0-owner-gate) | A1 观察窗口；A3/A4 负向证据 |
-| Data API grants 与 RLS 两层；exposed object allowlist；不以 publishable key 代替授权 | A0 执行中待审查 | [09 Entry 补充](../09-A0-账号架构ADR与威胁模型.md#31-2026-08-26-entry-preflight-安全补充待-g2-a0-owner-gate) | 独立审查原则确认；A1/A3/A4 实测 |
-| RLS `UPDATE` 先有 `SELECT`，同时具备 `USING` 与 `WITH CHECK` | A0 执行中待审查 | [09 Entry 补充](../09-A0-账号架构ADR与威胁模型.md#31-2026-08-26-entry-preflight-安全补充待-g2-a0-owner-gate) | A3/A4 policy 与跨租户负向 |
-| 暴露 view 使用 `security_invoker`，或非暴露 schema 等价保护 | A0 执行中待审查 | [09 Entry 补充](../09-A0-账号架构ADR与威胁模型.md#31-2026-08-26-entry-preflight-安全补充待-g2-a0-owner-gate) | A3/A4 view/RLS 实测 |
-| `SECURITY DEFINER` 最小化；固定 `search_path`、schema-qualified 引用、撤销 `PUBLIC EXECUTE`、显式角色 allowlist | A0 执行中待审查 | [09 Entry 补充](../09-A0-账号架构ADR与威胁模型.md#31-2026-08-26-entry-preflight-安全补充待-g2-a0-owner-gate) | A3/A4 function 权限和越权负向 |
-| Storage `upsert` 同时具备 `INSERT`、`SELECT`、`UPDATE`；桶私有、对象归属可审计 | A0 执行中待审查 | [09 Entry 补充](../09-A0-账号架构ADR与威胁模型.md#31-2026-08-26-entry-preflight-安全补充待-g2-a0-owner-gate) | A4 Storage policy、签名 URL 与替换文件负向 |
-| 不在 managed `auth`/`storage`/`realtime` schema 创建或破坏自定义对象 | A0 执行中待审查 | [09 Entry 补充](../09-A0-账号架构ADR与威胁模型.md#31-2026-08-26-entry-preflight-安全补充待-g2-a0-owner-gate) | A1/A3/A4 实施时核验 |
-| SSR 每请求新 client；Proxy 负责 cookie refresh；并发请求、过期 session 不互相串用户 | A0 执行中待审查 | [10 A1 合同](../10-A1-Auth-Spike执行合同.md#114-a1a3a4-验证责任分配)、[11 连接记录](../11-发布与Supabase连接记录.md#6-ssr-与发布前安全边界) | A1 独立环境运行 |
-| provider、plan、region、session lifetime、single-session、refresh delay 矩阵 | A1 实测（未开始） | [10 A1 合同](../10-A1-Auth-Spike执行合同.md) | Owner 选择候选；A1 记录实际版本/日期/结果 |
-| phone/SMS MFA 边界 | A0 执行中待审查 | 本清单第 5 节；[09 Entry 补充](../09-A0-账号架构ADR与威胁模型.md#31-2026-08-26-entry-preflight-安全补充待-g2-a0-owner-gate) | Owner 决定；采纳后 A1 才可不测试 |
-| publishable key 非授权边界；service role 只在受信服务端 | A0 执行中待审查 | [09](../09-A0-账号架构ADR与威胁模型.md)、[11 连接记录](../11-发布与Supabase连接记录.md#3-环境变量密钥与授权边界) | A1/A3/A4 bundle、grants/RLS 和服务端检查 |
-| 静态恢复码边界 | A0 执行中待审查 | 本清单第 5 节；[09 Entry 补充](../09-A0-账号架构ADR与威胁模型.md#31-2026-08-26-entry-preflight-安全补充待-g2-a0-owner-gate) | Owner 决定；A1 验证供应商能力 |
+| identity、membership、authorization、verification 四层分离；默认拒绝；职责分离 | 既有合同已覆盖 | [07](../07-完整账号系统规划.md)、[08](../08-账号系统思维导图.md)、[09](../09-A0-账号架构ADR与威胁模型.md) | 新 exact-head 复审与 Owner Exit |
+| 用户删除/暂停/成员撤销后的 session、access token、refresh token 窗口；高风险实时检查 `session_id` | A0 文档审查已完成 | [09 Entry 补充](../09-A0-账号架构ADR与威胁模型.md#31-2026-08-26-entry-preflight-安全补充历史预检2026-08-27-政策已采纳) | A1 观察窗口；A3/A4 负向证据；不以文档审查替代运行证据 |
+| Data API grants 与 RLS 两层；exposed object allowlist；不以 publishable key 代替授权 | A0 文档审查已完成 | [09 Entry 补充](../09-A0-账号架构ADR与威胁模型.md#31-2026-08-26-entry-preflight-安全补充历史预检2026-08-27-政策已采纳) | A1/A3/A4 实测；不以文档审查替代运行证据 |
+| RLS `UPDATE` 先有 `SELECT`，同时具备 `USING` 与 `WITH CHECK` | A0 文档审查已完成 | [09 Entry 补充](../09-A0-账号架构ADR与威胁模型.md#31-2026-08-26-entry-preflight-安全补充历史预检2026-08-27-政策已采纳) | A3/A4 policy 与跨租户负向 |
+| 暴露 view 使用 `security_invoker`，或非暴露 schema 等价保护 | A0 文档审查已完成 | [09 Entry 补充](../09-A0-账号架构ADR与威胁模型.md#31-2026-08-26-entry-preflight-安全补充历史预检2026-08-27-政策已采纳) | A3/A4 view/RLS 实测 |
+| `SECURITY DEFINER` 最小化；固定 `search_path`、schema-qualified 引用、撤销 `PUBLIC EXECUTE`、显式角色 allowlist | A0 文档审查已完成 | [09 Entry 补充](../09-A0-账号架构ADR与威胁模型.md#31-2026-08-26-entry-preflight-安全补充历史预检2026-08-27-政策已采纳) | A3/A4 function 权限和越权负向 |
+| Storage `upsert` 同时具备 `INSERT`、`SELECT`、`UPDATE`；桶私有、对象归属可审计 | A0 文档审查已完成 | [09 Entry 补充](../09-A0-账号架构ADR与威胁模型.md#31-2026-08-26-entry-preflight-安全补充历史预检2026-08-27-政策已采纳) | A4 Storage policy、签名 URL 与替换文件负向 |
+| 不在 managed `auth`/`storage`/`realtime` schema 创建或破坏自定义对象 | A0 文档审查已完成 | [09 Entry 补充](../09-A0-账号架构ADR与威胁模型.md#31-2026-08-26-entry-preflight-安全补充历史预检2026-08-27-政策已采纳) | A1/A3/A4 实施时核验 |
+| SSR 每请求新 client；Proxy 负责 cookie refresh；并发请求、过期 session 不互相串用户 | A0 文档审查已完成 | [10 A1 合同](../10-A1-Auth-Spike执行合同.md#114-a1a3a4-验证责任分配)、[11 连接记录](../11-发布与Supabase连接记录.md#6-ssr-与发布前安全边界) | A1 独立环境运行 |
+| provider、plan、region、session lifetime、single-session、refresh delay 矩阵 | A1 实测（未开始） | [10 A1 合同](../10-A1-Auth-Spike执行合同.md) | A1 按已采纳的 Supabase 优先、Clerk/Auth0 仅比较范围执行；plan/region/session 依 EU non-production 实测记录，最终 provider 仍由证据与 Owner 决策 |
+| phone/SMS MFA 边界 | A0 文档审查已完成；Owner 已采纳 V1 排除 | 本清单第 5 节；[09 Entry 补充](../09-A0-账号架构ADR与威胁模型.md#31-2026-08-26-entry-preflight-安全补充历史预检2026-08-27-政策已采纳) | A1 按已采纳范围不测试该路径；运行验证尚未开始 |
+| publishable key 非授权边界；service role 只在受信服务端 | A0 文档审查已完成 | [09](../09-A0-账号架构ADR与威胁模型.md)、[11 连接记录](../11-发布与Supabase连接记录.md#3-环境变量密钥与授权边界) | A1/A3/A4 bundle、grants/RLS 和服务端检查 |
+| 静态恢复码边界 | A0 文档审查已完成；Owner 已采纳排除静态恢复码 | 本清单第 5 节；[09 Entry 补充](../09-A0-账号架构ADR与威胁模型.md#31-2026-08-26-entry-preflight-安全补充历史预检2026-08-27-政策已采纳) | A1 验证备用 TOTP（不同设备/安全位置）、受审计人工恢复与供应商能力 |
 | 完整业务 RLS、Storage、view/function、申请三元组、原子审批与跨租户负向 | A3/A4 实测（未开始） | [07 A3/A4 合同](../07-完整账号系统规划.md#15-分阶段路线-a0a6) | 不以 A0 文档或 A1 基础测试代替 |
 | Apple/Google/邮箱 OTP、linking、MFA、signOut 和 token 窗口 | A1 实测（未开始） | [10 A1 合同](../10-A1-Auth-Spike执行合同.md)、[11 连接记录](../11-发布与Supabase连接记录.md) | 不在 A0 写成已实现 |
 
@@ -58,32 +58,32 @@
 - [x] 保留 Auth/DB/Storage/Realtime、secret/env、真实账号/PII、部署和远端写入禁止边界。
 - [x] 已明确分离未来独立资源授权 Gate 与 A0 Exit；A0 Exit 只打开 G2-A1 准备门，本次未授权项目/资源、费用、secret、OAuth、SMTP 或任何连接。
 
-### 4.2 待独立审查与 Owner Exit
+### 4.2 已完成的文档审查与 Owner 政策决定；待 Exit 签署
 
-- [ ] 独立安全审查人逐项复核 07/08/09、03 高层角色摘要、10 A1 资源边界和本清单威胁矩阵。
-- [ ] 独立审查人确认 grants/RLS/exposed allowlist、UPDATE 三条件、view/function 权限、Storage 规则和默认拒绝边界的一致性；不把文档当成运行证据。
-- [ ] (a) Owner 决定 V1 是否排除 phone/SMS MFA。
-- [ ] (b) Owner 决定是否排除静态恢复码，改用不同设备/安全位置备用 TOTP 与受审计人工恢复。
-- [ ] (c) Owner 决定 AAL2 强制角色范围与时点。
-- [ ] (d) Owner 决定高风险动作双人复核范围与第二责任人。
-- [ ] (e) Owner 决定 A1 spike provider 候选（Supabase 优先，Clerk/Auth0 仅比较）。
-- [ ] (f) Owner 决定 A1 plan/region/session 配置或决策规则。
-- [ ] (g) Owner 确认 GDPR/税务留存、删除、legal hold、跨境和处理者合同的确认/转交边界（A5/法律顾问）。
-- [ ] Owner 明确签署 G2-A0 Exit；通过后只将 G2-A1 改为“准备中/待资源授权”，不直接开始 Auth 实测。
+- [x] 独立安全审查人已在 decision-ready baseline `9b11f375080db68353dd6952774bcd5e75c4153c` 逐项复核 07/08/09、03 高层角色摘要、10 A1 资源边界和本清单威胁矩阵；findings `none/GO`。
+- [x] 独立审查人已确认 grants/RLS/exposed allowlist、UPDATE 三条件、view/function 权限、Storage 规则和默认拒绝边界的文档一致性；这是文档治理审查，不是运行时或 Auth/安全测试证据。
+- [x] (a) Owner 于 2026-08-27 采纳 V1 排除 phone/SMS MFA。
+- [x] (b) Owner 于 2026-08-27 采纳排除静态恢复码，改用不同设备/安全位置备用 TOTP 与受审计人工恢复。
+- [x] (c) Owner 于 2026-08-27 采纳 AAL2 强制角色范围与时点：平台 owner/admin/reviewer 上线前，商家 owner/admin 最迟 Beta 前，普通买家按风险提升，高风险动作重新认证。
+- [x] (d) Owner 于 2026-08-27 采纳六类高风险动作双人复核，禁止自审：MFA 人工恢复、owner 转移、角色/权限策略变更、敏感导出、隐私删除/导出、证明文件高风险访问；第二责任人由对应阶段细化。
+- [x] (e) Owner 于 2026-08-27 采纳 A1 spike 优先验证 Supabase，Clerk/Auth0 仅比较；A0 不锁最终 provider。
+- [x] (f) Owner 于 2026-08-27 采纳 plan/region/session 留待 A1 按 EU non-production 实测决定；不预承诺具体 plan、session lifetime、single-session 或 refresh delay。
+- [x] (g) Owner 于 2026-08-27 确认 GDPR/税务留存、删除、legal hold、跨境和处理者合同转交 A5 与专业顾问；本项不构成最终法律意见。
+- [ ] Owner 以新的 exact-head 明确签署 G2-A0 Exit；通过后只将 G2-A1 改为“准备中/待资源授权”，不直接开始 Auth 实测。
 
 ## 5. Owner 决策矩阵
 
-以下七项与[G2-A0 阶段记录](./G2-A0-账号安全合同与威胁模型验收.md)第 8 节逐项一致；“建议”只供 Owner 选择，当前不视为已采纳。
+以下七项与[G2-A0 阶段记录](./G2-A0-账号安全合同与威胁模型验收.md)第 8 节逐项一致，均已由 Owner 于 2026-08-27 采纳；政策落账不等于 G2-A0 Exit，也不授予资源、运行时或外部环境权限。
 
 | 决策项 | 建议/候选 | 当前决定 | 后续约束 |
 |---|---|---|---|
-| (a) phone/SMS MFA | 建议 V1 不使用 phone/SMS MFA | 待 Owner 决定 | 若采纳，A1 可不测试该路径；若不采纳，先修订 A1 合同并重新评审 |
-| (b) 静态恢复码与备用 TOTP/人工恢复 | 建议 V1 不使用静态恢复码；改用位于不同设备/安全位置的备用 TOTP + 受审计人工恢复 | 待 Owner 决定；供应商能力仍待 A1 验证 | A1 验证因子语义、恢复、AAL/会话重置、通知与审计；不得把供应商命名当作政策 |
-| (c) AAL2 强制角色范围与时点 | 候选：平台 owner/admin/reviewer 从上线前强制；商家 owner/admin 最迟 Beta 前强制；普通买家按风险提升；高风险动作重新认证 | 待 Owner 决定 | 影响 A1 测试矩阵、业务高风险动作和 P2/P6 入口 |
-| (d) 高风险动作双人复核与第二责任人 | 候选：MFA 人工恢复、owner 转移、角色/权限策略变更、敏感导出、隐私删除/导出、证明文件高风险访问 | 待 Owner 决定 | 需确定第二责任人、AAL、通知、审计、拒绝和回退证据 |
-| (e) A1 spike provider 候选 | 候选矩阵：Supabase 优先；Clerk、Auth0 仅作比较，不在 A0 锁定 | 待 Owner 决定 | A1 实测 provider 能力、限制、版本和数据/区域边界 |
-| (f) A1 plan/region/session 配置与决策规则 | A0 不锁 provider、plan、region、session lifetime、single-session、refresh delay | 待 Owner 决定 | 需 A1 实测并记录观察窗口；不得凭默认值承诺 |
-| (g) GDPR/税务留存、删除、legal hold、跨境与处理者合同边界 | GDPR/税务留存、legal hold、跨境传输、处理者合同留给 A5 与法律/税务顾问 | 待法律/Owner 决定 | 未有意见前不处理真实 PII，不把规划期限当法律结论 |
+| (a) phone/SMS MFA | V1 排除 phone/SMS MFA | Owner 已采纳（2026-08-27） | A1 按范围不测试该路径；运行验证尚未开始 |
+| (b) 静态恢复码与备用 TOTP/人工恢复 | 排除静态恢复码；备用 TOTP 必须位于不同设备/安全位置，并以受审计人工恢复为后备 | Owner 已采纳（2026-08-27） | A1 验证因子语义、恢复、AAL/会话重置、通知与审计；不得把供应商能力当作政策 |
+| (c) AAL2 强制角色范围与时点 | 平台 owner/admin/reviewer 上线前强制；商家 owner/admin 最迟 Beta 前强制；普通买家按风险提升；高风险动作重新认证 | Owner 已采纳（2026-08-27） | 影响 A1 测试矩阵、业务高风险动作和 P2/P6 入口 |
+| (d) 高风险动作双人复核与第二责任人 | 六类动作禁止自审并实行双人复核：MFA 人工恢复、owner 转移、角色/权限策略变更、敏感导出、隐私删除/导出、证明文件高风险访问 | Owner 已采纳（2026-08-27） | 第二责任人、AAL、通知、审计、拒绝和回退证据由对应阶段细化 |
+| (e) A1 spike provider 候选 | Supabase 优先验证；Clerk、Auth0 仅作比较；A0 不锁最终 provider | Owner 已采纳（2026-08-27） | A1 实测 provider 能力、限制、版本和数据/区域边界；资源 Gate 另行授权 |
+| (f) A1 plan/region/session 配置与决策规则 | plan/region/session 在 EU non-production 由 A1 实测决定；A0 不锁具体 plan、session lifetime、single-session 或 refresh delay | Owner 已采纳（2026-08-27） | A1 实测并记录观察窗口；不得凭默认值承诺；资源/费用/secret/连接另行授权 |
+| (g) GDPR/税务留存、删除、legal hold、跨境与处理者合同边界 | GDPR/税务问题转交 A5 与专业顾问，覆盖留存、删除、legal hold、跨境和处理者合同 | Owner 已采纳（2026-08-27） | 本项是确认/转交边界，不是最终法律意见；未授权处理真实 PII |
 
 ### 5.1 未来独立资源授权 Gate（不属于七项政策决定）
 
@@ -98,11 +98,12 @@ non-production project/resource、cost、secret、OAuth、SMTP 和任何连接�
 | G1 Exit | GO；2026-08-27；ref=`d51f1c7cb47e2fe2932b29bd39420f5d092a8160` |
 | G2-A0 Entry | 已授权；2026-08-27；仅 docs-only 候选 |
 | G2-A0 当前状态 | 执行中 |
-| G2-A0 Exit | 待独立安全审查与 Owner 验收 |
+| G2-A0 Exit | 待 Owner 以新的 exact-head 签署 |
 | G2-A1 | 未开始 / 关闭 |
-| 独立安全审查 | 待指定 / 未完成 |
+| 独立安全审查 | 已完成 decision-ready baseline `9b11f375080db68353dd6952774bcd5e75c4153c` 文档治理审查；findings `none/GO`；新 exact-head 待复审（非运行时测试） |
 | Owner 原话 | `确认 G1.3 technical closeout 通过；验收 ref=d51f1c7cb47e2fe2932b29bd39420f5d092a8160；签署 G1-19，G1 Exit GO，日期 2026-08-27，并授权打开 G2-A0。` |
-| 签署人 / 日期 | Hexiang Huang / 2026-08-27（G1-19；G2-A0 Exit 尚未签署） |
+| Owner 七项政策原话 | `G2-A0 七项政策全部采用推荐方案：排除 phone/SMS MFA；排除静态恢复码并采用异地备用 TOTP＋受审计人工恢复；高权限角色按推荐时点强制 AAL2；六类高风险操作实行双人复核；A1 优先验证 Supabase、Clerk/Auth0 仅比较；plan/region/session 留待 A1 按 EU 非生产环境实测决定；GDPR及税务法律问题转交 A5 和专业顾问。授权写入最终文档；G2-A1 的资源、费用、secret、Auth、DB、Storage、OAuth、SMTP、部署和 Production Gate 继续关闭。`（2026-08-27）` |
+| 签署人 / 日期 | Hexiang Huang / 2026-08-27（G1-19、七项政策；G2-A0 Exit 尚未签署） |
 
 ## 7. 官方规划依据（2026-08-27 文档复核）
 
