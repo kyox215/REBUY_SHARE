@@ -1,9 +1,9 @@
 # A1 Auth Spike 执行合同
 
-文档状态：G2-A1 尚未开始；G1 Exit 通过并完成 G2-A0 Owner Gate 后，才可连接独立测试环境
+文档状态：G2-A1 未开始；G2-A0 执行中，A0 Exit 通过并完成独立资源/成本/secret 授权后，才可连接独立测试环境
 适用范围：验证 Rebuy 三入口认证、OAuth callback、identity linking、邀请邮箱控制权、MFA、会话和最小服务端集成边界  
-当前允许：在 G1 Exit 通过并完成 G2-A0 Owner Gate 前，仅可准备文档、接口草图、测试用例和合成 fixture；不得以此改变已冻结的 G0/P1 UI。
-当前不允许：不得把 A1 标记为“技术验证通过”，不得初始化或连接 Supabase/OAuth/SMTP，不得连接 production、真实业务数据、真实客户邮箱或真实证件。
+当前允许：在 G2-A0 Exit 和独立资源授权完成前，仅可准备文档、接口草图、测试用例和合成 fixture；不得以此改变已冻结的 G0/P1 UI。
+当前不允许：不得把 A1 标记为“技术验证通过”，不得初始化或连接 Supabase/OAuth/SMTP，不得连接 production、真实业务数据、真实客户邮箱或真实证件；本 A1 合同不授予资源、费用或 secret。
 关联文档：[完整账号系统规划](./07-完整账号系统规划.md)、[账号系统思维导图](./08-账号系统思维导图.md)、[A0 账号架构 ADR 与威胁模型](./09-A0-账号架构ADR与威胁模型.md)。
 
 ## 1. 合同目的与入口条件
@@ -12,17 +12,29 @@ A1 是短期、可回退、证据驱动的 Auth spike。它只回答“候选认
 
 A1 的执行入口条件：
 
-1. Owner 已验收 09 的 A0 ADR、威胁模型、八项修正和风险登记。
-2. A0 Owner Gate 明确允许连接独立 `local`/`preview-staging` 测试环境。
+1. Owner 已完成 G2-A0 Exit，明确验收 09 的 A0-01～A0-15、日期化 Entry 补充、威胁模型和风险登记；未采纳候选不得视为政策。
+2. Owner 已单独授权 non-production resource/cost/secret，并明确 provider、project、plan、region、环境、费用上限、密钥责任人和停止联系人；A0 Exit 本身不包含该授权。
 3. 测试项目、client、secret、SMTP、Storage、redirect 和域名均已证明不属于 production。
 4. 所有测试账号、邮箱、组织、申请、文件和订单均为合成或专用测试数据。
-5. 密钥责任人、证据保存位置、停止联系人和回退方式已记录。
+5. 证据保存位置、停止联系人和回退方式已记录，且不保存 secret/token/PII 原值。
 
 在第 1–2 项未满足前，执行代理只能做文档、接口草图、静态 UI、测试用例和合成 fixture，不得初始化 Supabase 连接或 OAuth 控制台回调。
 
+### 1.1 A0 Exit 与 A1 资源授权分离
+
+G2-A0 Exit 只表示账号安全合同、威胁模型、Owner 待决事项和独立审查完成，并且至多打开 G2-A1 的准备门；它不创建或连接任何 provider/project，也不批准费用、计划、区域、OAuth、SMTP、Storage、secret 或真实账号。G2-A1 只有在新的 non-production resource/cost/secret Gate 明确通过后，才能从“未开始”进入“准备中/待资源授权”。
+
+| A1 provider 候选 | 本阶段定位 | A0 约束 |
+|---|---|---|
+| Supabase | 优先候选，待 A1 独立实测 | A0 不锁定项目、计划、区域、版本或费用 |
+| Clerk | 仅作能力、限制、数据/区域和成本比较 | 不创建账号、项目或连接 |
+| Auth0 | 仅作能力、限制、数据/区域和成本比较 | 不创建账号、租户或连接 |
+
+候选比较至少记录三入口、MFA/恢复、会话/退出、SSR、linking、地区/计划限制、费用、secret 责任和迁移/回退影响。候选矩阵不是 Owner 选择，也不是 A1 运行证据。
+
 ## 2. 目标
 
-- 验证 Supabase Auth 是否能在独立环境提供 Apple、Google、邮箱 OTP 三个等价 V1 入口；Magic Link 只作为邮箱兼容/后备路径。
+- 验证候选 Auth provider（当前优先候选 Supabase；Clerk/Auth0 仅作比较）是否能在独立环境提供 Apple、Google、邮箱 OTP 三个等价 V1 入口；Magic Link 只作为邮箱兼容/后备路径。
 - 验证 user 状态 `pending_identity_verification -> active` 的三入口转换、失败、取消、重试、限流和反枚举语义。
 - 验证 Apple/Google OAuth callback 的 PKCE、`state`、`nonce`、一次性 code、精确 redirect allowlist、环境绑定和 open redirect 防护。
 - 验证 Google 最小 scope `openid`、`email`、`profile`，不读取 Gmail、Drive、联系人等其他服务，不保存 provider token。
@@ -30,7 +42,7 @@ A1 的执行入口条件：
 - 验证同验证邮箱自动 linking 是否可用；验证手动 link/unlink、重新认证、至少保留一种可用登录方式和重复业务用户冲突路径。
 - 验证员工邀请先证明目标邮箱控制权；当前 Apple/Google identity 邮箱不精确匹配时拒绝；验证目标邮箱 OTP→link OAuth 与撤销重发两条允许路径。
 - 验证平台/商家高权限的 AAL2/TOTP、主因子与备用 TOTP 因子、不同设备/安全位置约束、受审计人工恢复、通知和会话重置。
-- 先校准 Supabase 原生 `signOut` 的 `local`、`global`、`others`；调查 `auth.sessions` 可见性、服务端权限、字段和单设备列表/撤销实现边界。
+- 若 A1 选择 Supabase，先校准其原生 `signOut` 的 `local`、`global`、`others`；无论选择何种候选，都要调查 session 可见性、服务端权限、字段和单设备列表/撤销实现边界。
 - 形成足够证据供 Owner 选择供应商、锁定 A2 入口和开启后续专项审查；未通过时提供明确停止/回退建议。
 
 ## 3. 非目标
@@ -285,7 +297,7 @@ A1 技术验证通过的最低条件：
 
 
 - 三入口、callback、linking、邀请邮箱控制权、MFA 和会话测试矩阵有可复核结果，失败项有明确分类。
-- 八项 A0 修正没有被测试结果推翻或绕过；任何未验证能力都标记为后置，不写成已具备。
+- `A0-01～A0-15` 及日期化 Entry 补充没有被测试结果推翻或绕过；任何未验证能力都标记为后置，不写成已具备。
 - 无 production/真实 PII 连接；无原始短时 OAuth 材料、provider token、密钥或验证码泄露。
 - `signOut` 语义、`auth.sessions` 能力、token `exp` 窗口和高风险实时检查结论被写入 07/后续 ADR 的变更建议，而不是隐含在 UI 中。
 - Owner 选择供应商、入口、linking 规则、人工恢复责任、SMTP/Apple 密钥责任和下一阶段范围。
