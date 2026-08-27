@@ -1,9 +1,9 @@
 # A0 账号架构 ADR 与威胁模型
 
-文档状态：G2-A0 账号安全合同输入；G1 Exit 前未打开，待独立安全审查与 Owner Gate
+文档状态：G2-A0 Exit GO；远端 docs-only reconciliation 已获批、尚未执行（本次修复 closeout head 待独立复审）；Entry 已授权，七项 Owner 政策已于 2026-08-27 采纳
 适用范围：Rebuy 多商家、批发与零售平台的身份、组织、权限、经营资格、文件和隐私信任边界  
 证据边界：本文是 A0 架构决定和威胁模型执行合同，不代表已连接 Supabase、OAuth、SMTP、Storage、数据库或生产环境。  
-关联文档：[完整账号系统规划](./07-完整账号系统规划.md)、[账号系统思维导图](./08-账号系统思维导图.md)、[A1 Auth spike 执行合同](./10-A1-Auth-Spike执行合同.md)。
+关联文档：[完整账号系统规划](./07-完整账号系统规划.md)、[账号系统思维导图](./08-账号系统思维导图.md)、[A1 Auth spike 执行合同](./10-A1-Auth-Spike执行合同.md)、[G2-A0 阶段记录](./stages/G2-A0-账号安全合同与威胁模型验收.md)。
 
 ## 1. A0 目标与范围
 
@@ -13,10 +13,12 @@ A0 要锁定账号系统在 A1 之前不能再被实现代理自行改变的安�
 - 组织/店铺是租户边界，服务端授权和 Postgres RLS/Storage policy 默认拒绝。
 - 商家入驻、批发申请、批发当前资格和证明文件具有不同生命周期和归属规则。
 - 邀请接受先证明目标邮箱控制权；Apple relay、Google identity 和姓名不能被用来猜测账号归属。
-- Entry preflight 候选建议（待 G2-A0 Owner 确认）：MFA 恢复采用不同设备/安全位置的备用 TOTP 因子或受审计人工恢复，建议 V1 不采用静态一次性恢复材料；供应商能力仍待 A1 验证，Owner 未确认前不作为现行政策。
+- Owner 已于 2026-08-27 采纳：MFA 恢复排除 phone/SMS MFA 与静态恢复码，采用不同设备/安全位置的备用 TOTP 因子＋受审计人工恢复；供应商能力与实现证据仍待 A1 验证。
 - 会话能力必须根据 Supabase 实测校准；未验证的设备列表、单设备撤销和即时 access token 失效不得被写成承诺。
 - OAuth 短时材料一次性消费，不持久保存原值，只留下必要的脱敏安全事件。
 - support、reviewer、auditor、platform admin 的读写和决定权限分离。
+
+2026-08-27 Owner 已签署 G1-19、G1 Exit=GO，并授权打开 G2-A0。G2-A0 Exit 已 GO（验收 ref=`140ea15d9c3f178a326709d35ad1750a156df0d1`），当前仅维护已批准且尚未执行的 docs-only reconciliation；前一 exact-head 独立文档治理审查 findings `none/GO`，本次修复 closeout head 待独立复审，G2-A1 保持未开始。不授权 Supabase/Auth/DB/Storage/Realtime、secret/env、真实账号或任何部署/外部资源写入。
 
 本 A0 只覆盖账号、组织、权限、资格、证明文件、会话、MFA、OAuth、隐私和相关审计。商品、订单、支付、税务、物流和生产部署仍受 00、04、05 的独立阶段门禁约束。
 
@@ -25,14 +27,14 @@ A0 要锁定账号系统在 A1 之前不能再被实现代理自行改变的安�
 | ADR | 决定 | 理由与约束 | 后续验证/门禁 |
 |---|---|---|---|
 | A0-01 | 采用四层模型：认证 identity、组织/店铺 membership、permission-point authorization、经营资格 verification | 登录成功不等于组织成员、平台角色或批发资格；每层必须有独立状态、归属和审计 | A1 验证 Auth 入口；A2–A4 验证业务表、服务端授权和 RLS |
-| A0-02 | 推荐 Supabase Auth + Rebuy 业务数据库；当前不锁定供应商、不连接环境 | Auth 供应商只托管 identity、会话和因子；组织、店铺、membership、权限、申请、资格和审计真源属于 Rebuy | A1 在独立环境比较 Supabase/替代方案；Owner Gate 后才锁定 |
+| A0-02 | Owner 已采纳 A1 优先验证 Supabase Auth，Clerk/Auth0 仅作比较；A0 不锁定最终 provider、不连接环境 | Auth 供应商只托管 identity、会话和因子；组织、店铺、membership、权限、申请、资格和审计真源属于 Rebuy | A1 在独立环境比较 Supabase/替代方案；最终选择仍需 A1 evidence/Owner 决策 |
 | A0-03 | `verification_documents.org_id` 审批前允许 NULL | 审批前组织可能尚不存在，NULL 是生命周期事实而不是公开访问条件 | A4 证明 RLS/Storage 同时匹配 `application_type/application_id/applicant_user_id`；批准事务成功后绑定 `org_id` |
 | A0-04 | 审批前文件归属由申请三元组和申请人形成 | `application_type`、`application_id`、`applicant_user_id` 必须同时匹配当前申请、当前用户、文件引用和授权角色；只凭 `org_id IS NULL` 一律拒绝 | A0 设计检查；A4 负向测试、Storage policy 和签名 URL 故障注入 |
 | A0-05 | `wholesale_applications` 与 `wholesale_qualifications` 分离 | 申请是不可变审核历史；资格是当前可用的业务状态，必须能独立暂停、到期或撤销 | A4 验证批准事务、版本、价格/结算实时检查和历史不可改写 |
 | A0-06 | 批发申请终态不可变 | `approved`、`rejected`、`withdrawn` 进入后不原地改写主体、文件、决定或理由；修正走追加事件或新申请 | A4 验证并发、重复批准、人工复核和追加审计 |
 | A0-07 | 当前资格实体只允许 `active`、`suspended`、`expired`、`revoked` | 资格字段包括 `source_application_id`、`org_id`、`valid_from`、`valid_until`、`reason`、`version`；只有 active 且其他实时条件满足时参与批发价格 | A4 负向验证 JWT/cache 陈旧、资格失效、结算前复核 |
 | A0-08 | 邀请接受必须证明邀请目标邮箱控制权 | Apple/Google identity 的已验证邮箱必须与目标邮箱精确匹配；relay 和姓名不能推断匹配 | A1 验证目标邮箱 OTP→link OAuth、拒绝不匹配、撤销重发和通知 |
-| A0-09 | MFA 使用主 TOTP + 备用 TOTP 因子 + 受审计人工恢复 | 备用因子必须在不同设备或安全位置；人工恢复需要身份核验、职责分离、AAL/会话重置、通知、限速和审计；support 不得单独批准 | A1 验证因子生命周期；A5 进行高风险流程和恢复专项审查 |
+| A0-09 | MFA 边界：主 TOTP、不同设备/安全位置的备用 TOTP、受审计人工恢复；Owner 已采纳排除 phone/SMS MFA 与静态恢复码 | 备用因子必须在不同设备或安全位置；人工恢复需要身份核验、职责分离、AAL/会话重置、通知、限速和审计；support 不得单独批准；六类高风险动作禁止自审并实行双人复核 | A1 验证因子生命周期；A5 进行高风险流程和恢复专项审查；实现证据仍未开始 |
 | A0-10 | 会话先校准原生退出语义 | 先验证 Supabase `signOut` 的 `local`、`global`、`others`；`auth.sessions` 可见性、服务端权限、设备列表和单设备撤销在 A1 前不承诺 | A1 记录实测能力；高风险请求实时查 `session_id`/membership；普通请求按批准 JWT 时限 |
 | A0-11 | 被撤销 access token 的窗口按风险处理 | access token 可能在 `exp` 到期前仍有效；高风险动作必须实时检查 session、用户、membership、组织/店铺和资格，不能只看 JWT | A1/A2 记录观察证据；A3–A5 做撤销后负向测试 |
 | A0-12 | user 初始状态命名为 `pending_identity_verification` | 邮箱 OTP/Magic Link 与受信任 OAuth callback 都能完成 identity verification 并转 active；不是只有邮箱验证路径 | A1 覆盖三入口和失败/取消路径 |
@@ -52,9 +54,9 @@ A0 要锁定账号系统在 A1 之前不能再被实现代理自行改变的安�
 - 批发资格的商业条件、有效期、审核 SLA、申诉和价格/订单快照规则。
 - 真实客户、真实商家、真实证件、真实邮箱、真实订单、生产 PII 或生产业务写入。
 
-## 3.1 2026-08-26 Entry preflight 安全补充（待 G2-A0 Owner Gate）
+## 3.1 2026-08-26 Entry preflight 安全补充（历史预检；2026-08-27 政策已采纳）
 
-本节是独立只读安全预检的合同补充，不是 Owner 已批准的现行 ADR，也不代表已连接 Supabase/Auth、数据库、Storage 或任何外部项目。G1 Exit 仍为 NO-GO；本节只有在 G1 Exit 通过并经 Owner 明确 Gate 后，才能进入正式 G2-A0 审查。完整记录见[G2-A0 Entry preflight 证据](./evidence/G2-A0/2026-08-26-entry-preflight/README.md)。
+本节是独立只读安全预检的历史合同补充，不是自动生效的运行时授权，也不代表已连接 Supabase/Auth、数据库、Storage 或任何外部项目。原记录日 2026-08-26 的 G1 Exit 快照为 NO-GO；2026-08-27 已由 Owner 以 G1-19/ref=`d51f1c7cb47e2fe2932b29bd39420f5d092a8160` 签署 G1 Exit=GO 并打开 G2-A0 docs-only 执行。七项政策已由 Owner 采纳，前一 exact-head `140ea15d9c3f178a326709d35ad1750a156df0d1` 的独立文档治理审查 findings `none/GO`；G2-A0 Exit 已 GO，新 closeout head 仍待独立复审，G2-A1 保持未开始。完整记录见[G2-A0 Entry preflight 证据](./evidence/G2-A0/2026-08-26-entry-preflight/README.md)和[G2-A0 阶段记录](./stages/G2-A0-账号安全合同与威胁模型验收.md)。
 
 官方页面只作为 2026-08-26 的规划依据，实施时须按实际版本、区域和项目重新核验： [Securing your API](https://supabase.com/docs/guides/api/securing-your-api)、[Row Level Security](https://supabase.com/docs/guides/database/postgres/row-level-security)、[Database Functions](https://supabase.com/docs/guides/database/functions)、[Storage Access Control](https://supabase.com/docs/guides/storage/security/access-control)、[SSR client](https://supabase.com/docs/guides/auth/server-side/creating-a-client)、[sessions](https://supabase.com/docs/guides/auth/sessions)、[MFA](https://supabase.com/docs/guides/auth/auth-mfa) 和 [managed schema restrictions](https://supabase.com/changelog/34270-restricting-access-on-auth-storage-and-realtime-schemas-on-april-21-2025)。本批只读官方网页，不执行 provider/project 连接。
 
@@ -69,9 +71,9 @@ A0 要锁定账号系统在 A1 之前不能再被实现代理自行改变的安�
 | managed `auth`/`storage`/`realtime` schema | 不在供应商 managed schema 创建/删除表或函数，不修改其迁移表或做破坏性写入；自有表、函数和迁移放在自有受控 schema，能引用 managed 表但不接管其对象。 | A1/A3/A4 复核迁移和 schema 约束；实现当天按官方 breaking-change 页面重验，不连接当前项目。 |
 | SSR 每请求 client、Proxy/cookie refresh 与并发 | 浏览器和服务端 client 都使用工厂按调用创建；SSR 每请求建立新 client，未来 Proxy 负责刷新 token 并写回 request/response cookies；并发请求、过期 session、刷新竞态和用户串线必须实测。 | A1 在独立测试环境运行并发/过期矩阵；当前仓库只有连接骨架，没有 Proxy 运行证据。 |
 | provider/plan/region/session 矩阵 | provider、plan、region、session lifetime、single-session、refresh delay 必须作为同一矩阵记录版本、配置、观察窗口和限制；不凭文档或默认值推断产品能力，不在本批选定具体供应商/区域/时长。 | A1 实测并由 Owner 选择；结果影响 signOut、设备管理和高风险授权，不提前承诺。 |
-| V1 MFA 范围 | Entry preflight 候选建议（待 G2-A0 Owner 确认）：建议 V1 不采用 phone/SMS MFA；正式因子候选为 TOTP、不同设备/安全位置的备用因子和受审计人工恢复。Owner 采纳后 A1 才可不测试 phone/SMS；若不采纳，必须先修订 A1 合同并重新评审。 | A1 验证 TOTP、恢复、AAL/会话重置、通知和审计；phone/SMS 是否测试取决于 Owner 对候选边界的决定。 |
+| V1 MFA 范围 | Owner 已于 2026-08-27 采纳 V1 排除 phone/SMS MFA；正式因子为 TOTP、不同设备/安全位置的备用因子和受审计人工恢复。 | A1 按已采纳范围不测试 phone/SMS；仍验证 TOTP、恢复、AAL/会话重置、通知和审计的实现证据。 |
 | publishable key 与授权 | publishable key 可以出现在浏览器，但只是连接/API key，不是授权边界；服务端 permission layer、grants、RLS、Storage policy 和业务状态才共同决定授权。`service_role`/secret 永不进浏览器、bundle、日志或 URL。 | A1/A3/A4 做 bundle、Network、grants/RLS 和服务端授权检查；不读取或写入任何真实 key。 |
-| 静态恢复码政策 | Entry preflight 候选建议（待 G2-A0 Owner 确认）：建议 Rebuy V1 不采用静态恢复码；供应商能力仍待 A1 验证。任何供应商界面命名都不能替代备用 TOTP、身份核验、职责分离、AAL/会话重置、通知和审计。 | Owner 先确认产品边界；A1 记录实际因子/恢复能力，A5 复核高风险恢复；未确认前不写成现行政策。 |
+| 静态恢复码政策 | Owner 已于 2026-08-27 采纳 V1 排除静态恢复码；备用 TOTP 必须位于不同设备/安全位置，人工恢复必须受审计。 | A1 记录实际因子/恢复能力，A5 复核高风险恢复；不把供应商界面命名当作政策。 |
 
 ## 4. 数据流与生命周期
 
@@ -134,7 +136,7 @@ flowchart TD
 | Auth identity、邮箱、provider identity | 高敏感账户资料 | 账号接管、枚举、重复业务用户 | 最小 scope、反枚举、MFA、通知、identity linking 门禁 |
 | access/refresh token、cookie、session_id | 极高敏感安全材料 | 会话劫持、撤销延迟、重放 | HttpOnly/安全 cookie 设计、短时策略、服务端 session 检查、禁止日志原值 |
 | OAuth code、PKCE verifier、state、nonce | 极高敏感短时材料 | callback 劫持、CSRF、重放 | 一次性、短时、绑定发起会话、消费后不持久保存原值 |
-| 主 TOTP 与备用 TOTP 因子元数据 | 极高敏感账户资料 | MFA 绕过、锁死、恢复滥用 | 不同设备/安全位置、AAL2、重新认证、人工恢复职责分离 |
+| 主 TOTP 与备用 TOTP 因子元数据 | 极高敏感账户资料 | MFA 绕过、锁死、恢复滥用 | 已采纳不同设备/安全位置、AAL2、重新认证、人工恢复职责分离；AAL2 角色/时点按 Owner 决定执行 |
 | 组织、membership、scope、permission point | 高敏感授权资料 | 跨租户读取、权限自提、撤销延迟 | 服务端重算、RLS、状态检查、版本和审计 |
 | 商家/批发申请历史 | 极高敏感业务资料 | 审批篡改、身份冒用、合规争议 | 不可变终态、版本化更正、reviewer 分配和审计 |
 | `wholesale_qualifications` | 极高敏感经营资格 | 批发价泄露、资格滥用、过期继续购买 | source application、有效期、reason/version、实时价格/结算校验 |
@@ -176,7 +178,7 @@ flowchart TD
 | 账号接管 | 攻击者控制邮箱、OAuth callback、邀请 token 或主 MFA 设备 | 未证明目标邮箱/二次因子不得激活 membership 或高风险会话 | A1 callback、邀请、MFA 证据 |
 | 邀请错收 | Apple relay 或 Google identity 与邀请目标邮箱不匹配，用户试图接受 | 拒绝；不得按姓名/relay 猜测；只允许目标邮箱 OTP→link 或撤销重发 | A1 invitation matrix；A3 审计 |
 | Linking 绑错账号 | 同姓名/头像/组织关系或不同 relay 被自动视为同一人 | 不自动合并，不搬运订单、membership、资格或审计；进入人工冲突流程 | A1 identity linking；A2 冲突记录 |
-| MFA 恢复滥用 | support 以工单理由替管理员解除 MFA，或主/备用因子同处一设备 | support 无批准权；恢复需身份核验、职责分离、AAL/会话重置、通知审计 | A1/A5 恢复演练和双人证据 |
+| MFA 恢复滥用 | support 以工单理由替管理员解除 MFA，或主/备用因子同处一设备 | support 无批准权；按 Owner 已采纳政策需身份核验、职责分离、AAL/会话重置、通知审计；MFA 人工恢复属于六类高风险动作，必须双人复核且禁止自审 | A1/A5 恢复演练和已采纳政策的实现证据 |
 | 审批前文件越权 | 查询 `org_id IS NULL` 或猜测对象 key 获取申请文件 | NULL 不产生访问权；必须匹配申请三元组、申请人和分配 reviewer | A4 RLS/Storage 负向 |
 | 文件公开/恶意上传 | 公开 bucket、可枚举文件名、伪造 MIME、超大或恶意内容 | 私有桶、签名短时 URL、类型/大小/内容检查、引用关系检查 | A4 文件测试、日志检查 |
 | support 越权审核 | support 读取全文证件、写“审核通过”、调用 approve | DTO、权限点和 API 层拒绝；support 只能处理工单/补件/脱敏状态 | A0 角色矩阵；A4 负向 |
@@ -191,7 +193,7 @@ flowchart TD
 3. `wholesale_applications` 的 `approved`、`rejected`、`withdrawn` 是不可变历史；当前资格只由 `wholesale_qualifications` 和实时组织/member/product 条件决定。
 4. `support` 不具备完整证件读取、审核意见写入或批准能力；`reviewer` 只能在分配案例中查看必要证明并作决定。
 5. Apple/Google identity 不能绕过邀请目标邮箱控制权；relay、姓名、头像和组织关系不是邮箱证明。
-6. MFA 备用因子必须与主因子处于不同设备或安全位置；人工恢复不能由单一 support 人员完成。
+6. Owner 已采纳：备用因子必须与主因子处于不同设备或安全位置；人工恢复不能由单一 support 人员完成；平台 owner/admin/reviewer 上线前、商家 owner/admin 最迟 Beta 前强制 AAL2，普通买家按风险提升，高风险动作重新认证；六类高风险动作必须双人复核且禁止自审。
 7. OAuth 短时材料原值不进入持久存储、日志、URL、截图或客户端响应。
 8. access token 撤销不被假定为立即失效；高风险请求以实时 session/member/qualification 为准。
 9. 本地视觉原型只能证明页面/交互合同，不能证明以上任何后端安全不变量。
@@ -205,12 +207,12 @@ flowchart TD
 | OAuth/Apple relay linking 误合并 | 未验证 | A1/A2 | mismatch 拒绝、OTP→link、人工冲突记录 | 默认拒绝，不自动合并 |
 | 审批前文件 RLS/Storage 归属 | 设计已决定，未实现验证 | A4 | 三元组负向测试、签名 URL 和事务绑定 | 不连接 Storage，不进入真实申请 |
 | 批发申请历史与资格状态混淆 | 设计已决定，未实现验证 | A4 | 两实体状态/版本/事务和价格测试 | 不开放批发价格 |
-| MFA 人工恢复单点滥用 | 设计已决定，未演练 | A1/A5 | 双人、身份核验、AAL/会话重置、通知、审计记录 | 不允许 support 单独恢复 |
+| MFA 人工恢复单点滥用 | Owner 已采纳控制，尚未演练 | A1/A5 | 身份核验、职责分离、AAL/会话重置、通知、审计；MFA 人工恢复按六类高风险动作双人复核且禁止自审 | 不允许 support 单独恢复；A1/A5 未形成运行证据前保持关闭 |
 | support/reviewer 职责漂移 | 已定义，待权限验证 | A4/A5 | 角色/字段/API 负向矩阵 | support 仅保留工单和脱敏状态 |
 | OAuth 原值落日志或缓存 | 已定义，待扫描 | A1 | 数据库/日志/错误/缓存检查 | 停止 A1，删除测试原值并修正采集链路 |
 | 隐私留存与删除冲突 | 未决法律问题 | A5 / Owner + 顾问 | 法律/税务意见、legal hold 和演练 | 不处理真实 PII |
 
-## 10. A0 验收标准
+## 10. A0 验收标准与 Exit 待签署条件
 
 A0 通过前，Owner 或指定审查人必须能从 07、08、09 逐项核对：
 
@@ -220,7 +222,7 @@ A0 通过前，Owner 或指定审查人必须能从 07、08、09 逐项核对：
 - 邀请目标邮箱控制权、Apple/Google mismatch 拒绝、OTP→link 或撤销重发路径明确；没有 relay/姓名猜测合并。
 - user 状态使用 `pending_identity_verification`；邮箱 OTP/Magic Link 和受信任 OAuth callback 都能转 active。
 - support/reviewer 读写和决定边界可执行，support 不得看完整证件、写审核意见或批准。
-- MFA 的备用 TOTP 不同设备/安全位置、人工恢复身份核验、职责分离、AAL/会话重置、通知和审计完整。
+- MFA 备用 TOTP 不同设备/安全位置、人工恢复身份核验、职责分离、AAL/会话重置、通知和审计已按 Owner 2026-08-27 决定形成合同；平台 owner/admin/reviewer 上线前、商家 owner/admin 最迟 Beta 前强制 AAL2，普通买家按风险提升，高风险动作重新认证；六类高风险动作双人复核且禁止自审，运行实现证据仍待 A1/A5。
 - OAuth code、PKCE verifier、state、nonce 的原值不持久保存，只有必要脱敏事件保留。
 - `signOut` local/global/others、`auth.sessions`、access token `exp` 窗口和高风险实时检查的 A1 未验证事项已标记，未作过度承诺。
 - STRIDE、滥用场景、风险登记、证据级别和失败后停止路径齐全。
@@ -228,13 +230,13 @@ A0 通过前，Owner 或指定审查人必须能从 07、08、09 逐项核对：
 
 ## 11. Owner Gate
 
-Owner Gate A0 的通过决定只允许打开 [A1 Auth spike 执行合同](./10-A1-Auth-Spike执行合同.md)，不等于批准连接环境或进入真实账号。Owner 需要明确：
+Owner Gate A0 的通过决定只允许打开 [A1 Auth spike 执行合同](./10-A1-Auth-Spike执行合同.md)的准备门，不等于批准连接环境或进入真实账号。七项政策已由 Owner 于 2026-08-27 采纳，G2-A0 Exit 已 GO；本次 closeout 新 exact-head 仍需独立复审后才可执行远端 reconciliation。Owner Gate 记录如下：
 
-1. 接受本 ADR 的八项账号修正及上述安全不变量。
-2. 接受 A1 只能连接独立 local/preview-staging，绝不连接 production 或真实 PII。
-3. 指定 A1 的环境、密钥、Google/Apple/SMTP 责任人，并接受未验证能力不得写成承诺。
-4. 决定是否启动涉及身份、隐私、Storage、RLS 和跨租户的独立安全审查；按 05 的高风险规则，A4/A5 仍必须专项审查。
-5. 确认 A0 验收证据已归档后，才把 A1 状态从“合同待执行”改为“独立测试环境执行中”。
+1. 七项政策及本 ADR 的 `A0-01～A0-15`、日期化 Entry 补充和上述安全不变量已接受并写入；未列入七项的实现细节仍须对应阶段决策，不得由实现代理推断。
+2. 接受 A1 只能连接独立 local/preview-staging，绝不连接 production 或真实 PII；这不等于批准资源或费用。
+3. 在单独的资源/成本/secret Gate 中指定 A1 的 non-production 环境、provider、计划、区域、密钥和 Google/Apple/SMTP 责任人；A0 不锁定或授权这些事项。
+4. decision-ready baseline `9b11f375080db68353dd6952774bcd5e75c4153c` 的独立文档治理审查已完成（findings `none/GO`），覆盖身份、隐私、Storage、RLS、跨租户、会话和威胁矩阵的一致性；这不是运行时或 Auth/安全测试，A4/A5 仍必须专项审查。
+5. Owner 已签署 A0 Exit GO；本次 closeout 新 exact-head 复审和 exact-head Actions 成功后，才可按已批准边界执行远端 docs-only reconciliation；A1 仍保持“未开始/待资源授权”，不得因七项政策或文档审查直接开始 Auth 实测。
 
 ## 12. 正式来源与交叉链接
 
@@ -245,3 +247,10 @@ Owner Gate A0 的通过决定只允许打开 [A1 Auth spike 执行合同](./10-A
 - [European Commission: GDPR principles](https://commission.europa.eu/law/law-topic/data-protection/information-business-and-organisations/principles-gdpr_en)
 
 本文件与 07/08 的交叉链接只用于规划一致性；任何链接、Mermaid 图、静态检查或本地原型都不能替代 A1 实测、RLS/Storage 负向测试、独立审查或 Owner 的后续生产 Gate。
+
+## 13. 2026-08-27 G2-A0 Exit closeout 当前状态
+
+- G2-A0 Exit 已由 Owner 以 ref=`140ea15d9c3f178a326709d35ad1750a156df0d1` 于 2026-08-27 签署 GO；当前为 `Exit GO；远端 docs-only reconciliation 已获批、尚未执行`。前一 exact-head 独立文档治理审查 findings=`none/GO`，范围为文档治理一致性，不是 Auth/MFA/DB/RLS/Storage 或运行时测试；本次修复 closeout head 待独立复审。
+- 本次授权承接紧前完整 docs-only 外发文本：公开 12 个 Markdown、相关 Git 历史、Owner 姓名、账号安全架构、威胁模型、角色权限和阶段治理信息到 `kyox215/REBUY_SHARE`；非强制 branch push/PR/`prototype-quality` Actions 和条件式 merge commit 均须通过 docs-only、exact-head Actions 和独立复审条件。
+- 远端 preflight（140ea 历史）记录为 `main=7ea1e45ad22ab29105910665baf4bbd7212241c5`、目标 branch/PR 无；公开外发审计为 12 个 Markdown、`351437` bytes，无 binary/image/secret/phone/address/customer PII，且新增内容审计未发现新增邮箱但漏计继承内容。base/public main 及既有 Git author metadata 已含同一 Owner 邮箱，G2-A0 未引入不同邮箱；当前 G2-A0 12 路径候选中 docs/15 的 Owner 邮箱正文已脱敏；未改动的既有历史/evidence 文档及 Git author 历史可能仍含同一邮箱；不可声称 Git 历史无 email。Owner 此前明确授权公开仓库 Git 历史且最新消息同意当前闭环；此前 push 审批被拒且远端写入为零。本地修复 closeout head 未完成独立复审前不预写 PR、Actions run 或 merge；提交后由外部复审重新计算最终字节数，本提交不自引用最终字节数。
+- G2-A1/P2+、resource/cost/secret、Supabase/Auth/DB/Storage/OAuth/SMTP、真实账号/PII、Preview/Production deploy、promote、alias、rollback 和生产写入继续关闭；A0 Exit 仅打开 A1 准备门。
