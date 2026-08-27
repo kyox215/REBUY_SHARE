@@ -1,13 +1,13 @@
 # 发布与 Supabase 连接记录
 
-文档状态：A1 独立测试连接骨架；当前未连接 Supabase 项目
+文档状态：本地连接骨架；G2-A1 尚未开始；本工作范围未连接 Supabase 项目，外部实际存在性 unknown
 
 ## 1. A1 边界
 
 本记录只描述 GitHub/Vercel/Supabase 独立测试环境的连接骨架，不代表已经创建或连接任何外部项目。
 
 - GitHub 仓库可见性保持用户指定的现状；本记录不执行可见性变更、提交、推送或部署。
-- 尚未创建 Supabase 项目。
+- 本工作范围未创建或连接 Supabase 项目；外部项目实际存在性 unknown。
 - 尚未配置 Vercel 环境变量。
 - 尚未启用真实登录、OAuth 或 SMTP。
 - 不连接 production，不写入真实业务数据，不使用真实客户、商家或员工 PII。
@@ -25,14 +25,16 @@
 - `prototype/lib/supabase/server.ts`：带 Next.js cookie 适配的 `createServerClient` 工具。
 - `prototype/app/api/health/supabase/route.ts`：服务端探针，不返回 URL、key、provider 细节或错误堆栈。
 
-## 3. 环境变量与密钥边界
+`client.ts` 与 `server.ts` 都以 `createClient()` 工厂在每次调用时创建 client；server factory 每次读取当前 request cookies，并为未来 Proxy 的 cookie 写回保留受控处理。这里仅是本地连接骨架，不是 SSR、会话刷新或并发安全的运行证据。
+
+## 3. 环境变量、密钥与授权边界
 
 唯一允许的环境变量是：
 
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
 
-只使用 publishable key。不得加入、读取或部署 service role、secret key、数据库密码或其他管理凭据。环境缺失时，client 工具只在被调用时抛出可控配置错误；模块导入和 Next.js build 不应因缺少环境变量崩溃。
+只使用 publishable key。publishable key 可以出现在浏览器，但只是连接/API key，不是授权边界；服务端授权、Data API grants、RLS、Storage policy、membership 和业务状态共同决定访问。不得加入、读取或部署 service role、secret key、数据库密码或其他管理凭据。环境缺失时，client 工具只在被调用时抛出可控配置错误；模块导入和 Next.js build 不应因缺少环境变量崩溃。
 
 后续保护页面或数据时，服务端鉴权必须使用 `supabase.auth.getClaims()`；不得使用 `getSession()` 的用户对象作为鉴权依据。
 
@@ -53,3 +55,12 @@
 当前证据如下：`pnpm typecheck`、`pnpm lint`、`pnpm build` 全部通过。复用的本地开发服务器上，无环境变量的 `/api/health/supabase` 返回 HTTP 503，响应为 `{"configured":false,"reachable":false,"status":503}` 并带 `Cache-Control: no-store`。此前同一服务器上的 `/` 与 `/account/login` 均返回 200。
 
 这些证据只证明本地 A1 连接骨架可构建、可运行和能安全处理未配置状态；仍未创建 Supabase 项目、配置 Vercel env、启用真实登录/OAuth/SMTP，也不构成生产批准。
+
+## 6. SSR 与发布前安全边界
+
+- 当前 `client.ts`/`server.ts` 是按调用创建 client 的骨架；当前仓库没有已运行的 Proxy。未来 SSR 必须每请求创建新 client，避免跨请求、跨用户复用 session 或数据。
+- Next.js Server Components 不能自行写 cookie；未来 Proxy 必须负责刷新 Auth token，并把刷新后的 cookie 正确写回 request/response。当前没有 cookie refresh、过期 session、并发刷新或竞态的运行证明，这些全部留给 A1 独立测试环境。
+- A1 必须覆盖过期 session、刷新延迟、两个并发请求、同一用户多设备、不同用户并发、刷新失败重试和 cookie 清理；证据只保存脱敏时间线和结果，不保存 token/cookie 原值。
+- `/api/health/supabase` 未配置时预期返回 503；这只证明配置缺失边界，不证明 provider 可达、Auth 已启用或 SSR 安全成立。
+
+规划依据：[Supabase SSR client](https://supabase.com/docs/guides/auth/server-side/creating-a-client)、[Supabase sessions](https://supabase.com/docs/guides/auth/sessions)、[Supabase securing your API](https://supabase.com/docs/guides/api/securing-your-api)。官方页面和本地骨架都不能替代 A1/A3/A4 运行证据。

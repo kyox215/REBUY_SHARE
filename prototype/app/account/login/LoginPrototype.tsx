@@ -1,16 +1,19 @@
 "use client";
 
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Moon, Sun } from "lucide-react";
 import Link from "next/link";
 import type { FormEvent } from "react";
 import { useState } from "react";
+import BrandMark from "@/components/BrandMark";
 import styles from "./login.module.css";
 
 type LoginStep = "email" | "otp";
+type Theme = "dark" | "light";
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function LoginPrototype() {
+  const [theme, setTheme] = useState<Theme>("light");
   const [email, setEmail] = useState("");
   const [step, setStep] = useState<LoginStep>("email");
   const [otp, setOtp] = useState("");
@@ -58,7 +61,7 @@ export default function LoginPrototype() {
   };
 
   return (
-    <main className={`theme-light ${styles.page}`}>
+    <main className={`${theme === "light" ? "theme-light" : "theme-dark"} ${styles.page}`}>
       <div className={styles.frame}>
         <header className={styles.topbar}>
           <Link
@@ -69,8 +72,18 @@ export default function LoginPrototype() {
           >
             <ArrowLeft aria-hidden="true" size={20} strokeWidth={2} />
           </Link>
-          <span className={styles.brand}>Rebuy</span>
-          <span aria-hidden="true" className={styles.topbarSpacer} />
+          <span className={styles.brand}>
+            <BrandMark />
+          </span>
+          <button
+            className={styles.themeButton}
+            type="button"
+            onClick={() => setTheme((current) => (current === "dark" ? "light" : "dark"))}
+            aria-label={theme === "dark" ? "切换浅色模式" : "切换深色模式"}
+            title={theme === "dark" ? "切换浅色模式" : "切换深色模式"}
+          >
+            {theme === "dark" ? <Sun aria-hidden="true" size={19} /> : <Moon aria-hidden="true" size={19} />}
+          </button>
         </header>
 
         <section className={styles.content} aria-labelledby="login-title">
@@ -151,6 +164,7 @@ export default function LoginPrototype() {
                     type="text"
                     inputMode="numeric"
                     autoComplete="one-time-code"
+                    autoFocus
                     pattern="[0-9]*"
                     maxLength={6}
                     value={otp}

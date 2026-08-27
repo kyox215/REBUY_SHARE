@@ -16,10 +16,6 @@ export default function UsedFacts({ product, locale, compact = false }: UsedFact
     { key: "used.battery", icon: BatteryMedium, value: facts.battery[locale] },
     { key: "used.warranty", icon: ShieldCheck, value: facts.warranty[locale] },
   ];
-  const visibleEntries = entries.filter(
-    ({ key }) => !compact || key === "used.condition" || key === "used.battery",
-  );
-
   return (
     <section
       className={`used-facts ${compact ? "used-facts--compact" : ""}`}
@@ -28,7 +24,7 @@ export default function UsedFacts({ product, locale, compact = false }: UsedFact
     >
       {!compact ? <h2 id="used-facts-title">{tr(locale, "used.title")}</h2> : null}
       <dl className="fact-grid">
-        {visibleEntries.map(({ key, icon: Icon, value }) => (
+        {entries.map(({ key, icon: Icon, value }) => (
           <div className="fact" key={key}>
             <dt>
               <Icon size={16} aria-hidden="true" />

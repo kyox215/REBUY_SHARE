@@ -8,6 +8,17 @@ export type PrimaryView = "home" | "catalog" | "orders" | "cart" | "profile";
 export type DetailView = "detail" | "checkout" | "order-detail";
 export type AppView = PrimaryView | DetailView;
 export type Localized = Record<Locale, string>;
+export type HtmlLocale = "zh-CN" | "it" | "en";
+
+const htmlLocaleByLocale: Record<Locale, HtmlLocale> = {
+  zh: "zh-CN",
+  it: "it",
+  en: "en",
+};
+
+export function localeToHtmlLang(locale: Locale): HtmlLocale {
+  return htmlLocaleByLocale[locale];
+}
 
 export type WholesaleLadder = {
   minimum: number;
@@ -83,6 +94,9 @@ export const copy: Record<Locale, Record<string, string>> = {
     "search.placeholder": "搜索商品、品牌或型号",
     "search.submit": "搜索",
     "catalog.title": "分类与搜索",
+    "catalog.directoryTitle": "分类目录",
+    "catalog.directoryNote": "选择一个品类查看商品列表",
+    "catalog.backToCategories": "返回全部分类",
     "catalog.results": "个结果",
     "catalog.filter": "筛选",
     "catalog.sort": "排序",
@@ -221,6 +235,9 @@ export const copy: Record<Locale, Record<string, string>> = {
     "search.placeholder": "Cerca prodotto, marca o modello",
     "search.submit": "Cerca",
     "catalog.title": "Categorie e ricerca",
+    "catalog.directoryTitle": "Catalogo categorie",
+    "catalog.directoryNote": "Scegli una categoria per vedere i prodotti",
+    "catalog.backToCategories": "Torna a tutte le categorie",
     "catalog.results": "risultati",
     "catalog.filter": "Filtra",
     "catalog.sort": "Ordina",
@@ -359,6 +376,9 @@ export const copy: Record<Locale, Record<string, string>> = {
     "search.placeholder": "Search products, brands or models",
     "search.submit": "Search",
     "catalog.title": "Categories and search",
+    "catalog.directoryTitle": "Category directory",
+    "catalog.directoryNote": "Choose a category to see its products",
+    "catalog.backToCategories": "Back to all categories",
     "catalog.results": "results",
     "catalog.filter": "Filter",
     "catalog.sort": "Sort",
