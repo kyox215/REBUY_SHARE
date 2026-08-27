@@ -45,7 +45,7 @@
 | [G2-A0 Entry preflight 证据](./evidence/G2-A0/2026-08-26-entry-preflight/README.md) | 只读官方依据与安全控制补充；不代表 provider/project 已连接 |
 | [G2-A1 准备与资源门禁](./stages/G2-A1-Auth-Spike准备与资源门禁.md) | G2-A1 无资源 Entry preparation；四批 Auth spike 合同、资源责任、停止/回退、官方来源刷新；resource/cost/secret Gate 关闭 |
 | [G2-A1 Entry preparation 证据](./evidence/G2-A1/2026-08-28-entry-preparation/README.md) | 记录 G2-A0 远端闭环、Vercel/Production 不变量、公开 Supabase 摘要、静态验证与本批边界 |
-| [G2-A1 资源成本与密钥 Gate 模板](./templates/G2-A1-资源成本与密钥Gate模板.md) | provider/project/plan/region/environment、exact cost、税费、Spend Cap、密钥责任、回退和清理字段 |
+| [G2-A1 资源成本与密钥 Gate 模板](./templates/G2-A1-资源成本与密钥Gate模板.md) | provider/project/plan/region/environment、provider amount/recurrence、另行核对的税费与 organization-level Spend Cap、密钥责任、回退和清理字段 |
 | [G2-A1 Auth 实测矩阵模板](./templates/G2-A1-Auth实测矩阵模板.md) | Apple/Google/email OTP/Magic Link、callback、linking、MFA/TOTP、session、恢复、限流、SSR 和 secret scan 字段 |
 
 ## 3. 当前权威关系

@@ -9,7 +9,7 @@
 
 本批完成 G2-A1 的无资源准备：建立四批后续执行合同、资源/成本/密钥 Gate 字段、Auth 实测矩阵字段、官方资料刷新和脱敏证据边界。**没有开始 G2-A1 Auth 技术验证**，没有创建或连接 Supabase/Auth/DB/Storage/OAuth/SMTP，没有读取 secret/env/PII，没有创建真实账号或 fixture，没有部署、promote、alias、Production 写入或 UI/代码变更。
 
-resource/cost/secret Gate 继续关闭。下一步只能在新的独立 non-production 授权明确 provider、组织、项目、计划、区域、环境、精确费用、Spend Cap、密钥责任和停止联系人后，重新打开资源 Gate；本批不从通用价格推断 exact cost，也不复用与 Rebuy 无关的项目。
+resource/cost/secret Gate 继续关闭。下一步只能在新的独立 non-production 授权明确 provider、组织、项目、计划、区域、环境、成本责任、密钥责任和停止联系人后，重新打开资源 Gate；用户必须先选择 organization + resource scope，由 provider `get_cost` 返回并确认其实际提供的 amount/recurrence，tax/VAT/billing-address effect 另行由 billing page/专业顾问核对，organization-level Spend Cap 状态与覆盖范围另行只读核验，三项均完成且 Owner 明确确认后才可创建。本批不从通用价格推断 exact cost，也不复用与 Rebuy 无关的项目。
 
 关联入口：
 
@@ -48,11 +48,11 @@ resource/cost/secret Gate 继续关闭。下一步只能在新的独立 non-prod
 
 ## 4. 公开 Supabase inventory 摘要
 
-允许公开的最小摘要仅为：**连接账户有 1 个 Pro 组织、2 个与 Rebuy 无关的 active projects、没有 Rebuy 项目。** 本批不记录组织名、项目名、项目 ID、host、现有项目 region、key、token 或环境值；两个既有项目严禁复用或连接。
+允许公开的最小摘要仅为：**只读 inventory 没有发现已获批准、可用于 Rebuy 的独立 non-production project；任何无关项目禁止复用。** 本批不公开任何 Supabase inventory 的组织/项目名称、ID、数量、套餐、host 或现有 region，也不记录 key、token 或环境值。
 
-候选只是 proposal，尚未获得组织确认、exact cost 或资源 Gate 通过：现有 Pro 组织内新建独立 Rebuy non-production project，候选区域 `eu-central-1`（Frankfurt），开启 Spend Cap、无 add-on、synthetic-only。该 proposal 不等同于 provider/plan/region 已选择，不授权创建项目。
+候选只是 proposal，尚未获得 Owner 明确选择的 organization、resource scope、exact cost 或资源 Gate 通过：在该 organization 内新建独立 Rebuy non-production project；计划须支持 A1 必测能力（session lifetime/single-session 因官方限制需 Pro 或更高）；候选区域 `eu-central-1`（Frankfurt）；组织级 Spend Cap 状态必须另行只读核验；无 add-on、synthetic-only。该 proposal 不等同于 provider/organization/plan/region 已选择，不授权创建项目。
 
-精确成本只能在指定组织后，由 provider `get_cost` 获取并记录 quote、recurrence、tax、spend cap，再由 Owner 明确确认；通用价格页不能替代本项目 exact cost。
+准确费用流程：用户先明确选择 organization + resource scope；provider `get_cost` 返回并确认其实际提供的 amount/recurrence；tax/VAT/billing-address effect 另由 billing page/专业顾问核对；Spend Cap 是 organization-level 设置，另行只读核验其状态和覆盖范围；三项均完成并有 Owner 明确确认后才可创建。通用价格页不能替代本项目 exact cost。
 
 ## 5. 2026-08-28 官方来源刷新
 
@@ -65,7 +65,7 @@ resource/cost/secret Gate 继续关闭。下一步只能在新的独立 non-prod
 | [Data API exposure breaking change](https://supabase.com/changelog/45329-breaking-change-tables-not-exposed-to-data-and-graphql-api-automatically) | 新表默认可能不自动暴露给 Data/GraphQL API；grants 与 RLS 分离 | A1 只做最小 reachability 观察；完整 grants/RLS 归 A3/A4 |
 | [Free-tier email template change](https://supabase.com/changelog/46599-changes-to-email-template-customisation-on-free-tier) | 新 Free 项目使用默认 SMTP 时认证邮件模板自定义受限；Pro 或配置自有 SMTP 不受该限制 | B1 必须记录 plan/SMTP；不发送真实邮件 |
 | [Available regions](https://supabase.com/docs/guides/platform/regions) | 精确 EU 候选为 `eu-central-1` Frankfurt；region 是数据位置控制，不等于 GDPR 合规 | GDPR、税务、跨境和处理者合同转 A5/专业顾问 |
-| [Control your costs](https://supabase.com/docs/guides/platform/cost-control) / [Billing FAQ](https://supabase.com/docs/guides/platform/billing-faq) | Spend Cap 仅适用于 Pro，且不是细粒度预算/告警；账单与税费依赖实际组织和账单地址 | 先指定组织，再取 exact cost/recurrence/tax 并由 Owner 确认 |
+| [Control your costs](https://supabase.com/docs/guides/platform/cost-control) / [Billing FAQ](https://supabase.com/docs/guides/platform/billing-faq) | Spend Cap 是 organization-level 设置，状态/覆盖范围需独立核验；`get_cost` 的 amount/recurrence 与 tax/VAT/billing-address effect 分开确认 | 用户先选 organization + resource scope，再确认 `get_cost` 实际返回值；税费和 Spend Cap 另行核对 |
 | [MFA](https://supabase.com/docs/guides/auth/auth-mfa) / [TOTP](https://supabase.com/docs/guides/auth/auth-mfa/totp) | TOTP enrollment/challenge/verify 可形成 AAL2；平台另有 phone factor | Owner 已排除 phone/SMS 与静态恢复码；只按备用 TOTP + 人工恢复合同验证 |
 | [Signing out](https://supabase.com/docs/guides/auth/signout) | `local`、`global`、`others` 作用域不同；撤销 session 的 access token 可能直到 `exp` 才失效 | 记录退出语义和 token 窗口，不承诺即时失效 |
 | [User sessions](https://supabase.com/docs/guides/auth/sessions) | session lifetime 和 single-session per user 只在 Pro 及以上可配置 | A1 记录 plan、配置和观察窗口，不把默认值写成承诺 |
@@ -81,6 +81,16 @@ resource/cost/secret Gate 继续关闭。下一步只能在新的独立 non-prod
 - 不运行 typecheck/lint/build：源码、依赖、workflow、lockfile、配置和生成物均未变化；复用精确 `main` Actions run `33122238997` / job `98691703085` 的 install/typecheck/lint/build 全绿证据。
 - 未做 hash：本批不是确定性生成或文件传输校验，且没有异常覆盖迹象。
 - 未启动独立运行时审查：本批只形成文档与模板；资源 Gate 关闭，尚无 Auth/DB/Storage/Provider 实施。文档级复核仍需由主代理/Owner 按 Gate 处理。
+
+## 6.1 2026-08-28 独立文档审查修复记录
+
+独立文档审查发现两项需要收敛的问题：P1 公开边界中残留历史 Supabase org/project 名称；P2 `A0 通过前` 的原型表述已不能反映当前 G2-A0 Exit GO 状态。
+
+- 本提交已从当前 tree 脱敏上述 Supabase 名称，并将 inventory 公开摘要收敛为“没有发现已获批准、可用于 Rebuy 的独立 non-production project；任何无关项目禁止复用”。当前 tree 不公开 Supabase inventory 的组织/项目名称、ID、数量、套餐、host 或现有 region。
+- 本提交已将 A1 原型边界改为 `resource/cost/secret Gate` 通过前仅可继续无资源后端原型、接口合同、测试矩阵和合成字段维护；不再暗示 G2-A0 未通过。
+- `615de47` 的历史 diff 仍是不可重写的既有提交；其中已被 supersede 的 inventory 数量/套餐表述已从当前 tree 移除，本批不改写 Git history。
+- 当前 tree 已脱敏，但既有公开 Git history 仍可能保留历史名称；Owner 已授权公开历史，本批不做破坏性 rewrite。
+- 本提交修复已完成；exact new head 待独立复审。此处不预写复审 GO、PR、Actions 或 merge 结果。
 
 ## 7. 停止、回退与遗留风险
 

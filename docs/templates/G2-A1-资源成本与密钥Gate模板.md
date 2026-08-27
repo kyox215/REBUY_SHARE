@@ -32,7 +32,7 @@
 | organization | `待指定` | 只记录经批准的最小标识；不在模板中写无关组织名 |
 | project | `待指定` | 必须是独立 Rebuy non-production；禁止复用无关项目 |
 | project ref / internal ID | `待指定；仅在授权证据允许时填写` | 不记录 host、连接串或 key |
-| plan | `待确认` | 记录实际套餐，不从价格页推断 |
+| plan | `待确认` | 必须支持 A1 必测能力；session lifetime/single-session 因官方限制需 Pro 或更高；实际套餐仍待确认，不从价格页推断 |
 | region | `待确认（proposal 可为 eu-central-1 / Frankfurt）` | region 是位置选择，不等于 GDPR 合规 |
 | environment | `local / preview-staging；禁止 production` | 记录隔离证明、域名和访问边界 |
 | deployment target | `N/A；A1 不打开 Production` | 不写 deploy URL、cookie 或 token |
@@ -43,20 +43,21 @@
 
 | 字段 | 填写值 | 强制说明 |
 |---|---|---|
-| provider exact cost quote | `待获取` | 只能在指定组织后由 provider `get_cost` 获取；不得从通用价格推断 |
+| provider exact cost quote | `待获取` | 用户先明确选择 organization + resource scope；只能记录 provider `get_cost` 实际提供的 amount；不得从通用价格推断 |
+| provider recurrence | `待获取` | 与 provider `get_cost` 实际返回的 recurrence 绑定；不将税费或 Spend Cap 当作该返回值 |
 | quote timestamp / currency | `待获取` | 与 provider 返回结果绑定；记录日期和币种 |
 | quote scope | `项目/组织/资源清单待填写` | 明确是否包含 compute、Auth、Storage、SMTP、OAuth 等 |
 | recurrence | `一次性 / 月度 / 年度 / 按用量 / 待确认` | 记录周期与计费触发，不得遗漏按量费用 |
-| tax / VAT / billing address effect | `待确认` | 由账单和专业顾问核对；不把税务判断写成本模板结论 |
+| tax / VAT / billing address effect | `待确认` | 另由 billing page/账单和专业顾问核对；不声称由 provider `get_cost` 返回 |
 | included quota | `待获取` | 记录 provider 返回摘要，不记录支付凭据 |
 | overage unit / cap coverage | `待获取` | 记录哪些 usage item 被覆盖，哪些不覆盖 |
-| spend cap | `开启 / 关闭 / 不适用 / 待确认` | 推荐 proposal 为开启；Pro 才可用且不是细粒度预算 |
+| spend cap（organization-level） | `开启 / 关闭 / 不适用 / 待确认` | 另行只读核验状态与覆盖范围；不声称由 provider `get_cost` 返回；不是细粒度预算 |
 | spend cap stop behavior | `待确认` | 记录超 quota 的限制与人工处置，不自动扩大预算 |
 | maximum authorized spend | `待填写` | Owner 明确金额、币种、周期和触发人 |
 | alert / invoice owner | `待指定` | 负责 usage、invoice、超额和停用沟通 |
-| cost approval evidence | `待填写` | 必须有 Owner 对 exact quote/recurrence/tax 的明确确认 |
+| cost approval evidence | `待填写` | 必须有 Owner 对 provider amount/recurrence、另行核对的 tax/VAT/billing-address effect 和 organization-level Spend Cap 状态/覆盖范围的明确确认 |
 
-精确费用的唯一流程：先指定组织和 resource scope → 调用 provider `get_cost` → 记录 exact quote、recurrence、tax、Spend Cap 与最大上限 → Owner 确认 → 才能创建/启用资源。若 provider 无法返回可核验报价，Gate 继续关闭。
+精确费用的唯一流程：用户先明确选择 organization + resource scope → 调用 provider `get_cost` → 只记录并确认其实际提供的 amount/recurrence → 由 billing page/账单和专业顾问另行核对 tax/VAT/billing-address effect → 对 organization-level Spend Cap 另行只读核验状态与覆盖范围 → 三项均完成、最大授权支出与停止责任确认且 Owner 明确批准后，才能创建/启用资源。若 provider 无法返回可核验的 amount/recurrence，Gate 继续关闭。
 
 ## 4. Secrets / keys / access responsibility
 
@@ -107,8 +108,8 @@
 |---|---|---|
 | provider / organization / project 已明确且独立 | `待审` | `待指定` |
 | plan / region / environment 已明确 | `待审` | `待指定` |
-| exact cost、recurrence、tax 已由 provider `get_cost` 返回 | `待审` | `待指定` |
-| spend cap、最大支出和 stop contact 已确认 | `待审` | `待指定` |
+| provider `get_cost` 实际返回的 amount/recurrence 已获取并确认；tax/VAT/billing-address effect 已由 billing page/专业顾问另行核对 | `待审` | `待指定` |
+| organization-level Spend Cap 状态/覆盖范围、最大支出和 stop contact 已另行确认 | `待审` | `待指定` |
 | secret/key owner、保存、轮换、撤销已确认 | `待审` | `待指定` |
 | redirect / SMTP / Storage / synthetic-only 已确认 | `待审` | `待指定` |
 | evidence / rollback / expiry-cleanup 已确认 | `待审` | `待指定` |

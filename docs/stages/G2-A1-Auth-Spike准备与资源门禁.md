@@ -92,7 +92,7 @@ G2-A0 的远端闭环已经在 `main` 完成：PR #7 的 merge commit 为 `fd9b7
 | 技术执行负责人 | 待指定 | 只能在 Gate 通过后操作独立 non-production；不得单人扩大范围 |
 | 独立安全审查人 | 待指定 | 审查 callback、MFA、session、恢复、日志和隔离负向 |
 | provider/项目管理员 | 待指定 | 证明组织、project、plan、region 和 Production 隔离；不得复用既有无关项目 |
-| 成本责任人 | 待指定 | 接收 provider exact cost、税费、recurrence、Spend Cap 和 stop 触发；用户确认后才可产生费用 |
+| 成本责任人 | 待指定 | 接收 provider `get_cost` 实际返回的 amount/recurrence；另行核对 tax/VAT/billing-address effect，并只读核验 organization-level Spend Cap 状态/覆盖范围；Owner 确认后才可产生费用 |
 | secret/key owner | 待指定 | 管理 OAuth/SMTP/服务端密钥；只提供 secret 名称/摘要，不把原值交给文档或客户端 |
 | 回调/SMTP/Storage 责任人 | 待指定 | 分别记录 redirect、邮件捕获和文件边界；默认关闭 Storage，禁止真实邮件/文件 |
 | 证据保管人 | 待指定 | 管理脱敏证据、访问控制、保存期限和销毁记录 |
@@ -101,13 +101,13 @@ G2-A0 的远端闭环已经在 `main` 完成：PR #7 的 merge commit 为 `fd9b7
 
 ## 5. 公开 Supabase inventory 摘要与候选提案
 
-本批只允许记录经过脱敏的公开摘要：**连接账户有 1 个 Pro 组织、2 个与 Rebuy 无关的 active projects、没有 Rebuy 项目。** 不记录组织名、项目名、项目 ID、host、现有项目 region、key、token 或环境值。既有两个项目严禁复用或连接。
+本批只允许记录最小化公开摘要：**只读 inventory 没有发现已获批准、可用于 Rebuy 的独立 non-production project；任何无关项目禁止复用。** 本批不公开任何 Supabase inventory 的组织/项目名称、ID、数量、套餐、host 或现有 region；也不记录 key、token 或环境值。
 
-候选仅为 proposal，未获得组织确认、exact cost 和独立资源 Gate 通过前不得创建：
+候选仅为 proposal，未获得 Owner 明确选择的 organization、resource scope、exact cost 和独立资源 Gate 通过前不得创建：
 
-> 现有 Pro 组织内新建独立 Rebuy non-production project；候选精确区域为 `eu-central-1`（Frankfurt）；开启 Spend Cap；不启用 add-on；只使用 synthetic-only 数据。
+> 在 Owner 明确选择的 organization 内新建独立 Rebuy non-production project；计划须支持 A1 必测能力（session lifetime/single-session 因官方限制需 Pro 或更高）；候选精确区域为 `eu-central-1`（Frankfurt）；组织级 Spend Cap 状态必须另行只读核验；不启用 add-on；只使用 synthetic-only 数据。
 
-该提案不等同于已选 provider、已选套餐、已确定成本或已创建项目。精确费用只能在指定组织后，由 provider 的 `get_cost` 获取并记录 recurrence、税费和 spend cap，再由 Owner 明确确认；禁止从通用价格页推断本项目 exact cost。
+该提案不等同于已选 provider、已选 organization、已选套餐、已确定成本或已创建项目。准确流程是：用户先明确选择 organization + resource scope；provider `get_cost` 返回并确认其实际提供的 amount/recurrence；tax/VAT/billing-address effect 另由 billing page/专业顾问核对；Spend Cap 是 organization-level 设置，另行只读核验其状态和覆盖范围；三项均完成并由 Owner 明确确认后才可创建。禁止从通用价格页推断本项目 exact cost。
 
 ## 6. 2026-08-28 官方来源刷新（只作为规划依据）
 
@@ -120,8 +120,8 @@ G2-A0 的远端闭环已经在 `main` 完成：PR #7 的 merge commit 为 `fd9b7
 | [Data API exposure breaking change](https://supabase.com/changelog/45329-breaking-change-tables-not-exposed-to-data-and-graphql-api-automatically) | 新表默认可能不自动暴露给 Data/GraphQL API；grants 控制对象可达性，RLS 控制行级可见性，二者分离 | A1 只做最小 reachability 观察；完整 grants/RLS 归 A3/A4 |
 | [Free-tier email template change](https://supabase.com/changelog/46599-changes-to-email-template-customisation-on-free-tier) | 新 Free 项目使用默认 SMTP 时，认证邮件模板自定义受限；Pro 或配置自有 SMTP 的项目不受该限制 | B1 必须记录 plan/SMTP 事实；不发送真实邮件 |
 | [Available regions](https://supabase.com/docs/guides/platform/regions) | 精确 EU 候选为 `eu-central-1` Frankfurt；region 是数据位置控制，不等于 GDPR 合规证明 | 区域与合规法律判断分离，GDPR 转 A5/专业顾问 |
-| [Control your costs](https://supabase.com/docs/guides/platform/cost-control) | Spend Cap 仅适用于 Pro；它不是细粒度预算或告警系统；超 quota 时会限制被覆盖的 usage item | Gate 必须记录 cap 状态、覆盖范围和 stop 联系人 |
-| [Billing FAQ](https://supabase.com/docs/guides/platform/billing-faq) | Pro 的超额、税费和组织账单需按实际组织/账单地址计算；通用价格不能替代本项目 exact cost | 先指定组织，再取 exact quote/recurrence/tax 并由 Owner 确认 |
+| [Control your costs](https://supabase.com/docs/guides/platform/cost-control) | Spend Cap 是 organization-level 设置，仅适用于 Pro；它不是细粒度预算或告警系统；超 quota 时会限制被覆盖的 usage item | 单独只读核验 cap 状态与覆盖范围，记录 stop 联系人 |
+| [Billing FAQ](https://supabase.com/docs/guides/platform/billing-faq) | provider `get_cost` 的 amount/recurrence 与账单税费不是同一返回值；tax/VAT/billing-address effect 依实际账单和专业意见核对 | 用户先选 organization + resource scope，再取并确认 `get_cost` 实际返回值；税费另核对 |
 | [MFA guide](https://supabase.com/docs/guides/auth/auth-mfa) / [TOTP guide](https://supabase.com/docs/guides/auth/auth-mfa/totp) | Auth 支持 App Authenticator/TOTP 与 phone factor；TOTP 可通过 enrollment/challenge/verify 形成 AAL2 | Owner 已排除 phone/SMS 与静态恢复码；B3 只按 TOTP/人工恢复合同实测 |
 | [Signing out](https://supabase.com/docs/guides/auth/signout) | `local`、`global`、`others` 具有不同退出范围；撤销 session 的 access token 仍可能在 `exp` 前有效 | B3 必须记录退出语义和 token 窗口，不承诺即时失效 |
 | [User sessions](https://supabase.com/docs/guides/auth/sessions) | session lifetime 与 single-session per user 只在 Pro 及以上可配置；刷新时才逐步执行设置 | B3 记录计划、配置和观察窗口，不能把默认值写成承诺 |

@@ -307,7 +307,7 @@ A1 通过只打开 A2 买家账号或 Owner 指定的下一阶段，不自动打
 
 ## 18. 当前原型边界
 
-A0 通过前可以继续制作无后端 UI 原型：
+resource/cost/secret Gate 通过前，仅可继续维护无资源后端原型、接口合同、测试矩阵和合成字段；G2-A0 已通过，不应将当前限制表述为 A0 未通过。可继续维护的无资源原型范围如下：
 
 - 可展示 Apple、Google、邮箱 OTP、Magic Link 后备、邀请邮箱 mismatch、备用 TOTP、人工恢复、会话能力“待 A1 验证”等状态。
 - 只能使用合成身份、虚构邮箱、虚构组织、不可用的示例 token 文本和静态结果；不得把按钮点击写成真实 Auth 成功。
@@ -337,5 +337,5 @@ A0 通过前可以继续制作无后端 UI 原型：
 
 - G2-A0 远端 reconciliation 已完成：PR #7 merge=`fd9b712c7b07bf34399f9838eebb75846425c1d1`，parents=`7ea1e45ad22ab29105910665baf4bbd7212241c5` + `1433e7c7c141df0f5498fff7cd645a8d5c92340c`；main Actions run=`33122238997` / job=`98691703085` 的 install/typecheck/lint/build 全部 success，merge SHA 的 GitHub deployments=`0`，来源分支保留。完整摘要见[G2-A1 Entry preparation 证据](./evidence/G2-A1/2026-08-28-entry-preparation/README.md)。
 - 当前正式状态为：**G2-A1 技术阶段未开始；无资源 Entry preparation 已完成/待审；resource/cost/secret Gate 关闭**。本批只允许文档、接口草图、测试矩阵和 `.invalid` 合成字段；不创建/连接 Supabase/Auth/DB/Storage/OAuth/SMTP，不读取 secret/env/PII，不部署或修改 Production。
-- A1 资源 Gate 字段与 Auth 矩阵分别见[资源成本与密钥 Gate 模板](./templates/G2-A1-资源成本与密钥Gate模板.md)和[Auth 实测矩阵模板](./templates/G2-A1-Auth实测矩阵模板.md)。只有 Owner 另行确认 provider/project/plan/region/environment、exact cost、recurrence、tax、Spend Cap、key owner 和 stop contact 后，才可打开技术阶段。
+- A1 资源 Gate 字段与 Auth 矩阵分别见[资源成本与密钥 Gate 模板](./templates/G2-A1-资源成本与密钥Gate模板.md)和[Auth 实测矩阵模板](./templates/G2-A1-Auth实测矩阵模板.md)。只有 Owner 另行确认 provider/project/plan/region/environment；provider `get_cost` 实际提供的 amount/recurrence；另行核对的 tax/VAT/billing-address effect；organization-level Spend Cap 状态/覆盖范围；以及 key owner 和 stop contact 后，才可打开技术阶段。
 - 2026-08-28 官方来源刷新、EU `eu-central-1` proposal、Node 20→22、OAuth 2xx、Data API grants/RLS 分离、Free SMTP 限制、Pro session 约束与 region/GDPR 边界见[G2-A1 准备与资源门禁](./stages/G2-A1-Auth-Spike准备与资源门禁.md)；这些是规划依据，不是实现证据。

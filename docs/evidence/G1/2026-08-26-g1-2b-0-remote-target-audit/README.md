@@ -29,7 +29,7 @@
 - 本地仓库：`/Users/kyox215/Documents/codex应用文件夹/rebuy购物交易计划`；shell：zsh；审计开始时 `git status --short --branch` 为 `## main`，HEAD 为 `099439c`，`git remote -v` 为空。
 - 项目规则：已完整读取 `prototype/AGENTS.md`；本批不修改 `prototype/**`、workflow、package、lockfile 或产品代码。
 - 账户检查：`gh auth status --hostname github.com` 显示活动账户 `kyox215`，但 token 无效；`gh api user` 不可用。因此只记录“登录名可识别、认证不可用”，不记录 token 或 scope。
-- 公开发现：`GET https://api.github.com/users/kyox215/repos?per_page=100&sort=updated`；公开列表包括 `PartsPro-V4`、`REBUY_SHARE`、`Chinatech-codex`、`PartsPro-Italia`、`ChinatechOS-2026`、`Chinatech`、`MagiskOnWSA`。列表不证明不可见的 private/internal 仓库不存在。
+- 公开发现：`GET https://api.github.com/users/kyox215/repos?per_page=100&sort=updated`；公开列表包括 `[unrelated repository redacted]`、`REBUY_SHARE`、`Chinatech-codex`、`PartsPro-Italia`、`ChinatechOS-2026`、`Chinatech`、`MagiskOnWSA`。列表不证明不可见的 private/internal 仓库不存在。
 - 候选核验：使用 GitHub 公开 REST GET、`git ls-remote --symref`；在 `/private/tmp` 临时比较仓库 fetch 本地 HEAD 和候选 `main`，比较完成后删除临时目录。当前项目 `.git` 未写入 remote 或远端跟踪 ref。
 
 ## 3. 候选发现与仓库元数据
