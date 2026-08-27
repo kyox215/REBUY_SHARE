@@ -124,6 +124,7 @@ Job：[prototype-quality / 98372467897](https://github.com/kyox215/REBUY_SHARE/a
 - `allowed_actions=all`、SHA enforcement 为 `false`；仓库设置比项目 workflow 自身更宽，后续应由 Owner/治理专项决定是否收紧。
 - 公开上传已发生；本仓库源码、文档、Git 历史和图片按 Owner 授权公开可见。敏感审计不替代 GitHub secret scanning 或未来真实环境变量审查。
 - 本证据固定的是 run `33027593355` 对 `f746dca` 的结果；更新后的 docs head 必须单独确认 PR check，不能由本条预填成功。
+- 上一份文档 head `cce03acfdf7eb4da5ce1f8bb7b559d8705332b0e` 的 PR check run `33029927182` / job `98379847069` 已独立实时确认 SUCCESS；本次新增文档提交只追加纠正当前时态，不改写初始 run 事实。
 
 ### 回退
 
