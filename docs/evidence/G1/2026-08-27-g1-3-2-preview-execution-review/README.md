@@ -2,7 +2,7 @@
 
 阶段：G1 工程底座与环境隔离
 批次：G1.3-2 Preview 执行方案、环境保护与 bad→good 回退独立审查
-状态：`独立审查完成；原方案 NO-GO；修正后条件 GO 候选；Owner Gate 已批准（2026-08-27 10:33:59 CEST）；本审查阶段未执行外部动作；后续 bad503 结果由 G1.3-3 独立记录，good200 尚未运行 Actions 或部署 Preview；G1 Exit NO-GO`
+状态：`独立审查完成；原方案 NO-GO；修正后条件 GO 候选；Owner Gate 已批准（2026-08-27 10:33:59 CEST）；本审查阶段未执行外部动作；后续 G1.3-3 已记录 bad503 结果；历史代码候选快照 ref 5ce3723b73edcd7284f88b26d6faa0e31ed01b40 曾为 PR#5 head，首轮 Actions run 33074662873 / job 98525606734 的 install/typecheck/lint/build 已成功；本次 docs-only closeout 会生成后继 head，其 SHA/run 不预写、不递归回写；good Preview 仍待独立门禁；G1 Exit NO-GO`
 证据级别：文档审查 + provider 只读事实复用 + Owner Gate 授权记录；未执行 Preview/PR/Actions/deploy
 记录日期：2026-08-27（Europe/Rome）
 审查输入 ref：`main@af6d7419956ce6640c0b4af5df4db0369e793f77`（只作为未来精确 archive 输入）
@@ -140,6 +140,6 @@ vercel curl / \
 - 归档副本、`.vercel/` 和临时缓存完成后清理；当前 repo、Git refs、remote、workflow、package、lockfile 和 provider 设置不得因本审查改变。
 - 维护记录只保留 ref、target、时间、deployment id、步骤结论、fingerprint 和风险类别；不保存 secret、完整日志、alias/URL 值或 PII。
 - 审查时风险（历史快照）：Owner Gate 已批准但 Preview 尚未部署，在线 bad→good 尚未演练，Vercel Node24 project 显示与 Node22 应用合同尚未由 build log 证明，变量存在性和 aliases fingerprint 尚未实测；后续 bad503 Preview 的脱敏结果与 resolved Node22 配置由 G1.3-3 独立记录。
-- 后续 implementation 事实由独立 G1.3-3 evidence 追加：bad503 Preview 已有脱敏 READY/health 结果；good200 仅完成本地候选实现与验证，尚未运行 good200 Actions 或部署 good200 Preview。本审查记录仍是历史合同与风险边界，不改写为 G1 Exit 通过。
+- 后续 implementation 事实由独立 G1.3-3 evidence 追加：bad503 Preview 已有脱敏 READY/health 结果；历史代码候选快照 ref 5ce3723b73edcd7284f88b26d6faa0e31ed01b40 曾为 PR#5 head（当时为 OPEN/普通非 Draft），首轮 Actions run 33074662873 / job 98525606734 的 install/typecheck/lint/build 已成功；本次 docs-only closeout 会生成后继 head，其 SHA/run 不预写、不递归回写；good Preview 与在线回退仍待独立门禁，任何 deploy 前必须实时确认 PR 当前 head 及其新 Actions 的 install/typecheck/lint/build 全部成功，否则 STOP。本审查记录仍是历史合同与风险边界，不改写为 G1 Exit 通过。
 
 关联记录：[G1.3-1 provider/Preview preflight](../2026-08-27-g1-3-1-provider-preview-preflight/README.md)、[G1 Owner 验收清单](../../../stages/G1-Owner验收清单.md)、[G1 阶段合同](../../../stages/G1-工程底座与环境隔离.md)、[15 项目状态与阶段台账](../../../15-项目状态与阶段台账.md)、[Prototype quality workflow](../../../../.github/workflows/prototype-quality.yml)。

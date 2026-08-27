@@ -1,14 +1,14 @@
-# G1.3-3 good200 本地候选与 bad503 Preview 结果
+# G1.3-3 good200 本地候选、PR/Actions 与 bad503 Preview 结果
 
 阶段：G1 工程底座与环境隔离
-批次：G1.3-3 good200 本地 health 候选实现、bad503 Preview 结果收口与文档同步
-状态：`good200 本地候选已实现；本批本地验证已通过；good200 尚未运行 Actions 或部署 Preview；G1 Exit NO-GO`
-证据级别：本地静态 + 本地 production server + provider 远端只读事实复用
+批次：G1.3-3 good200 本地 health 候选实现、PR#5/Actions 验证、bad503 Preview 结果收口与文档同步
+状态：`good200 本地候选已通过；历史代码候选快照 ref=5ce3723b73edcd7284f88b26d6faa0e31ed01b40 曾为 PR#5 head（当时为 OPEN 普通非 Draft、base=main），首轮 Prototype quality Actions run=33074662873 / job=98525606734 的 install/typecheck/lint/build 已成功；good Preview 尚未部署；G1 Exit NO-GO`
+证据级别：本地静态 + 本地 production server + provider 远端只读事实复用 + GitHub PR/Actions 远端
 记录日期：2026-08-27（Europe/Rome）
-good ref：`N/A`（本地候选尚未提交；base=`a228545ce0f36d8206d048a8180897a041d23de0`）
+code candidate snapshot ref：`5ce3723b73edcd7284f88b26d6faa0e31ed01b40`（当时为 PR#5 exact head；首轮 Actions run=`33074662873` / job=`98525606734` 已成功；本次 docs-only closeout 会生成后继 head，其 SHA/run 不预写、不递归回写）
 lineage：`origin/main@af6d7419956ce6640c0b4af5df4db0369e793f77` 为 base 祖先；bad503 ref 不在该 base 历史中
 
-> 本记录只覆盖一个最小 good200 本地候选和已提供的 bad503 Preview 脱敏结果。它不代表 good200 已通过 GitHub Actions、Preview、在线回退、Production 或 G1 Exit；不得据此打开 G2-A0。
+> 本记录覆盖一个最小 good200 本地候选、历史代码候选快照的首轮 PR#5/Actions 成功结果和已提供的 bad503 Preview 脱敏结果。它不代表 good200 Preview、在线回退、Production 或 G1 Exit 通过；不得据此打开 G2-A0。任何 deploy 前必须实时确认 PR 当前 head 及其新 Actions 的 install/typecheck/lint/build 全部成功，否则 STOP。
 
 ## 1. good200 本地候选实现
 
@@ -56,9 +56,9 @@ lineage：`origin/main@af6d7419956ce6640c0b4af5df4db0369e793f77` 为 base 祖先
 
 ## 5. good200 外部状态与后续边界
 
-- good200 当前仅是本地候选：尚未运行该 good ref 的 GitHub Actions，尚未创建/推送 good PR，尚未部署 good Preview。
+- 历史代码候选快照 ref=`5ce3723b73edcd7284f88b26d6faa0e31ed01b40` 曾为 PR#5 head（当时为 OPEN 普通非 Draft、base=`main`）；首轮 Prototype quality Actions run=`33074662873` / job=`98525606734` 的 install/typecheck/lint/build 已成功；本次 docs-only closeout 会生成后继 head，其 SHA/run 不预写、不递归回写；任何 deploy 前必须实时确认 PR 当前 head 及其新 Actions 的 install/typecheck/lint/build 全部成功，否则 STOP。good Preview 尚未部署。
 - bad503 演练分支/ Draft PR 与 good200 路径保持分离；bad PR 永不 Ready/merge，分支按审计要求保留。
-- good200 后续如获批准，必须从独立干净 good ref 进入普通 PR，再按 provider `rootDirectory=prototype` 从 archive 仓库根执行 Preview；不得从 archive/prototype 执行。
+- good200 Preview 后续必须沿独立普通 PR 路径，按 provider `rootDirectory=prototype` 从 archive 仓库根执行 Preview；不得从 archive/prototype 执行。
 - 本批不 promote、不切换 Production alias、不 rollback Production、不接 Supabase/Auth/DB/Staging/Production，不读取或写入任何 env/secret/PII。
 
 ## 6. 变更与验收摘要
@@ -69,7 +69,7 @@ lineage：`origin/main@af6d7419956ce6640c0b4af5df4db0369e793f77` 为 base 祖先
 | 文档范围 | 更新 15 台账、G1 Owner 清单、G1 工程合同、G1.3-2 历史快照说明；新增本 evidence |
 | good200 本地运行 | Node22 exact toolchain 下 frozen install/typecheck/lint/build 均退出 `0`；root/health 均 HTTP `200`，body 仅 healthy，Cache-Control 含 `no-store` |
 | changed-files 敏感扫描 | changed-files sensitive scan=`0`；route scope scan=`0`；docs 中历史 503/unhealthy 证据不纳入路由 scope 结论 |
-| GitHub Actions / good Preview | 未执行 |
+| GitHub Actions / good Preview | 首轮代码候选快照 Actions run=`33074662873`、job=`98525606734` 成功（install/typecheck/lint/build 均成功）；本次 docs-only closeout 后继 head/run 不预写、不递归回写；good Preview 尚未部署；deploy 前必须实时确认当前 PR head 及新 Actions 全部成功 |
 | Production 写入 | 未执行；既有 Production fingerprint 仅作为 bad503 结果不变量复用 |
 | G1 Exit | `NO-GO`；在线 bad→good 回退和 Owner Exit 仍缺失 |
 
