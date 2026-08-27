@@ -18,7 +18,7 @@
 
 | 前置条件 | 当前状态 | 已有证据 | 对 G2-A0 的影响 |
 |---|---|---|---|
-| G1.2b 真实 CI 与 main merge | 已满足 | PR #5 merge=`d51f1c7cb47e2fe2932b29bd39420f5d092a8160`；main Actions run=`33089108238` / job=`98576781415`，install/typecheck/lint/build success | 允许继续 G2-A0 Entry；不替代 A0 安全审查 |
+| G1 final technical main merge / exact-head CI | 已满足 | PR #5 merge=`d51f1c7cb47e2fe2932b29bd39420f5d092a8160`；main Actions run=`33089108238` / job=`98576781415`，install/typecheck/lint/build success | 允许继续 G2-A0 Entry；不替代 A0 安全审查 |
 | G1.3 technical closeout | 已满足 | Owner 验收 ref=`d51f1c7cb47e2fe2932b29bd39420f5d092a8160`；G1-19/G1 Exit GO | 允许打开 A0 docs-only 入口；不授权 Auth/DB/部署 |
 | G1 Exit Owner 决定 | 已满足 | Owner 原话、日期、签署和 ref 已记入 [15 台账](../15-项目状态与阶段台账.md) | Entry 通过；A0 Exit 仍待独立审查与 Owner |
 | A0 文档权威输入 | 已满足 | [07](../07-完整账号系统规划.md)、[08](../08-账号系统思维导图.md)、[09](../09-A0-账号架构ADR与威胁模型.md) | 本批复用并做状态/术语一致性同步 |
@@ -56,32 +56,41 @@
 - [x] 形成 A0-01～A0-15 及日期化 Entry 补充的统一引用。
 - [x] 形成覆盖账号枚举、撞库、接管、会话、CSRF/XSS、权限提升、跨租户、邀请滥用和停用/删除残余访问的威胁矩阵。
 - [x] 保留 Auth/DB/Storage/Realtime、secret/env、真实账号/PII、部署和远端写入禁止边界。
-- [x] 明确 A0 Exit 只打开 G2-A1 准备门，A1 资源/费用/secret/连接需独立授权。
+- [x] 明确 A0 Exit 只打开 G2-A1 准备门，并将未来独立资源授权 Gate 与 A0 Exit 分离。
 
 ### 4.2 待独立审查与 Owner Exit
 
 - [ ] 独立安全审查人逐项复核 07/08/09、03 高层角色摘要、10 A1 资源边界和本清单威胁矩阵。
 - [ ] 独立审查人确认 grants/RLS/exposed allowlist、UPDATE 三条件、view/function 权限、Storage 规则和默认拒绝边界的一致性；不把文档当成运行证据。
-- [ ] Owner 决定 phone/SMS MFA、静态恢复码、AAL2 范围/时点、双人复核和 A1 provider 候选。
-- [ ] Owner 确认 GDPR/税务留存、legal hold、跨境和处理者合同交由 A5/法律顾问，不在 A0 代替法律结论。
+- [ ] (a) Owner 决定 V1 是否排除 phone/SMS MFA。
+- [ ] (b) Owner 决定是否排除静态恢复码，改用不同设备/安全位置备用 TOTP 与受审计人工恢复。
+- [ ] (c) Owner 决定 AAL2 强制角色范围与时点。
+- [ ] (d) Owner 决定高风险动作双人复核范围与第二责任人。
+- [ ] (e) Owner 决定 A1 spike provider 候选（Supabase 优先，Clerk/Auth0 仅比较）。
+- [ ] (f) Owner 决定 A1 plan/region/session 配置或决策规则。
+- [ ] (g) Owner 确认 GDPR/税务留存、删除、legal hold、跨境和处理者合同的确认/转交边界（A5/法律顾问）。
+- [ ] 未来独立资源授权 Gate：non-production project/resource、cost、secret、OAuth、SMTP 和任何连接另行授权；不属于上述七项、不属于 G2-A0 Exit 条件，也不因 A0 签署获批。
 - [ ] Owner 明确签署 G2-A0 Exit；通过后只将 G2-A1 改为“准备中/待资源授权”，不直接开始 Auth 实测。
 
 ## 5. Owner 决策矩阵
 
-以下“建议”只供 Owner 选择，当前不视为已采纳。
+以下七项与[G2-A0 阶段记录](./G2-A0-账号安全合同与威胁模型验收.md)第 8 节逐项一致；“建议”只供 Owner 选择，当前不视为已采纳。
 
 | 决策项 | 建议/候选 | 当前决定 | 后续约束 |
 |---|---|---|---|
-| phone/SMS MFA | 建议 V1 不使用 phone/SMS MFA | 待 Owner 决定 | 采纳后 A1 可不测试；不采纳则修订 A1 合同并重新评审 |
-| 静态恢复码 | 建议 V1 不使用静态恢复码；采用不同设备/安全位置备用 TOTP + 受审计人工恢复 | 待 Owner 决定；供应商能力待 A1 验证 | 恢复必须身份核验、职责分离、AAL/会话重置、通知和审计 |
-| AAL2 强制范围/时点 | 平台 owner/admin/reviewer 从上线前强制；商家 owner/admin 最迟 Beta 前强制；普通买家按风险提升；高风险动作重新认证 | 待 Owner 决定 | 影响 A1 矩阵和 P2/P6 高风险动作 |
-| 双人复核 | MFA 人工恢复、owner 转移、角色/权限策略变更、敏感导出、隐私删除/导出、证明文件高风险访问 | 待 Owner 决定 | 指定第二责任人、AAL、通知、审计、拒绝和回退证据 |
-| A1 provider | Supabase 优先；Clerk/Auth0 只作比较 | 待 Owner 决定；A0 不锁 provider | A1 记录能力、限制、版本、数据/区域边界 |
-| A1 plan/region/session | A0 不锁 provider、plan、region、session lifetime、single-session、refresh delay | 待 Owner 决定 | 需 A1 实测并记录观察窗口；不得凭默认值承诺 |
-| A1 资源/费用/secret | 需要新的 non-production resource/cost/secret 授权；本次 A0 不授权 | 未授权 | 不得创建项目、产生费用、配置 secret 或连接任何环境 |
-| GDPR/税务与删除 | GDPR/税务留存、legal hold、跨境/处理者合同留给 A5 与法律/税务顾问 | 待 Owner/顾问决定 | 未有意见前不处理真实 PII、不把规划期限当法律结论 |
+| (a) phone/SMS MFA | 建议 V1 不使用 phone/SMS MFA | 待 Owner 决定 | 若采纳，A1 可不测试该路径；若不采纳，先修订 A1 合同并重新评审 |
+| (b) 静态恢复码与备用 TOTP/人工恢复 | 建议 V1 不使用静态恢复码；改用位于不同设备/安全位置的备用 TOTP + 受审计人工恢复 | 待 Owner 决定；供应商能力仍待 A1 验证 | A1 验证因子语义、恢复、AAL/会话重置、通知与审计；不得把供应商命名当作政策 |
+| (c) AAL2 强制角色范围与时点 | 候选：平台 owner/admin/reviewer 从上线前强制；商家 owner/admin 最迟 Beta 前强制；普通买家按风险提升；高风险动作重新认证 | 待 Owner 决定 | 影响 A1 测试矩阵、业务高风险动作和 P2/P6 入口 |
+| (d) 高风险动作双人复核与第二责任人 | 候选：MFA 人工恢复、owner 转移、角色/权限策略变更、敏感导出、隐私删除/导出、证明文件高风险访问 | 待 Owner 决定 | 需确定第二责任人、AAL、通知、审计、拒绝和回退证据 |
+| (e) A1 spike provider 候选 | 候选矩阵：Supabase 优先；Clerk、Auth0 仅作比较，不在 A0 锁定 | 待 Owner 决定 | A1 实测 provider 能力、限制、版本和数据/区域边界 |
+| (f) A1 plan/region/session 配置与决策规则 | A0 不锁 provider、plan、region、session lifetime、single-session、refresh delay | 待 Owner 决定 | 需 A1 实测并记录观察窗口；不得凭默认值承诺 |
+| (g) GDPR/税务留存、删除、legal hold、跨境与处理者合同边界 | GDPR/税务留存、legal hold、跨境传输、处理者合同留给 A5 与法律/税务顾问 | 待法律/Owner 决定 | 未有意见前不处理真实 PII，不把规划期限当法律结论 |
 
-已确定且不重复询问：支持多店铺；批发手动切换是产品交互事实但不是授权依据；`wholesale application` 与 `wholesale qualification` 分离；identity/membership/authorization/verification 分层；浏览器不得持 service role。
+### 5.1 未来独立资源授权 Gate（不属于七项政策决定）
+
+non-production project/resource、cost、secret、OAuth、SMTP 和任何连接必须另行取得独立资源授权。该 Gate 不属于上述七项政策决定，不属于 G2-A0 Exit 条件，也不会因 A0 签署而获批；当前 A0 不授权创建项目、产生费用、配置 secret 或连接任何环境。
+
+已确定且不重复询问：支持多店铺；批发价格、起订量和阶梯价由有效批发资格、组织状态、商品规则和服务端实时判断自动决定，不提供手动切换零售/批发模式的开关；`wholesale application` 与 `wholesale qualification` 分离；identity/membership/authorization/verification 分层；浏览器不得持 service role。
 
 ## 6. Owner 决定栏
 

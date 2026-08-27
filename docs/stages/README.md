@@ -49,4 +49,4 @@ GOV-1 的阶段事实见其[独立记录](./GOV-1-治理文档与状态台账.md
 
 ## 7. 2026-08-27 G2-A0 docs-only 执行启动
 
-G1-19/G1 Exit=GO 后，Owner 已授权打开 G2-A0。当前阶段仅更新账号安全合同、ADR/威胁模型一致性、Owner 待决矩阵、阶段台账和导航；独立安全审查与 G2-A0 Exit 尚未完成。G2-A1 保持“未开始”，不创建或连接 Supabase/Auth/DB/Storage/Realtime，不读取 secret/env/PII，不修改代码、依赖、lockfile、workflow、环境配置，不执行 push、PR、远端 Actions、Preview、部署、promote、alias 或 Production 操作。详细记录见[G2-A0 阶段记录](./G2-A0-账号安全合同与威胁模型验收.md)。
+G1-19/G1 Exit=GO 后，Owner 已授权打开 G2-A0。当前阶段仅更新账号安全合同、ADR/威胁模型一致性、Owner 待决矩阵、阶段台账和导航；07/08 仅同步状态头，不修改 Owner 政策；独立安全审查与 G2-A0 Exit 尚未完成。G2-A1 保持“未开始”，不创建或连接 Supabase/Auth/DB/Storage/Realtime，不读取 secret/env/PII，不修改代码、依赖、lockfile、workflow、环境配置，不执行 push、PR、远端 Actions、Preview、部署、promote、alias 或 Production 操作。详细记录见[G2-A0 阶段记录](./G2-A0-账号安全合同与威胁模型验收.md)。
