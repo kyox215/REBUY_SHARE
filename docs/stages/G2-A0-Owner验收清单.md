@@ -56,7 +56,7 @@
 - [x] 形成 A0-01～A0-15 及日期化 Entry 补充的统一引用。
 - [x] 形成覆盖账号枚举、撞库、接管、会话、CSRF/XSS、权限提升、跨租户、邀请滥用和停用/删除残余访问的威胁矩阵。
 - [x] 保留 Auth/DB/Storage/Realtime、secret/env、真实账号/PII、部署和远端写入禁止边界。
-- [x] 明确 A0 Exit 只打开 G2-A1 准备门，并将未来独立资源授权 Gate 与 A0 Exit 分离。
+- [x] 已明确分离未来独立资源授权 Gate 与 A0 Exit；A0 Exit 只打开 G2-A1 准备门，本次未授权项目/资源、费用、secret、OAuth、SMTP 或任何连接。
 
 ### 4.2 待独立审查与 Owner Exit
 
@@ -69,7 +69,6 @@
 - [ ] (e) Owner 决定 A1 spike provider 候选（Supabase 优先，Clerk/Auth0 仅比较）。
 - [ ] (f) Owner 决定 A1 plan/region/session 配置或决策规则。
 - [ ] (g) Owner 确认 GDPR/税务留存、删除、legal hold、跨境和处理者合同的确认/转交边界（A5/法律顾问）。
-- [ ] 未来独立资源授权 Gate：non-production project/resource、cost、secret、OAuth、SMTP 和任何连接另行授权；不属于上述七项、不属于 G2-A0 Exit 条件，也不因 A0 签署获批。
 - [ ] Owner 明确签署 G2-A0 Exit；通过后只将 G2-A1 改为“准备中/待资源授权”，不直接开始 Auth 实测。
 
 ## 5. Owner 决策矩阵
