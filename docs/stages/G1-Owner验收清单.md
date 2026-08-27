@@ -3,7 +3,7 @@
 清单性质：稳定 Owner Gate checklist；不替代唯一当前状态源 [15 项目状态与阶段台账](../15-项目状态与阶段台账.md)
 适用阶段：G1 工程底座与环境隔离
 当前结论：`NO-GO / G1 Exit 未通过`
-当前清单证据：本地静态、G1.2a 本地 workflow/等价验证、G1.3-0 本地预检、G1.2b 真实 PR/Actions、PR #1 main merge 与远端只读设置核验；不包含 Preview 或在线回退证据
+当前清单证据：本地静态、G1.2a 本地 workflow/等价验证、G1.3-0 本地预检、G1.3-1 provider/CLI/隔离预检、G1.2b 真实 PR/Actions、PR #1 main merge 与远端只读设置核验；不包含 Preview 或在线回退证据
 记录日期：2026-08-27（Europe/Rome）
 
 > 本清单只提供 Owner 验收所需的 requirement-to-evidence 入口和签署栏。任何本地静态、Git archive、合成数据或规划证据都不能写成真实 GitHub Actions、Preview、Staging、Production 或 G1 Exit 通过。
@@ -14,7 +14,7 @@
 - “已满足（本地）”只表示对应本地合同或本地等价证据成立，不扩大为远端、外部环境或生产批准。
 - 当前 Owner 已明确的 G1.2a 授权原话为：`批准进入G1.2a：采用GitHub Actions候选，在本地创建只读最小CI工作流并做本地等价验证；暂不添加remote、不push、不运行远端CI、不部署Preview、不接Supabase或生产。`
 - 随后 Owner 已明确授权一次受限 G1.2b：允许将当前仓库公开上传至 `kyox215/REBUY_SHARE`、推送 `integration/g1-2b`、创建 PR、运行 Actions 并在通过后非强制合并；本次仍禁止 force-push、删除远端历史、Preview、Supabase/Auth/DB 和生产。另有 Workflow scope 仅限该仓库本次工作流。
-- 当前 G1 状态必须以 15 为准：G1.1 已完成，G1.2a 已完成，G1.2b 真实 PR/CI 已完成并通过 PR #1 merge commit 合并 `main`；main push 的 install/typecheck/lint/build 已成功，`integration/g1-2b` 仍保留；G1.3-0 仅为本地预检，G1.3 实施未开始；G1 Exit 未通过，G2-A0 不打开。
+- 当前 G1 状态必须以 15 为准：G1.1 已完成，G1.2a 已完成，G1.2b 真实 PR/CI 已完成并通过 PR #1 merge commit 合并 `main`；main push 的 install/typecheck/lint/build 已成功，`integration/g1-2b` 仍保留；G1.3-0 本地预检与 G1.3-1 provider/CLI/部署前隔离预检已完成，G1.3 实施仍待 Owner Gate；G1 Exit 未通过，G2-A0 不打开。
 
 ## 2. G1 Exit requirement-to-evidence 矩阵
 
@@ -30,11 +30,11 @@
 | G1-08 | canonical repo、无共同祖先的历史策略、分支/PR 入口已确定 | 已满足（远端） | [G1.2b 远端证据](../evidence/G1/2026-08-27-g1-2b-remote-ci/README.md)；[main merge closeout](../evidence/G1/2026-08-27-g1-2b-main-merge/README.md)；PR #1 | `kyox215/REBUY_SHARE`、双 parent integration 策略与 merge commit 入口已确认；integration 分支仍保留；不能 direct push、force push 或改写远端 `main` |
 | G1-09 | Actions enabled/default workflow permissions/selected-actions 已核验 | 已满足（远端只读） | [G1.2b 远端证据](../evidence/G1/2026-08-27-g1-2b-remote-ci/README.md) | enabled=true、default read、allowed all、SHA enforcement=false；selected-actions 在 all 策略下 409；不读取 secrets |
 | G1-10 | Local 边界、`.gitignore`、`.env.example`、secret/log 规则 | 已满足（本地） | [G1.3-0 预检](../evidence/G1/2026-08-26-g1-3-0-local-environment-preflight/README.md)；[11 连接边界](../11-发布与Supabase连接记录.md) | 只记录变量名；真实环境值、日志和 provider 边界需后续 Owner Gate |
-| G1-11 | Preview 项目/owner/ref/Node/root `prototype`/访问/变量/health/日志/停止入口 | 缺失 | [G1.3-0 预检](../evidence/G1/2026-08-26-g1-3-0-local-environment-preflight/README.md)仅有目标合同 | 必须先确认 provider/project/owner/cost/access，再部署；当前不得造 URL/project id |
+| G1-11 | Preview 项目/owner/ref/Node/root `prototype`/访问/变量/health/日志/停止入口 | 预检完成/实施缺失 | [G1.3-1 provider/Preview preflight](../evidence/G1/2026-08-27-g1-3-1-provider-preview-preflight/README.md)；[G1.3-0 预检](../evidence/G1/2026-08-26-g1-3-0-local-environment-preflight/README.md) | provider/project/owner/access 已只读确认；cost、Node `24.x → 22.x` 候选变更、Preview、health、日志、停止入口仍待 Owner Gate 与实施确认 |
 | G1-12 | Staging 隔离边界合同（资源、secret、数据、Storage、角色和日志不得共用） | 已满足（本地） | [G1.3-0 四环境矩阵](../evidence/G1/2026-08-26-g1-3-0-local-environment-preflight/README.md) | G1 只验收边界合同；实际资源/账号/Auth/DB/RLS/PII 实施属于 G2-A1/P2 后续专项，不是 G1 Exit 前置 |
 | G1-13 | Production 隔离边界合同（专用资源、secret、访问、监控、备份、恢复和回退不得与其他环境共用） | 已满足（本地） | [G1.3-0 四环境矩阵](../evidence/G1/2026-08-26-g1-3-0-local-environment-preflight/README.md) | G1 只验收边界合同；实际 Production 资产、监控、备份/恢复和 PII 实施属于 P7/Production 后续专项，不是 G1 Exit 前置 |
 | G1-14 | Staging/Production 实际资源创建、Auth/DB/RLS/PII、监控、备份和恢复实施 | 不适用 | [G1.3-0 四环境矩阵](../evidence/G1/2026-08-26-g1-3-0-local-environment-preflight/README.md) | 标记为不适用（G1）；由 G2-A1/P2/P7/Production 专项另行授权和验收，不作为 G1 实施前置 |
-| G1-15 | 外部 provider/资产认证只读盘点（选择 Preview provider 前） | unknown | G1.3-0 仅记录本地未绑定事实，无认证外部资产清单 | 这是未来选择 Preview provider 的安全前置；不得据此创建、连接或推断外部资源不存在 |
+| G1-15 | 外部 provider/资产认证只读盘点（选择 Preview provider 前） | 已满足（远端只读） | [G1.3-1 provider/Preview preflight](../evidence/G1/2026-08-27-g1-3-1-provider-preview-preflight/README.md) | Vercel team/project/旧 production deployment 与 Supabase 组织/项目已按最小事实只读确认；不得据此创建、连接、改 Node、改 alias 或推断后续资源不存在 |
 | G1-16 | Preview 实际部署来自已通过 CI 的可追溯 ref | 缺失 | 当前无 Preview 部署；[G1.3-0 预检](../evidence/G1/2026-08-26-g1-3-0-local-environment-preflight/README.md) | G1.2b 已完成，但仍需 G1.3 Owner Gate 后建立隔离 Preview；不使用未通过 CI 的 ref |
 | G1-17 | bad ref → good ref 的在线 Preview 回退与恢复结果 | 缺失 | 只有本地 archive/回退手册，无在线演练 | 需 Owner 授权后执行并保存脱敏 health、访问、数据/Storage、日志结果 |
 | G1-18 | 验证后脱敏证据、维护责任、回退/恢复记录可持续维护 | 预检完成/实施缺失 | [G1.2b 远端证据](../evidence/G1/2026-08-27-g1-2b-remote-ci/README.md)；[G1.2b main merge closeout](../evidence/G1/2026-08-27-g1-2b-main-merge/README.md)；[G1.3-0 回退手册](../evidence/G1/2026-08-26-g1-3-0-local-environment-preflight/README.md) | PR/main 真实 CI 与脱敏证据已归档；Preview/在线回退仍缺；真实 secret 只记录 commit/path/category，不复制值；Staging/Production 由后续专项维护 |
@@ -42,7 +42,7 @@
 
 ## 3. 当前结论与不得越级事项
 
-当前结论固定为 `NO-GO / G1 Exit 未通过`。G1.2b 真实 PR/CI 已完成并通过 PR #1 merge commit 合并 main，merge 后 main push 的质量 workflow 也已成功；但 Preview 实际部署、在线回退和 Owner 签署仍缺失。G1.3-0 环境边界合同不能替代这些 Exit 要求。Staging/Production 实际资源与高风险能力属于后续 G2-A1/P2/P7/Production 专项，不是 G1 Exit 前置。
+当前结论固定为 `NO-GO / G1 Exit 未通过`。G1.2b 真实 PR/CI 已完成并通过 PR #1 merge commit 合并 main，merge 后 main push 的质量 workflow 也已成功；G1.3-1 已完成 provider/CLI 只读盘点与本地隔离预检，但 Preview 实际部署、在线回退和 Owner 签署仍缺失。G1.3-1 不能替代 Node 策略、cost/access/停止入口确认或 Preview/在线回退实施。Staging/Production 实际资源与高风险能力属于后续 G2-A1/P2/P7/Production 专项，不是 G1 Exit 前置。
 
 在 G1 Exit 明确通过前：
 
@@ -106,3 +106,12 @@ Owner 已明确采纳上述边界并完成一次受限流程；随后另行授�
 - PR #1 已 `MERGED`，merge commit 为 `cba97eb4e7c93e5c42ba496e4d2ddeac5b476c7c`，parents 为远端 main `366ad7f...` 与 integration head `0bb5fb5...`；`integration/g1-2b` 仍保留、未删除。
 - merge 后 main push 的 [Actions run 33031297793](https://github.com/kyox215/REBUY_SHARE/actions/runs/33031297793) / [job 98384190584](https://github.com/kyox215/REBUY_SHARE/actions/runs/33031297793/job/98384190584) 已 SUCCESS，install、typecheck、lint、build 和收尾步骤全部通过；完整 closeout 见[G1.2b main merge evidence](../evidence/G1/2026-08-27-g1-2b-main-merge/README.md)。
 - 当前仍为 `G1 Exit NO-GO`：G1.3-0 仅本地预检，G1.3 实施、Preview、在线回退与 Owner Exit 签署仍缺失；G2-A0 不打开。Actions `allowed_actions=all`、SHA enforcement=`false` 的治理债务继续保留，后续另行治理。
+
+## 8. 2026-08-27｜G1.3-1 provider/CLI/部署前隔离预检同步
+
+- G1.3-1 已完成 Vercel 与 Supabase 的最小认证只读盘点：Vercel team/project、旧 READY production deployment、Node `24.x` 与无 Git link 已记录；Supabase 仅确认组织下的无关项目，无 Rebuy 项目；未读取或记录 host、key、token、cookie、secret、环境值或 PII。
+- `main@af6d7419956ce6640c0b4af5df4db0369e793f77` 的归档副本在 Node `22.12.0`、Corepack `0.34.6`、pnpm `10.33.3` 下完成 frozen install、typecheck、lint、build，均退出 0；临时目录已清理，仅保留 `unrs-resolver` ignored build-script warning。main Actions run/job `33034314565/98393579170` 已 SUCCESS。
+- Vercel CLI `53.1.1` 的 `deploy/link/inspect --help` 语法已核对；`whoami` 无可确认身份输出；未执行 login、link、deploy、inspect、promote、rollback 或项目设置修改，也未写 `.vercel`。
+- 当前结论仍为 `G1 Exit NO-GO`：G1.3 实施等待 Owner Gate，需先决定 project Node `24.x → 22.x` 候选变更、Pro build/compute 用量、访问/停止入口，再仅以 `main@af6d741`、Root `prototype`、Target Preview 建立隔离 Preview；不得改变 Production alias、注入 Supabase/Auth/DB/PII 或打开 Staging/Production。在线 bad ref → good ref 仍未执行。
+
+关联证据：[G1.3-1 provider/Preview preflight](../evidence/G1/2026-08-27-g1-3-1-provider-preview-preflight/README.md)。
