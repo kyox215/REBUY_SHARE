@@ -2,18 +2,19 @@
 
 阶段：G1 工程底座与环境隔离
 批次：G1.3-2 Preview 执行方案、环境保护与 bad→good 回退独立审查
-状态：`独立审查完成；原方案 NO-GO；修正后条件 GO 候选；尚未获得 Owner 执行授权；G1 Exit NO-GO`
-证据级别：文档审查 + provider 只读事实复用；未执行 Preview/PR/deploy
+状态：`独立审查完成；原方案 NO-GO；修正后条件 GO 候选；Owner Gate 已批准（2026-08-27 10:33:59 CEST）；G1.3 implementation 已授权/执行中；尚未执行 Preview/PR/Actions/deploy；G1 Exit NO-GO`
+证据级别：文档审查 + provider 只读事实复用 + Owner Gate 授权记录；未执行 Preview/PR/Actions/deploy
 记录日期：2026-08-27（Europe/Rome）
 审查输入 ref：`main@af6d7419956ce6640c0b4af5df4db0369e793f77`（只作为未来精确 archive 输入）
 deploy/environment ref：`N/A`（本批未部署）
 
-> 本记录属于高风险独立审查，不是 Preview 执行结果。原执行草案因 Node 版本、`rootDirectory`、变量存在性、Deployment Protection、Production aliases 和回退 PR 边界不充分而判定 `NO-GO`；以下修正后仅形成条件 `GO` 候选。当前 G1.3 仍无外部执行授权、未登录、未 push、未创建 PR、未 deploy。
+> 本记录属于高风险独立审查，不是 Preview 执行结果。原执行草案因 Node 版本、`rootDirectory`、变量存在性、Deployment Protection、Production aliases 和回退 PR 边界不充分而判定 `NO-GO`；以下修正后仅形成条件 `GO` 候选。Owner 于 2026-08-27 10:33:59 CEST 回复 `我批准 ，下次无需我批准`，语义承接主线程上一条完整 G1.3 修正版授权语句；该授权已记录但不代表任何 login、push、PR、Actions 或 deploy 结果，G1 Exit 仍为 `NO-GO`。
 
 ## 1. 审查范围与安全边界
 
 - 审查 Preview 的 project、Node、root、ref、变量、访问保护、Production 不变量和 bad→good 回退，不修改代码、workflow、package、lockfile、环境文件或 provider 设置。
-- 任何后续 link/deploy/PR 都必须在新的 Owner Gate 后执行；本记录不授予 Vercel、GitHub、Supabase、Auth、DB、Staging 或 Production 权限。
+- 仅允许在本记录 §8 明列的已批准范围内进行必要 link/deploy/PR/Actions；超出该范围必须另行 Owner Gate。本记录不授予 Supabase、Auth、DB、Staging、Production 或真实业务数据权限。
+- §8 的“下次无需我批准”只覆盖该已批准范围内的常规可回退步骤和必要重试；不扩展任何未来新付费资源、Supabase project/cost、secret/env 值、Auth/DB/PII、支付、Staging/Production 或真实业务数据。
 - 不读取或记录环境变量值、token、cookie、保护 secret、host、真实 URL、PII 或原始 provider 日志；变量只允许记录名称和 target。
 - G1 Exit 保持 `NO-GO`，G2-A0/G2-A1/P2–P8 不打开。
 
@@ -43,7 +44,7 @@ deploy/environment ref：`N/A`（本批未部署）
 
 ## 4. 精确 archive、link/deploy 与访问草案（均未执行）
 
-未来仅在 Owner Gate 明确批准后，从已通过 CI 的精确 ref 建立一次性归档副本：
+仅按 §8 已批准范围，从已通过 CI 的精确 ref 建立一次性归档副本：
 
 ```bash
 ARCHIVE_REF=af6d7419956ce6640c0b4af5df4db0369e793f77
@@ -106,7 +107,7 @@ vercel curl / \
 
 | 验收项 | 当前结果 | 通过条件 |
 |---|---|---|
-| Owner 外部执行授权 | `N/A`；当前未授权 | Owner 逐字批准本记录 §7 的授权语句 |
+| Owner 外部执行授权 | `已批准（2026-08-27 10:33:59 CEST）`；仅限 §8 范围，不等于已执行 | 以实际执行证据核对 OAuth、分支/PR/Actions、最多三个 Target=Preview 及停止边界 |
 | CLI 登录与 provider access | `N/A`；未登录/不确认登录 | 只在授权后取得最小必要 access，不记录凭据 |
 | exact archive/ref | 输入固定为 `main@af6d741...`；未执行部署 | archive SHA、CI 成功、`prototype/` tree 可追溯 |
 | project rootDirectory | 未修改；当前要求 unset | link/deploy 前后均证明 project rootDirectory 未设置 |
@@ -118,15 +119,23 @@ vercel curl / \
 
 ## 7. 推荐 Owner 授权语句
 
-以下语句必须由 Owner 逐字批准后才可解除本批边界；当前仅为候选，不是已授权事实：
+以下语句是 Owner Gate 批准前的候选原文；实际批准记录见 §8：
 
 > `批准进入G1.3-2 Preview执行：确认 Vercel team kyox120-9295's projects（team_AOJDnrjov0QDLqpvMyhwA1yc）与 project rebuy-share（prj_g1W3AWm3hkbZib9zDgm6YQfGEyHL）及 Pro 正常 build/compute 用量；project Node24.x 默认不 PATCH，依据 package.json engines.node=22.x 请求 Node22，并以新的 build log 实证实际 Node22；仅从已通过 CI 的精确 archive main@af6d7419956ce6640c0b4af5df4db0369e793f77 的 prototype/执行 link/deploy，project rootDirectory 保持未设置，Target=Preview；Preview前只核对变量名与target、不读取值，任一应用变量存在即停止；不关闭 Deployment Protection，使用 vercel curl；部署前后核对旧 production deployment dpl_DZSmbtizfp3z7x2X4itwdwyLGxrH 与 aliases fingerprint 不变；bad503 使用独立 DO NOT MERGE Draft PR，永不Ready/merge，关闭PR但保留分支，good200 及后续永久 good route 另从干净 main/最终集成分支进入独立普通PR；不得改变 Production alias，不注入 Supabase/Auth/DB/PII 或任何环境值，不接 Staging、Production 或真实业务数据。`
 
-## 8. 回退、维护与关联记录
+## 8. 2026-08-27 10:33:59 CEST｜G1.3 修正版 Owner Gate 已批准
+
+- Owner 原话：`我批准 ，下次无需我批准`。该回复明确承接主线程上一条完整 G1.3 修正版授权语句，批准本批受控 Preview 执行范围，不是 G1 Exit 签署，也不把条件 GO 候选写成已完成。
+- 授权范围：允许 Vercel OAuth 临时认证；仅限上一条完整授权语句指定的两个 `codex/*` 分支/PR/Actions 入口（本记录不臆补名称或编号）；最多三个 `Target=Preview`，角色仅为 `bad503`、`good200`、`final`；允许 Vercel Pro 正常 build/compute 用量；在该范围内风险触发时可受限取消构建中的 Preview。OAuth/login 是否发生、分支/PR/Actions 是否创建及 Preview 是否部署，均须由后续证据确认。
+- 原修正合同保持不变：`engines.node=22.x` 覆盖 project Node24，Node 默认不 PATCH，必须由 build log 实证 Node22；project `rootDirectory` 保持未设置，从精确 archive 的 `prototype/` cwd 执行；Preview 前只列变量名/target，任一应用变量存在即停止；不关闭 Deployment Protection，使用 `vercel curl`；旧 production deployment `dpl_DZSmbtizfp3z7x2X4itwdwyLGxrH` 与 aliases fingerprint 前后必须不变；bad503 使用永不 Ready/merge 的 `DO NOT MERGE` Draft PR，关闭 PR 但保留分支，good200 与后续永久 good route 另用独立干净普通 PR。
+- `下次无需我批准` 仅表示上述已批准范围内的常规可回退步骤和必要重试不重复询问；不得扩展到未来新付费资源、Supabase project/cost、任何 secret/env 值、Auth/DB/PII、支付、Staging/Production、真实业务数据、Production alias/promote/rollback、项目删除或其他 team/project 设置。
+- 当前状态：G1.3 implementation 从“待 Owner Gate”更新为“已授权/执行中”；本记录仍不伪造任何 login、push、PR、Actions、Preview 或 deploy 结果，G1 Exit 保持 `NO-GO`，G2-A0 不打开。
+
+## 9. 回退、维护与关联记录
 
 - 任一 Node、变量、保护、alias、访问或 ref 检查失败：停止 Preview 晋级和所有外部写入，保存最小脱敏摘要，回到 Owner Gate；不把失败写成通过。
 - 归档副本、`.vercel/` 和临时缓存完成后清理；当前 repo、Git refs、remote、workflow、package、lockfile 和 provider 设置不得因本审查改变。
 - 维护记录只保留 ref、target、时间、deployment id、步骤结论、fingerprint 和风险类别；不保存 secret、完整日志、alias/URL 值或 PII。
-- 当前风险：Preview 尚未部署，在线 bad→good 尚未演练，Vercel Node24 project 显示与 Node22 应用合同尚未由 build log 证明，变量存在性和 aliases fingerprint 尚未实测。
+- 当前风险：Owner Gate 已批准但 Preview 尚未部署，在线 bad→good 尚未演练，Vercel Node24 project 显示与 Node22 应用合同尚未由 build log 证明，变量存在性和 aliases fingerprint 尚未实测。
 
 关联记录：[G1.3-1 provider/Preview preflight](../2026-08-27-g1-3-1-provider-preview-preflight/README.md)、[G1 Owner 验收清单](../../../stages/G1-Owner验收清单.md)、[G1 阶段合同](../../../stages/G1-工程底座与环境隔离.md)、[15 项目状态与阶段台账](../../../15-项目状态与阶段台账.md)、[Prototype quality workflow](../../../../.github/workflows/prototype-quality.yml)。
