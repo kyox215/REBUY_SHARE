@@ -43,7 +43,7 @@ deploy/environment ref：`N/A`（本批未部署）
 
 ## 3. Rebuy 本地 ref、目录与 CI 合同
 
-- 当前本地 `main`、`HEAD` 均为 `af6d7419956ce6640c0b4af5df4db0369e793f77`；本批工作树保持 clean。
+- G1.3-1 预检输入时 `main`/`HEAD` 均为 `af6d7419956ce6640c0b4af5df4db0369e793f77`；文档收口分支/commit 另见本文头部与当前 Git 记录；本批工作树保持 clean。
 - App Root 固定为 `prototype/`；存在 `prototype/app`、`prototype/package.json`、`prototype/pnpm-lock.yaml` 和 `prototype/next.config.ts`。
 - `prototype/package.json` 声明 `engines.node=22.x`、`engines.pnpm=10.33.3`、`packageManager=pnpm@10.33.3`；`.node-version` 为 `22`。
 - 健康路由为 `/api/health/supabase`。未注入 Supabase 变量时该路由按 fail-closed 合同返回未配置结果，不能替代根页面或关键无外部依赖页面的 Preview health。
