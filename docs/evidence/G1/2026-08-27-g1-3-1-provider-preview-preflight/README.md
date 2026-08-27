@@ -11,6 +11,8 @@ deploy/environment ref：`N/A`（本批未部署）
 
 > 本记录只证明在不写入 provider、不建立 Preview、不连接 Supabase/Auth/DB 的前提下完成了部署前盘点、CLI 语法核对和临时归档验证。没有读取、记录或输出 host、key、token、cookie、secret、环境变量值、PII 或原始 provider 日志。外部状态仅记录认证只读得到的最小事实，不从本地未绑定推断不存在。
 
+> 2026-08-27 高风险独立审查纠正：原 Preview 执行草案因 Node 版本、`rootDirectory`、变量存在性、Deployment Protection 和 bad→good 回退入口表述不严密，审查结论为 `NO-GO`；修正后的执行合同见 [G1.3-2 Preview execution review](../2026-08-27-g1-3-2-preview-execution-review/README.md)。修正后仅为条件 `GO` 候选，当前仍未获外部执行授权、未登录、未 push、未创建 PR、未 deploy。
+
 ## 1. 本批范围与安全边界
 
 - 从 clean `main@af6d741` 创建本地 `codex/g1-3-preview`，仅用于本地文档收口；未 push、未创建 PR、未修改远端 ref。
@@ -82,29 +84,34 @@ CLI help 期间后台更新器尝试写用户缓存并产生 `EPERM`，不影响
 
 ## 6. Node 设置结论
 
-前置审查引用的官方 Vercel 规则将 `package.json` 的 `engines.node` 作为项目 Node 版本合同来源之一；但本地 `engines.node=22.x` 不等于已经修改或覆盖 Vercel project setting。实时只读项目仍显示 Node `24.x`，因此不能假定 Preview 会按 Node 22 运行。
+按 Vercel 官方 Node 版本规则，`package.json` 的 `engines.node=22.x` 会覆盖 project 层面当前显示的 Node `24.x`，因此默认不 PATCH project Node 设置。Preview 执行仍必须在新的 build log 中核对实际 Node 主版本为 `22`；若 build log 显示非 Node 22，立即停止，不自动修改 project 设置，另开 Owner 决策。
 
-G1.3 实施前必须由 Owner 明确是否把现有 project 默认 Node 从 `24.x` 调整为 `22.x`；若保留 `24.x`，必须另有兼容性决定并以新的 Vercel build logs 实证。当前推荐路径为 Node 22 与本地/CI 合同一致，且只建立显式 Preview。
+这一区分的是“部署构建时的应用版本请求”与“project UI 当前默认值”：当前 project 的 Node `24.x` 只读事实保留，但不再作为必须先改成 22 的前置条件。当前没有新的 Vercel build log，不能把 Node 22 写成 Preview 已实证。
 
 ## 7. 可执行 Preview 命令草案（本批未执行）
 
 只有 Owner Gate 明确批准 Node 策略、费用、访问和停止入口后，才可在现有 project 上运行：
 
 ```bash
+ARCHIVE_REF=af6d7419956ce6640c0b4af5df4db0369e793f77
+ARCHIVE_DIR="$(mktemp -d /private/tmp/rebuy-g13-2-archive.XXXXXX)"
+git archive --format=tar "$ARCHIVE_REF" | tar -xf - -C "$ARCHIVE_DIR"
+cd "$ARCHIVE_DIR/prototype"
+
 vercel link \
-  --cwd "/Users/kyox215/Documents/codex应用文件夹/rebuy购物交易计划/prototype" \
-  --yes \
-  --team team_AOJDnrjov0QDLqpvMyhwA1yc \
-  --project prj_g1W3AWm3hkbZib9zDgm6YQfGEyHL
+  --scope team_AOJDnrjov0QDLqpvMyhwA1yc \
+  --project prj_g1W3AWm3hkbZib9zDgm6YQfGEyHL \
+  --yes
 
 vercel deploy \
-  --cwd "/Users/kyox215/Documents/codex应用文件夹/rebuy购物交易计划/prototype" \
   --scope team_AOJDnrjov0QDLqpvMyhwA1yc \
   --target=preview \
   --yes
 ```
 
-`vercel link` 会写入本地 `.vercel/`，因此它不属于本批授权；部署时必须使用既有 project、`Root=prototype`、`Target=preview` 和 `main@af6d741`，不得使用 `--prod`，不得注入任何 Supabase/Auth/DB/PII 环境值，旧 Production alias 必须保持不变。
+该草案必须从精确 `git archive` SHA 的临时副本执行；`cd "$ARCHIVE_DIR/prototype"` 只是执行 cwd，不是 Vercel project 的 `rootDirectory` 设置。project `rootDirectory` 必须保持未设置，禁止同时设置或写入 `rootDirectory=prototype`；`vercel link` 产生的 `.vercel/` 只能存在于临时副本并在结束后清理。部署只使用既有 project、`Target=preview` 和 `main@af6d741`，不得使用 `--prod`、promote 或 rollback。
+
+Preview 前只读核对应用变量的名称与 target，不读取任何变量值；任一应用变量在 team/project/Preview target 中存在即停止，不删除、不修改、不绕过后继续 deploy。当前只允许登记 `.env.example` 已观察到的变量名 `NEXT_PUBLIC_SUPABASE_URL`、`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` 及 target，不写值。
 
 部署后仅对已返回的 Preview deployment id/URL 做只读检查：
 
@@ -112,47 +119,55 @@ vercel deploy \
 vercel inspect <preview-url-or-deployment-id> \
   --scope team_AOJDnrjov0QDLqpvMyhwA1yc \
   --wait --timeout 90s --format=json
+
+vercel curl / \
+  --deployment <preview-url-or-deployment-id> \
+  --scope team_AOJDnrjov0QDLqpvMyhwA1yc \
+  --yes
 ```
+
+Deployment Protection 不得关闭或改弱；部署后使用 `vercel curl` 访问根页面及必要的无外部依赖路径，不把保护绕过 secret 写入文档。若 CLI 不能在不读取/记录凭据的前提下访问，停止并回到 Owner Gate。
 
 ## 8. Preview 部署前后检查清单
 
 ### 部署前
 
-1. Owner 书面确认 team、project、Pro 用量、访问角色、停止入口和 Node `24.x → 22.x` 候选变更。
-2. 重新核对 `main@af6d741`、main Actions run/job 成功、工作树 clean、`Root=prototype` 和 lockfile/toolchain 合同。
-3. 确认 Target 只能是 `preview`；不使用 `--prod`，不推广 alias，不改旧 Production deployment。
-4. 确认 Preview 不注入 Supabase/Auth/DB/PII 环境值；变量只登记名称/来源，不记录值。
-5. 明确 Preview 访问、日志脱敏、停止入口与 bad/good ref 记录方式。
+1. Owner 书面确认 team、project、Pro 用量、访问角色和停止入口；project Node `24.x` 默认不 PATCH，由 build log 实证 `engines.node=22.x` 实际生效。
+2. 从精确 `main@af6d741` 建立临时 archive，重新核对 main Actions run/job、工作树 clean、`prototype/` 执行 cwd 和 lockfile/toolchain 合同；project `rootDirectory` 保持未设置。
+3. 只读核对变量名称与 target；任一应用变量存在即停止，不读取值、不删除变量、不继续 deploy。
+4. 确认 Target 只能是 `preview`；不使用 `--prod`、不推广 alias、不改旧 Production deployment，也不关闭 Deployment Protection。
+5. 部署前后对旧 production deployment `dpl_DZSmbtizfp3z7x2X4itwdwyLGxrH` 和 aliases 做只读核对，保存不含 alias/URL 值的映射 fingerprint；前后不一致即停止。
+6. 明确使用 `vercel curl` 的 Preview 访问、日志脱敏、停止入口与 bad/good ref 记录方式。
 
 ### 部署后
 
-1. `inspect --wait --format=json` 核对 deployment target、project、ref/commit、Node/build 状态和错误摘要，不复制完整日志或环境值。
-2. 只访问根页面和关键无外部依赖页面，检查 HTTP、静态资源、浏览器控制台和基本交互；不以未配置 Supabase 的 503 health 响应宣称部署成功。
-3. 核对 Preview URL 未成为 Production alias，旧 Production deployment/alias 未变化，未产生外部数据写入。
-4. 保存最小脱敏证据：deployment id、ref、target、时间、步骤结论和风险；不保存 URL 中的敏感 query、cookie、token 或 PII。
+1. `inspect --wait --format=json` 核对 deployment target、project、ref/commit、Node/build 状态和错误摘要；必须从 build log 摘要确认 Node `22`，不复制完整日志或环境值。
+2. 不关闭 Deployment Protection，使用 `vercel curl` 访问根页面和关键无外部依赖页面，检查 HTTP、静态资源、浏览器控制台和基本交互；不以未配置 Supabase 的 503 health 响应宣称部署成功。
+3. 再次只读核对旧 production deployment/aliases fingerprint 与部署前一致，Preview URL 未成为 Production alias，未产生外部数据写入。
+4. 保存最小脱敏证据：deployment id、ref、target、时间、Node/build 结论和风险；不保存 URL 中的敏感 query、cookie、token、保护 secret 或 PII。
 
 ## 9. bad → good Preview 回退演练方案
 
-本批未执行在线演练。未来在单独 Owner Gate 下只在隔离 Preview 中进行：
+本批未执行在线演练。未来在单独 Owner Gate 下只在隔离 Preview 中进行，且必须把演练 PR 与长期 good route 分开：
 
-1. 先从明确标注的 bad ref 建立独立 Preview，不推广 alias、不接 Production 数据；记录 ref、target 和最小故障类别。
-2. 一旦出现构建、页面、越界、变量泄露或日志风险，立即停止晋级，保留脱敏失败摘要，不复制完整日志或 secret。
-3. 从已通过 CI 的 `main@af6d741` good ref 重新建立独立 Preview，先 inspect，再检查根页面、关键无外部依赖页面、访问边界和日志脱敏。
-4. good Preview 通过后保留 bad/good ref 与观察窗口记录；不执行 `promote`、Production alias 切换或生产回滚。
+1. 从明确标注的 `g1-3-preview-bad503` 演练分支建立 `DO NOT MERGE` Draft PR；PR 永不转 Ready、永不 merge，bad Preview 只记录预期 `503` 故障类别和最小脱敏证据。
+2. 一旦出现构建、页面、越界、变量泄露或日志风险，立即停止晋级，保留脱敏失败摘要，不复制完整日志或 secret；关闭该 Draft PR 但保留演练分支和审计证据，不删除历史。
+3. 从干净 `main@af6d741` 或最终集成分支另行建立 `good200` 的独立普通 PR，使用精确 archive/ref 建立独立 Preview，先 inspect，再以 `vercel curl` 检查根页面、关键无外部依赖页面、访问边界和日志脱敏；后续永久 good route 仍沿这条独立干净 PR 路径，不复用 bad503 PR。
+4. good Preview 通过后保留 bad/good ref 与观察窗口记录；不执行 `promote`、Production alias 切换或生产回滚。长期 good route 不携带 bad 演练分支提交。
 5. 若 good 验证失败，维持停止状态并升级 Owner Gate；不得 force、delete、reset 或改写 Git 历史。
 
-该演练是“bad Preview → good Preview”的受控恢复，不证明 Production rollback；旧 Production alias 在整个 G1.3-1 范围内保持不变。
+该演练是“bad503 Preview → good200 Preview”的受控恢复，不证明 Production rollback；旧 production deployment/aliases fingerprint 在整个流程前后必须不变。
 
 ## 10. 当前 Gate 与剩余风险
 
-- G1.3-1 provider、CLI、Node 结论和临时隔离预检完成；G1.3 Preview 实施仍待 Owner Gate。
+- G1.3-1 provider、CLI、Node 结论和临时隔离预检完成；G1.3-2 高风险独立审查原方案为 `NO-GO`，修正后为条件 `GO` 候选；G1.3 Preview 实施仍待 Owner Gate。
 - G1 Exit 保持 `NO-GO`；G2-A0/G2-A1/P2–P8 不打开。
-- 主要未决项是 Vercel project Node `24.x` 与项目/CI Node `22.x` 的策略一致性、Preview 费用/访问/停止入口和在线 bad→good 证据。
-- 当前没有 Preview、Staging 或 Production 写入；没有 Supabase/Auth/DB 连接；没有环境值、PII 或 secret 证据。
+- 主要未决项是新 Preview build log 是否实证 Node `22`、Preview 费用/访问/停止入口、变量存在性门和在线 bad→good 证据；project Node `24.x` 默认不 PATCH。
+- 当前没有外部执行授权；未登录、未 push、未创建 PR、未 deploy；没有 Preview、Staging 或 Production 写入；没有 Supabase/Auth/DB 连接；没有环境值、PII 或 secret 证据。
 - 本批未修改 `prototype/**`、workflow、package、lockfile、`.env.example`、`.gitignore`、Git remote 或 provider 设置。
 
-推荐 Owner Gate 语句：
+推荐 Owner Gate 语句（待 Owner 逐字批准；不代表当前授权）：
 
-> `批准进入G1.3 Preview：确认 Vercel team kyox120-9295's projects（team_AOJDnrjov0QDLqpvMyhwA1yc）与 project rebuy-share（prj_g1W3AWm3hkbZib9zDgm6YQfGEyHL）；确认当前 project Node24.x，并授权评估/执行 Node24.x→22.x 候选变更，要求以新的 build logs 实证；仅使用已通过 CI 的 main@af6d7419956ce6640c0b4af5df4db0369e793f77，Root Directory=prototype，Target=Preview；按 Pro 正常 build/compute 用量执行；不得改变 Production alias，不注入 Supabase/Auth/DB/PII 或任何环境值；完成受控 bad ref→good ref Preview 演练和脱敏证据；不接 Staging、Production 或真实业务数据。`
+> `批准进入G1.3-2 Preview执行：确认 Vercel team kyox120-9295's projects（team_AOJDnrjov0QDLqpvMyhwA1yc）与 project rebuy-share（prj_g1W3AWm3hkbZib9zDgm6YQfGEyHL）；project Node24.x 默认不 PATCH，依据 package.json engines.node=22.x 请求 Node22，并以新的 build log 实证实际 Node22；仅从已通过 CI 的精确 archive main@af6d7419956ce6640c0b4af5df4db0369e793f77 的 prototype/执行 link/deploy，project rootDirectory 保持未设置，Target=Preview；Preview前只核对变量名与target、不读取值，任一应用变量存在即停止；不关闭 Deployment Protection，使用 vercel curl；按 Pro 正常 build/compute 用量执行；部署前后核对旧 production deployment dpl_DZSmbtizfp3z7x2X4itwdwyLGxrH 与 aliases fingerprint 不变；bad503 使用 DO NOT MERGE Draft PR，永不Ready/merge，关闭PR但保留分支，good200 及后续永久 good route 另从干净 main/最终集成分支进入独立普通PR；不得改变 Production alias，不注入 Supabase/Auth/DB/PII 或任何环境值，不接 Staging、Production 或真实业务数据。`
 
-关联记录：[G1 Owner 验收清单](../../../stages/G1-Owner验收清单.md)、[G1 阶段合同](../../../stages/G1-工程底座与环境隔离.md)、[G1.3-0 本地环境预检](../2026-08-26-g1-3-0-local-environment-preflight/README.md)、[15 项目状态与阶段台账](../../../15-项目状态与阶段台账.md)、[Prototype quality workflow](../../../../.github/workflows/prototype-quality.yml)。
+关联记录：[G1 Owner 验收清单](../../../stages/G1-Owner验收清单.md)、[G1 阶段合同](../../../stages/G1-工程底座与环境隔离.md)、[G1.3-0 本地环境预检](../2026-08-26-g1-3-0-local-environment-preflight/README.md)、[G1.3-2 Preview execution review](../2026-08-27-g1-3-2-preview-execution-review/README.md)、[15 项目状态与阶段台账](../../../15-项目状态与阶段台账.md)、[Prototype quality workflow](../../../../.github/workflows/prototype-quality.yml)。
