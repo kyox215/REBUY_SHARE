@@ -259,5 +259,6 @@ G2-A0 的远端闭环已经在 `main` 完成：PR #7 的 merge commit 为 `fd9b7
 ## 13. 2026-08-28｜G2-A1-B2 本地安全基础实现（当前候选）
 
 - 本批复用既有 `prototype/lib/supabase/config.ts`、`client.ts`、`server.ts`、登录演示和 health route；新增 safe-next 规范化、callback decision、同源 no-store callback route、有限错误提示、Node 内置契约测试和一次性 workflow 测试步骤。未新建第二套 client/env/health。
-- 本批只形成 B2 本地 callback 基础完成候选；`test:auth`、typecheck、lint、build 通过，浏览器工具尝试在隔离 dev server 上阻塞后已停止，未产生页面/console/Auth 运行证据。详细脱敏证据见[B2 本地安全基础](../evidence/G2-A1/2026-08-28-b2-local-foundation/README.md)。
+- 本批只形成 B2 本地 callback 基础完成候选；`test:auth`、typecheck、lint、build 通过，隔离端口 `3102` 首页按 agent-browser-verify 完成 open/networkidle、截图、非空、无错误覆盖层、console `[]` 与交互快照并已关闭 server；因无有效 Auth 凭据或授权 code，未产生 callback/Auth 运行证据。详细脱敏证据见[B2 本地安全基础](../evidence/G2-A1/2026-08-28-b2-local-foundation/README.md)。
+- 首轮独立安全复审为 REVIEW NO-GO，发现 1 项 P1 与 2 项 P2；当前 checkpoint 已修正 callback code 输入上限/空白与控制字符门禁、safe-next 总长度与稳定解码边界、可注入 route handler 及最终 origin 二次校验，并补齐 12 项 Node `node:test` 契约；当前仍待独立定向复审，不预写 REVIEW GO、PR、Actions 或 merge。
 - 真实 Auth/OAuth/SMTP/email/OTP/Magic Link、session/user、MFA、DB/Storage、真实 PII、部署和 Production Gate 继续 CLOSED；下一步为独立安全复审与 action-time Owner/主代理 Gate，不自动进入 B3/P2。

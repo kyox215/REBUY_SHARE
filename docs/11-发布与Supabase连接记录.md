@@ -100,7 +100,7 @@
 
 ## 9. 2026-08-28｜G2-A1-B2 本地 callback 安全基础实现（当前候选）
 
-- 本批复用既有 `prototype/lib/supabase/config.ts`、`client.ts`、`server.ts`、登录演示和 health route；新增最小 safe-next/callback decision 纯函数、`/auth/callback` route、有限登录错误映射、Node 内置契约测试与一次性 workflow 测试步骤。未新建第二套 client、env、health 或业务 Auth handler。
-- callback 只接受同源相对 `next`，provider error/缺 code 不执行 exchange；有效 code 的 exchange 最多执行一次，异常或空结果归一到有限错误码；route 使用同源 `303`、`no-store`/`no-referrer`，不回显 raw query/code/error。该结论来自源码和契约测试，不是成功 Auth exchange 证据。
-- `install --frozen-lockfile`、`test:auth`（7 项）、`typecheck`、`lint`、`build` 已通过。agent-browser-verify 所需 CLI 在隔离 dev server 尝试时阻塞，server 已关闭；没有页面、callback 缺 code/假 code、console 或网络运行证据，详见[B2 本地安全基础证据](./evidence/G2-A1/2026-08-28-b2-local-foundation/README.md)。
+- 本批复用既有 `prototype/lib/supabase/config.ts`、`client.ts`、`server.ts`、登录演示和 health route；新增最小 safe-next/callback decision 纯函数、可注入 callback handler、仅绑定 SSR client 的 `/auth/callback` route、有限登录错误映射、Node 内置契约测试与一次性 workflow 测试步骤。未新建第二套 client、env、health 或业务 Auth handler。
+- callback 只接受同源相对 `next`，provider error/缺 code 不执行 exchange；空/全空白 code 为 `missing_code`，边界空白、控制/格式字符或超过 `4096` 字符为 `invalid_code`，有效 code 的 exchange 最多执行一次，异常或空结果归一到有限错误码；safe-next 总长度上限 `2048` 且最多 `3` 次稳定解码；route 使用同源 `303`、`no-store`/`no-referrer`，并做最终 origin 二次校验，不回显 callback 原始参数或 provider error。该结论来自源码和契约测试，不是成功 Auth exchange 证据。
+- `install --frozen-lockfile`、`test:auth`（12 项）、`typecheck`、`lint`、`build` 已通过。首轮独立安全复审为 REVIEW NO-GO，1 项 P1 与 2 项 P2 已在当前 checkpoint 修正，待独立定向复审；隔离端口 `3102` 首页按 agent-browser-verify 完成 open/networkidle、截图、非空、无错误覆盖层、console `[]` 和交互快照，server 已关闭；因无有效 Auth 凭据或授权 code，未执行 callback 缺 code/假 code HTTP 或 Auth 运行证据，详见[B2 本地安全基础证据](./evidence/G2-A1/2026-08-28-b2-local-foundation/README.md)。
 - 当前仅为 B2 本地 callback 基础完成候选，待独立安全复审与 action-time Owner/主代理 Gate；真实 Auth/OAuth/provider、email/OTP/Magic Link、session/user、MFA、DB/Storage、SMTP、真实 PII、部署和 Production Gate 均继续 CLOSED。

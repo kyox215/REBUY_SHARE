@@ -25,6 +25,7 @@ const tscArgs = [
   outputDirectory,
   "lib/auth/redirect.ts",
   "lib/auth/callback.ts",
+  "lib/auth/callback-route.ts",
   "tests/auth/contract.test.ts",
 ];
 

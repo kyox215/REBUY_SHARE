@@ -414,8 +414,9 @@ resource/cost/secret Gate 通过前，仅可继续维护无资源后端原型、
 
 ## 25. 2026-08-28｜G2-A1-B2 本地安全基础实现（当前候选）
 
-- 本批在隔离的 local worktree 实现 B2 最小 callback 安全基础：复用既有 Supabase config、browser/SSR client 与登录演示；新增 safe-next 规范化、受控 callback decision、`/auth/callback` 同源 no-store redirect、有限错误码映射、Node 内置契约测试和一次性 CI 测试步骤。未新建第二套 client/env/health，也未改变冻结视觉结构。
-- 本批仅证明源码契约、typecheck、lint、build 和 7 项 Node `node:test` 契约通过；浏览器 CLI 在隔离端口尝试时阻塞，已停止 dev server，未伪造页面、callback、console 或 Auth 运行证据。详细脱敏记录见[B2 本地安全基础证据](./evidence/G2-A1/2026-08-28-b2-local-foundation/README.md)。
+- 本批在隔离的 local worktree 实现 B2 最小 callback 安全基础：复用既有 Supabase config、browser/SSR client 与登录演示；新增 safe-next 规范化、受控 callback decision、可注入 callback handler、仅绑定 SSR client 的 `/auth/callback` 同源 no-store redirect、有限错误码映射、Node 内置契约测试和一次性 CI 测试步骤。未新建第二套 client/env/health，也未改变冻结视觉结构。
+- 本批证明源码契约、typecheck、lint、build 和 12 项 Node `node:test` 契约通过；契约覆盖 code 输入门禁、稳定解码/深层编码/dot-segment、route 303/headers/origin 二次校验和 exchange 0/1 次。隔离端口 `3102` 的首页按 agent-browser-verify 完成 open/networkidle、截图、非空、无 Next 错误覆盖层、console `[]` 和交互快照；浏览器与 dev server 已关闭。因无有效 Auth 凭据或授权 code，未执行 callback 缺 code/假 code HTTP 或 Auth 运行证据。详细脱敏记录见[B2 本地安全基础证据](./evidence/G2-A1/2026-08-28-b2-local-foundation/README.md)。
+- 首轮独立安全复审结论为 **REVIEW NO-GO**，发现 1 项 P1 与 2 项 P2：callback code 缺少明确长度/边界/控制字符门禁，safe-next 解码与路径边界覆盖不足，route 缺少独立可注入行为契约。本批 checkpoint 已修正：code 上限 `4096` 且无效输入在 exchange 前映射为有限错误码；safe-next 总长度 `2048`、最多 `3` 次且必须稳定；route handler 仅绑定既有 SSR client 并补齐 `303`、header、同源二次校验测试。当前仍待独立定向复审，不预写 REVIEW GO、PR、Actions 或 merge。
 - 当前状态为 **B2 本地 callback 基础完成候选，待独立安全复审与 action-time Owner/主代理 Gate**；G2-A1 仍执行中。Auth 登录、OAuth initiation/provider enable、email/OTP/Magic Link、session refresh/proxy、identity linking、invite、MFA、DB/Storage、真实账号/PII、SMTP、部署和 Production 均未开始或继续关闭。
 - 完整 resource/cost/secret/Auth/DB/Storage/OAuth/SMTP/真实 PII/部署/Production Gate 继续 CLOSED；不得读取或使用 `service_role`、secret key、DB password，不得以 broad approval 绕过 Gate；本批没有创建 env、访问 Supabase dashboard 或执行外部管理动作。
 - 下一步为独立安全复审；复审前不打开 B2 真实 Auth 运行、B3、P2 或任何外部配置。回退方式为移除本批新增 callback 模块、测试与登录提示，保留 B1 骨架和脱敏证据。
