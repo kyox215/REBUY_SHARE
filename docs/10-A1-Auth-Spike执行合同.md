@@ -1,8 +1,8 @@
 # A1 Auth Spike 执行合同
 
-文档状态：**G2-A1 执行中（仅 A1-B1 最小连接验证已完成；后续 B1 配置/能力只读预检待执行）；Auth/OAuth/SMTP/DB/Storage/user/session/MFA 未开始；既有文档治理复审首轮 finding 已关闭；本次独立运行时复审首次结论为 REVIEW NO-GO，本批 findings 由 `c15b11c` 修复；独立定向复审针对 `c15b11c` 给出 REVIEW GO，无未关闭 P0/P1 finding；该 review GO 仅表示本批复审闭环，不改变 B1/B2 或完整 Gate；完整 resource/cost/secret/Auth/DB/Storage/OAuth/SMTP/真实 PII/部署/Production Gate 关闭**；G2-A0 Exit GO，远端 docs-only reconciliation 已完成；七项 Owner 政策已采纳；即使资源已存在，也须另行完成 Auth/secret/DB 等技术 Gate 后才可进入独立测试
+文档状态：**G2-A1 执行中（A1-B1 最小连接与配置/能力只读预检已完成；B2 风险 Gate 草案待独立复审与 Owner/主代理 Gate）；Auth/OAuth/SMTP/DB/Storage/user/session/MFA 未开始；既有文档治理复审首轮 finding 已关闭；本次独立运行时复审首次结论为 REVIEW NO-GO，本批 findings 由 `c15b11c` 修复；独立定向复审针对 `c15b11c` 给出 REVIEW GO，无未关闭 P0/P1 finding；该 review GO 仅表示本批复审闭环，不改变 B1/B2 或完整 Gate；完整 resource/cost/secret/Auth/DB/Storage/OAuth/SMTP/真实 PII/部署/Production Gate 关闭**；G2-A0 Exit GO，远端 docs-only reconciliation 已完成；七项 Owner 政策已采纳；即使资源已存在，也须另行完成 Auth/secret/DB 等技术 Gate 后才可进入独立测试
 适用范围：验证 Rebuy 三入口认证、OAuth callback、identity linking、邀请邮箱控制权、MFA、会话和最小服务端集成边界  
-当前允许：A1-B1 最小连接验证已完成：仅按授权只读取得 project URL + modern publishable key，确认 `.gitignore` 阻止 env，将原值仅存入 gitignored local env，复用现有 SSR/client/health 完成 EU non-production synthetic-only 连接验证并记录 Free 限制、STOP/cleanup；下一步仅做 B1 配置/能力只读预检，不自动进入 B2。当前运行时复审首次结论为 REVIEW NO-GO，本批 findings 由 `c15b11c` 修复；独立定向复审针对 `c15b11c` 给出 REVIEW GO，无未关闭 P0/P1 finding；该 review GO 仅表示本批复审闭环，不改变 B1/B2 或完整 Gate；不得以此改变已冻结的 G0/P1 UI。
+当前允许：A1-B1 最小连接与配置/能力只读预检已完成：仅按授权只读取得 project URL + modern publishable key，确认 `.gitignore` 阻止 env，将原值仅存入 gitignored local env，复用现有 SSR/client/health 完成 EU non-production synthetic-only 连接验证并记录 Free 限制、STOP/cleanup；B2 专项风险 Gate 草案已记录；下一步仅等待独立安全复审与 Owner/主代理 Gate，不自动进入 B2。当前运行时复审首次结论为 REVIEW NO-GO，本批 findings 由 `c15b11c` 修复；独立定向复审针对 `c15b11c` 给出 REVIEW GO，无未关闭 P0/P1 finding；该 review GO 仅表示本批复审闭环，不改变 B1/B2 或完整 Gate；不得以此改变已冻结的 G0/P1 UI。
 当前不允许：不得把 A1 标记为“技术验证通过”；除已授权 B1 窄范围内只读取得 project URL + modern publishable key 外，不得读取任何 key/secret，不得配置或连接 Supabase Auth/OAuth/SMTP，不得建表/写数据，不得连接 production、真实业务数据、真实客户邮箱或真实证件；本 A1 合同不授予 service_role、secret key、db password 或其他管理凭据使用权。
 关联文档：[完整账号系统规划](./07-完整账号系统规划.md)、[账号系统思维导图](./08-账号系统思维导图.md)、[A0 账号架构 ADR 与威胁模型](./09-A0-账号架构ADR与威胁模型.md)、[G2-A1 准备与资源门禁](./stages/G2-A1-Auth-Spike准备与资源门禁.md)、[资源成本与密钥 Gate 模板](./templates/G2-A1-资源成本与密钥Gate模板.md)、[Auth 实测矩阵模板](./templates/G2-A1-Auth实测矩阵模板.md)。
 
@@ -333,11 +333,11 @@ resource/cost/secret Gate 通过前，仅可继续维护无资源后端原型、
 - 该状态承接紧前完整授权：允许公开本阶段 12 个 Markdown、相关 Git 历史、Owner 姓名、账号安全架构、威胁模型、角色权限和阶段治理信息到 `kyox215/REBUY_SHARE`，并在 docs-only、exact-head Actions 成功、独立复审通过后按非强制 branch push/PR/merge commit 边界执行；A1 的资源、费用、secret、Auth、DB、Storage、OAuth、SMTP、部署和 Production Gate 继续关闭。
 - G2-A1 仍为“未开始”。A0 Exit 只开放准备门；provider、plan、region、session、真实账号、真实 PII 和任何外部连接仍待独立资源授权与后续阶段证据，不得由本合同自动开始。
 
-## 21. 2026-08-28 G2-A1 无资源 Entry preparation 与资源存在性预检当前状态
+## 21. 2026-08-28 G2-A1 无资源 Entry preparation 与资源存在性预检当前状态（历史快照；当前见第 24 节）
 
 - G2-A0 远端 reconciliation 已完成：PR #7 merge=`fd9b712c7b07bf34399f9838eebb75846425c1d1`，parents=`7ea1e45ad22ab29105910665baf4bbd7212241c5` + `1433e7c7c141df0f5498fff7cd645a8d5c92340c`；main Actions run=`33122238997` / job=`98691703085` 的 install/typecheck/lint/build 全部 success，merge SHA 的 GitHub deployments=`0`，来源分支保留。完整摘要见[G2-A1 Entry preparation 证据](./evidence/G2-A1/2026-08-28-entry-preparation/README.md)。
-- （历史状态）当时正式状态为：**G2-A1 技术阶段未开始；最小资源存在性/基础预检已完成；独立安全复审已完成、首轮 finding 已关闭；Owner/主代理批准打开 A1-B1 最小技术范围（已授权/待执行）；完整 resource/cost/secret/Auth/DB/Storage/OAuth/SMTP/真实 PII/部署/Production Gate 关闭**。无资源 Entry preparation 已归档；当时窄范围预检仅核对独立 Free 组织、项目、区域、provider quote 确认和管理面健康状态。当前 B1 结果见第 23.5 节；不预写 Auth/DB/Storage/OAuth/SMTP 结果，不读取 secret/env/PII，不部署或修改 Production。
-- A1 资源 Gate 字段与 Auth 矩阵分别见[资源成本与密钥 Gate 模板](./templates/G2-A1-资源成本与密钥Gate模板.md)和[Auth 实测矩阵模板](./templates/G2-A1-Auth实测矩阵模板.md)。资源存在性与 A1-B1 最小连接验证已完成，但完整 resource/cost/secret、secret/env、Auth、DB/schema/RLS、Storage、OAuth、SMTP、真实数据、部署和 Production Gate 仍关闭；下一步仅做 B1 配置/能力只读预检。service_role、secret key、db password 继续禁止，B1 结果不能写成 G2-A1 Auth/B1 技术通过。
+- （历史状态）当时正式状态为：**G2-A1 技术阶段未开始；最小资源存在性/基础预检已完成；独立安全复审已完成、首轮 finding 已关闭；Owner/主代理批准打开 A1-B1 最小技术范围（已授权/待执行）；完整 resource/cost/secret/Auth/DB/Storage/OAuth/SMTP/真实 PII/部署/Production Gate 关闭**。无资源 Entry preparation 已归档；当时窄范围预检仅核对独立 Free 组织、项目、区域、provider quote 确认和管理面健康状态。当前 B1 配置/能力预检见第 24 节；连接结果见第 23.5 节；不预写 Auth/DB/Storage/OAuth/SMTP 结果，不读取 secret/env/PII，不部署或修改 Production。
+- A1 资源 Gate 字段与 Auth 矩阵分别见[资源成本与密钥 Gate 模板](./templates/G2-A1-资源成本与密钥Gate模板.md)和[Auth 实测矩阵模板](./templates/G2-A1-Auth实测矩阵模板.md)。资源存在性与 A1-B1 最小连接验证已完成，但完整 resource/cost/secret、secret/env、Auth、DB/schema/RLS、Storage、OAuth、SMTP、真实数据、部署和 Production Gate 仍关闭；B1 配置/能力只读预检已完成；下一步为 B2 专项风险 Gate 草案独立复审与 Owner/主代理 Gate。service_role、secret key、db password 继续禁止，B1 结果不能写成 G2-A1 Auth/B1 技术通过。
 - 2026-08-28 官方来源刷新、EU `eu-central-1` proposal、Node 20→22、OAuth 2xx、Data API grants/RLS 分离、Free SMTP 限制、Pro session 约束与 region/GDPR 边界见[G2-A1 准备与资源门禁](./stages/G2-A1-Auth-Spike准备与资源门禁.md)；这些是规划依据，不是实现证据。
 
 ## 22. 2026-08-28 Free Supabase 资源存在性/基础预检事实（历史资源快照；当前运行时状态见 23.5）
@@ -391,11 +391,17 @@ resource/cost/secret Gate 通过前，仅可继续维护无资源后端原型、
 
 出现非零费用、add-on/upgrade、生产或真实 PII 连接、service_role 依赖、secret/URL/key 进入仓库/日志/证据、无法证明 `.gitignore` 或环境隔离、health 错误泄露、无法清理或其他越界，立即停止并保留脱敏失败摘要；不得绕过 Gate 继续。B1 技术结果已回写阶段证据；后续配置/能力只读预检仍需按相同边界执行。
 
-### 23.5 B1 最小连接验证执行结果
+### 23.5 B1 最小连接验证执行结果（历史运行窗口；当前配置/能力预检见第 24 节）
 
 - 初次 B1 运行前 connector 曾核对目标为精确的 Rebuy Lab / rebuy-auth-spike、Free、EU non-production、`eu-central-1`、`ACTIVE_HEALTHY`；独立运行时复审期间 connector 再次无法列出精确目标，当前管理面状态无法复验。未访问其他项目、未执行任何外部动作；此前本地 health `200` 仅为当时运行窗口的时间界定证据，不是当前持续健康保证。
 - Chrome DOM 与内部交接曾出现一个截断的 publishable 参数展示值，该值首次导致 health `401 invalid-credential-response`，按停止条件主动停止；随后仅按授权改用 connector 返回的唯一 active modern publishable key，未创建、轮换或删除 key。该展示值不是当前 active key；只记录错误类别，不记录长度、前后缀或原值。
 - `prototype/.env.local` 已由 `.gitignore:11` 忽略且权限类别为 owner-only；当前 tracked tree/diff 未发现完整 active key、host、project ref 或 secret。不对所有非 tracked 命令回显、日志、截图、浏览器输出或内部状态作绝对无值断言。
 - 复用现有 config、browser/SSR client 与 `/api/health/supabase`：无配置返回 HTTP `503`，真实 local synthetic-only 连接返回 HTTP `200`，均为固定最小 JSON 并带 `Cache-Control: no-store`；health 200 不代表 Auth、MFA、session、DB、RLS、Storage、OAuth、SMTP 或 SSR 技术通过。
 - Node `22.12.0`、pnpm `10.33.3` 下 `pnpm typecheck`、`pnpm lint`、`pnpm build` 已成功；未修改源码、依赖、lockfile、workflow 或配置，build 生成的 `next-env.d.ts` 漂移已按 HEAD 恢复。localhost agent-browser 已完成 networkidle、非空、无可见 Next 错误覆盖层、console `[]`、关键元素快照与搜索→结果→商品详情导航；dev server 与浏览器均已关闭。
-- 当前结论仅为 **B1 最小连接验证完成（窄范围）**；G2-A1 仍执行中，Auth/OAuth/SMTP/DB/Storage/user/session/MFA 未开始，完整 resource/cost/secret/Auth/DB/Storage/OAuth/SMTP/真实 PII/部署/Production Gate 继续 CLOSED。独立运行时复审首次结论为 REVIEW NO-GO，本批 findings 由 `c15b11c` 修复；独立定向复审针对 `c15b11c` 给出 REVIEW GO，无未关闭 P0/P1 finding；该 review GO 仅表示本批复审闭环，不改变 B1/B2 或完整 Gate。下一步为 B1 配置/能力只读预检，不自动进入 B2。
+- （历史运行窗口）当前结论仅为 **B1 最小连接验证完成（窄范围）**；G2-A1 仍执行中，Auth/OAuth/SMTP/DB/Storage/user/session/MFA 未开始，完整 resource/cost/secret/Auth/DB/Storage/OAuth/SMTP/真实 PII/部署/Production Gate 继续 CLOSED。独立运行时复审首次结论为 REVIEW NO-GO，本批 findings 由 `c15b11c` 修复；独立定向复审针对 `c15b11c` 给出 REVIEW GO，无未关闭 P0/P1 finding；该 review GO 仅表示本批复审闭环，不改变 B1/B2 或完整 Gate。下一步为 B1 配置/能力只读预检，不自动进入 B2。
+## 24. 2026-08-28 G2-A1-B1 配置/能力只读预检
+
+- B1 配置/能力只读预检已完成，范围仅为指定 Supabase Auth 配置页面的脱敏能力观察；signup/provider、URL/redirect、邮件/SMTP、MFA、session、rate limits、attack protection 与 hooks 的分类证据见[B1 配置/能力预检证据](./evidence/G2-A1/2026-08-28-b1-capability-preflight/README.md)。
+- 观察到的 Free 能力限制、TOTP/phone MFA 状态、AAL1 会话限制、session 可配置边界、邮件模板/SMTP限制和限流字段只作为配置事实记录，不等于 Auth、用户、邮件、OAuth callback、session、MFA 或 SSR 运行时通过。
+- B2 专项风险 Gate 草案已定义独立复审、Owner/主代理 Gate、.invalid synthetic-only、三入口前提、Free 限制、停止和清理条件；B2 实施仍 CLOSED。OAuth client/redirect/secret、SMTP、DB/schema、Storage、真实账号/PII、部署和 Production 继续关闭。
+- 未点击 Save、Enable、Create、Reveal 或 Copy；未读取 API Keys、SQL/Table Editor、DB/Storage 数据、用户、Audit Logs 数据或管理凭据。connector 精确目标当前不可复验，未访问其他项目或执行外部写入。
