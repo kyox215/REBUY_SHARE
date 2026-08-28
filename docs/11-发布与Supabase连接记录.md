@@ -1,6 +1,6 @@
 # 发布与 Supabase 连接记录
 
-文档状态：本地连接骨架 + 独立资源存在性预检 + A1-B1 最小连接验证已完成（既有文档治理复审首轮 finding 已关闭；本次独立运行时复审首次 REVIEW NO-GO，本轮 finding 已定向修复，待定向复审）；G2-A1 仍执行中，Auth/OAuth/SMTP/DB/Storage/user/session/MFA 未开始；完整 resource/cost/secret Gate 关闭
+文档状态：本地连接骨架 + 独立资源存在性预检 + A1-B1 最小连接验证已完成（既有文档治理复审首轮 finding 已关闭；本次独立运行时复审首次结论为 REVIEW NO-GO，本批 findings 由 `c15b11c` 修复；独立定向复审针对 `c15b11c` 给出 REVIEW GO，无未关闭 P0/P1 finding；该 review GO 仅表示本批复审闭环，不改变 B1/B2 或完整 Gate）；G2-A1 仍执行中，Auth/OAuth/SMTP/DB/Storage/user/session/MFA 未开始；完整 resource/cost/secret Gate 关闭
 
 ## 1. A1 边界
 
@@ -83,7 +83,7 @@
 
 - 复用现有 `prototype/lib/supabase/client.ts`、`server.ts`、`config.ts`、`.env.example` 与 `/api/health/supabase`；不新建第二套 client/config/health 实现。
 - `prototype/app/account/login/LoginPrototype.tsx` 继续保持本地演示边界；Apple、Google、邮箱 OTP 点击不改写为真实 Auth，不创建真实 session。
-- A1-B1 最小连接验证已完成；既有文档治理复审首轮 finding 已关闭。本次独立运行时复审首次结论为 REVIEW NO-GO，本轮 finding 已定向修复，待独立定向复审，不得写成 review GO。B1 已按授权复核官方 docs/changelog，初次运行窗口读取目标 project URL + active modern publishable key，确认 `.gitignore` 阻止 env，仅存入 gitignored local env，并用 EU non-production local synthetic-only 连接验证不依赖 service_role。
+- A1-B1 最小连接验证已完成；既有文档治理复审首轮 finding 已关闭。本次独立运行时复审首次结论为 REVIEW NO-GO，本批 findings 由 `c15b11c` 修复；独立定向复审针对 `c15b11c` 给出 REVIEW GO，无未关闭 P0/P1 finding；该 review GO 仅表示本批复审闭环，不改变 B1/B2 或完整 Gate。B1 已按授权复核官方 docs/changelog，初次运行窗口读取目标 project URL + active modern publishable key，确认 `.gitignore` 阻止 env，仅存入 gitignored local env，并用 EU non-production local synthetic-only 连接验证不依赖 service_role。
 - 这不是 broad waiver（全局豁免），也不代表 G2-A1 Auth/B1 技术通过。完整 resource/cost/secret、secret/env、Auth、DB/schema/RLS、Storage、OAuth、SMTP、真实 PII、部署和 Production Gate 继续关闭；service_role、secret key、db password 继续禁止，不触碰 Production。
 - 下一步仅为 B1 配置/能力只读预检，不自动进入 B2。脱敏 Gate 证据见[G2-A1 B1 风险 Gate 证据](./evidence/G2-A1/2026-08-28-b1-risk-gate/README.md)；完整资源/技术结果仍须按[阶段记录](./stages/G2-A1-Auth-Spike准备与资源门禁.md)和[15 台账](./15-项目状态与阶段台账.md)更新。
 
