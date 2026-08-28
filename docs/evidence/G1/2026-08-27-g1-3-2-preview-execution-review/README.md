@@ -2,7 +2,7 @@
 
 阶段：G1 工程底座与环境隔离
 批次：G1.3-2 Preview 执行方案、环境保护与 bad→good 回退独立审查
-状态：`G1.3 technical closeout=GO；G1-19=satisfied；G1 Exit=GO（Owner signed，日期=2026-08-27，验收 ref=d51f1c7cb47e2fe2932b29bd39420f5d092a8160）；本记录审查阶段的 NO-GO/未执行内容均为历史快照；PR #5 merge 双 parent、main Actions run/job 与既有 Preview/Production/provider 不变量已由 final closeout evidence 记录；G2-A0 已授权并打开准备入口但未实施，G2-A1 保持关闭；本 docs-only closeout 后继 SHA/PR/Actions/独立复审/merge 仍为 N/A，待实时门`
+状态：`G1.3 technical closeout=GO；G1-19=satisfied；G1 Exit=GO（Owner signed，日期=2026-08-27，验收 ref=d51f1c7cb47e2fe2932b29bd39420f5d092a8160）；本记录审查阶段的 NO-GO/未执行内容均为历史快照；PR #5 merge 双 parent、main Actions run/job 与既有 Preview/Production/provider 不变量已由 final closeout evidence 记录；G2-A0 当前 Exit GO 且远端 docs-only reconciliation 已完成，G2-A1 为无资源 Entry preparation、技术阶段未开始；本 docs-only closeout 后继 SHA/PR/Actions/独立复审/merge 仍为 N/A，待实时门`
 证据级别：文档审查 + provider 只读事实复用 + Owner Gate 授权记录 + 后续 G1.3-3 脱敏执行证据；本审查阶段未执行 Preview/PR/Actions/deploy，后续 good Preview、bad→good 技术恢复与 bad Draft closeout 已由后续记录完成；G1-19/G1 Exit 已由 Owner 签署为 `GO`（日期=`2026-08-27`，验收 ref=`d51f1c7cb47e2fe2932b29bd39420f5d092a8160`）。当前仅待 docs-only closeout 后 current-head exact-head Actions、独立复审与条件非强制 merge 的实时门。
 记录日期：2026-08-27（Europe/Rome）
 审查输入 ref：`main@af6d7419956ce6640c0b4af5df4db0369e793f77`（只作为未来精确 archive 输入）
@@ -18,13 +18,13 @@ deploy/environment ref：`f4225397dc6c6b99e315d5ca4a7ecbc8695fb529`（当时 PR#
 - 仅允许在本记录 §8 明列的已批准范围内进行必要 link/deploy/PR/Actions；超出该范围必须另行 Owner Gate。本记录不授予 Supabase、Auth、DB、Staging、Production 或真实业务数据权限。
 - §8 的“下次无需我批准”只覆盖该已批准范围内的常规可回退步骤和必要重试；不扩展任何未来新付费资源、Supabase project/cost、secret/env 值、Auth/DB/PII、支付、Staging/Production 或真实业务数据。
 - 不读取或记录环境变量值、token、cookie、保护 secret、host、真实 URL、PII 或原始 provider 日志；变量只允许记录名称和 target。
-- 审查阶段的历史结论为 `NO-GO`；final closeout 后 Owner 已签署 G1-19、G1 Exit=`GO`。G2-A0 仅获授权打开准备入口但未实施，G2-A1/P2–P8 不打开。
+- 审查阶段的历史结论为 `NO-GO`；final closeout 后 Owner 已签署 G1-19、G1 Exit=`GO`。当时 G2-A0 仅获授权打开准备入口但未实施；当前 G2-A0 已完成远端 docs-only reconciliation，G2-A1 为无资源 Entry preparation、技术阶段未开始，P2–P8 不打开。
 
 ## 2. 审查输入的最小只读事实
 
 | 项目 | 当前事实 | 边界 |
 |---|---|---|
-| Vercel team | `kyox120-9295's projects` / `team_AOJDnrjov0QDLqpvMyhwA1yc` / Pro | 本批未改 team、权限、计费或设置 |
+| Vercel team | [authorized Vercel team redacted] / `team_AOJDnrjov0QDLqpvMyhwA1yc` / Pro | 本批未改 team、权限、计费或设置 |
 | Vercel project | `rebuy-share` / `prj_g1W3AWm3hkbZib9zDgm6YQfGEyHL` | 本批未 link、deploy 或修改 project |
 | 旧 Production asset | `READY`、`target=production` deployment `dpl_DZSmbtizfp3z7x2X4itwdwyLGxrH` | 仅已认证只读发现；不 promote、不 rollback、不切 alias |
 | Project Node/Git link | UI 当前显示 Node `24.x`；无 Git link | `engines.node=22.x` 的构建覆盖结论须以新 deployment 的 provider-resolved config `builds[0].config.nodeVersion=22.x` 为主证据；build log 仅作补强；resolved 缺失或非 22 立即 STOP；默认不 PATCH project |
@@ -42,7 +42,7 @@ deploy/environment ref：`f4225397dc6c6b99e315d5ca4a7ecbc8695fb529`（当时 PR#
 | Production 不变量 | `NO-GO`：只写“alias 不变”不够可审计 | 部署前后只读检查旧 deployment 与 aliases，计算不暴露 alias/URL 值的 normalized mapping fingerprint；不一致即停止 | 本审查阶段未执行；后续 bad→good 证据确认旧 Production、main 与保护/alias 不变量未变 |
 | 回退 PR | `NO-GO`：bad/good 与长期路径混在一起 | `bad503` 使用独立演练分支和 `DO NOT MERGE` Draft PR，永不 Ready/merge，关闭 PR 但保留分支；`good200` 另从干净 main/最终集成分支进入普通 PR | 本审查阶段未创建；后续 bad PR #4 已 CLOSED 且保留 Draft，good source 曾经由 PR #5 普通路径完成；Owner G1-19/G1 Exit 已签署；当前仅待 docs-only closeout 后 current-head exact-head Actions、独立复审与条件非强制 merge |
 
-历史审查结论：原方案为 `NO-GO`；以上修正后曾为条件 `GO` 候选，后续 G1.3-3 已补充 good Preview READY 与 bad→good online recovery 技术 GO 的脱敏证据。当前有效结论为 G1.3 technical closeout、G1-19、G1 Exit=`GO`（Owner 日期=`2026-08-27`，验收 ref=`d51f1c7cb47e2fe2932b29bd39420f5d092a8160`）；G2-A0 已授权并打开准备入口但未实施，G2-A1 保持关闭；docs-only closeout 后继 SHA/PR/Actions/独立复审/merge 仍为 `N/A`，待实时门。
+历史审查结论：原方案为 `NO-GO`；以上修正后曾为条件 `GO` 候选，后续 G1.3-3 已补充 good Preview READY 与 bad→good online recovery 技术 GO 的脱敏证据。当前有效结论为 G1.3 technical closeout、G1-19、G1 Exit=`GO`（Owner 日期=`2026-08-27`，验收 ref=`d51f1c7cb47e2fe2932b29bd39420f5d092a8160`）；G2-A0 Exit GO 且远端 docs-only reconciliation 已完成，G2-A1 为无资源 Entry preparation、技术阶段未开始；docs-only closeout 后继 SHA/PR/Actions/独立复审/merge 仍为 `N/A`，待实时门。
 
 ## 4. 精确 archive、link/deploy 与访问草案（均未执行）
 
@@ -126,7 +126,7 @@ vercel curl / \
 
 以下语句是 Owner Gate 批准前的候选原文（历史快照，已废止，禁止执行，保留供审计）；实际批准记录见 §8。当前执行合同以 §4 的 archive 仓库根入口为准：provider `rootDirectory=prototype` 保持不变，禁止从 archive/prototype 执行。
 
-> 历史候选原文（已废止、禁止执行）：`批准进入G1.3-2 Preview执行：确认 Vercel team kyox120-9295's projects（team_AOJDnrjov0QDLqpvMyhwA1yc）与 project rebuy-share（prj_g1W3AWm3hkbZib9zDgm6YQfGEyHL）及 Pro 正常 build/compute 用量；project Node24.x 默认不 PATCH，依据 package.json engines.node=22.x 请求 Node22，并以新的 build log 实证实际 Node22；仅从已通过 CI 的精确 archive main@af6d7419956ce6640c0b4af5df4db0369e793f77 的 prototype/执行 link/deploy，project rootDirectory 保持未设置，Target=Preview；Preview前只核对变量名与target、不读取值，任一应用变量存在即停止；不关闭 Deployment Protection，使用 vercel curl；部署前后核对旧 production deployment dpl_DZSmbtizfp3z7x2X4itwdwyLGxrH 与 aliases fingerprint 不变；bad503 使用独立 DO NOT MERGE Draft PR，永不Ready/merge，关闭PR但保留分支，good200 及后续永久 good route 另从干净 main/最终集成分支进入独立普通PR；不得改变 Production alias，不注入 Supabase/Auth/DB/PII 或任何环境值，不接 Staging、Production 或真实业务数据。`
+> 历史候选原文（已废止、禁止执行）：`批准进入G1.3-2 Preview执行：确认 Vercel team [authorized Vercel team redacted]（team_AOJDnrjov0QDLqpvMyhwA1yc）与 project rebuy-share（prj_g1W3AWm3hkbZib9zDgm6YQfGEyHL）及 Pro 正常 build/compute 用量；project Node24.x 默认不 PATCH，依据 package.json engines.node=22.x 请求 Node22，并以新的 build log 实证实际 Node22；仅从已通过 CI 的精确 archive main@af6d7419956ce6640c0b4af5df4db0369e793f77 的 prototype/执行 link/deploy，project rootDirectory 保持未设置，Target=Preview；Preview前只核对变量名与target、不读取值，任一应用变量存在即停止；不关闭 Deployment Protection，使用 vercel curl；部署前后核对旧 production deployment dpl_DZSmbtizfp3z7x2X4itwdwyLGxrH 与 aliases fingerprint 不变；bad503 使用独立 DO NOT MERGE Draft PR，永不Ready/merge，关闭PR但保留分支，good200 及后续永久 good route 另从干净 main/最终集成分支进入独立普通PR；不得改变 Production alias，不注入 Supabase/Auth/DB/PII 或任何环境值，不接 Staging、Production 或真实业务数据。`
 
 ## 8. 2026-08-27 10:33:59 CEST｜G1.3 修正版 Owner Gate 已批准
 
@@ -134,7 +134,7 @@ vercel curl / \
 - 授权范围：允许 Vercel OAuth 临时认证；仅限上一条完整授权语句指定的两个 `codex/*` 分支/PR/Actions 入口（本记录不臆补名称或编号）；最多三个 `Target=Preview`，角色仅为 `bad503`、`good200`、`final`；允许 Vercel Pro 正常 build/compute 用量；在该范围内风险触发时可受限取消构建中的 Preview。OAuth/login 是否发生、分支/PR/Actions 是否创建及 Preview 是否部署，均须由后续证据确认。
 - 原批准记录历史快照（保留）：曾写作 project `rootDirectory` 保持未设置、从 archive/prototype cwd 执行；该表述已废止。当前执行合同为：`engines.node=22.x` 覆盖 project Node24，Node 默认不 PATCH，必须以 deployment provider-resolved config `builds[0].config.nodeVersion=22.x` 为主证据，build log 仅作补强；resolved 缺失或非 22 立即 STOP；provider `rootDirectory=prototype` 保持不变，从精确 archive 仓库根执行 CLI，禁止从 archive/prototype；Preview 前只列变量名/target，任一应用变量存在即停止；不关闭 Deployment Protection，使用 `vercel curl`；旧 production deployment `dpl_DZSmbtizfp3z7x2X4itwdwyLGxrH` 与 aliases fingerprint 前后必须不变；bad503 使用永不 Ready/merge 的 `DO NOT MERGE` Draft PR，关闭 PR 但保留分支，good200 与后续永久 good route 另用独立干净普通 PR。
 - `下次无需我批准` 仅表示上述已批准范围内的常规可回退步骤和必要重试不重复询问；不得扩展到未来新付费资源、Supabase project/cost、任何 secret/env 值、Auth/DB/PII、支付、Staging/Production、真实业务数据、Production alias/promote/rollback、项目删除或其他 team/project 设置。
-- 当前状态：G1.3 implementation 从“待 Owner Gate”更新为“已授权/执行中”；本记录仍不伪造任何 login、push、PR、Actions、Preview 或 deploy 结果，G1 Exit 保持 `NO-GO`，G2-A0 不打开。
+- 记录时点状态：G1.3 implementation 从“待 Owner Gate”更新为“已授权/执行中”；本记录仍不伪造任何 login、push、PR、Actions、Preview 或 deploy 结果；该记录时点 G1 Exit 保持 `NO-GO`，G2-A0 不打开。当前 G1 Exit 已为 `GO`，G2-A0 远端 docs-only reconciliation 已完成，G2-A1 为无资源 Entry preparation、技术阶段未开始。
 
 ## 9. 回退、维护与关联记录
 
@@ -149,7 +149,7 @@ vercel curl / \
 - close-bad 门已完成：PR#4 状态为 `CLOSED`，仍为 `Draft`；head=`059c936c5ecdf4152141ed685fa64151b22e3326`，merge commit=`null`，comments=`0`；远端 bad 分支保留该 head；bad deployment `dpl_J9E3WThCmtqxAndfjQDKAW1G49EU` 保留为 `Target=Preview/READY`。
 - provider/Production 不变量保持：deployment inventory（只读）仅包含 bad Preview、good Preview `dpl_D2oNMJhvQsvbbyszgApm24aGLYnZ` 与旧 Production `dpl_DZSmbtizfp3z7x2X4itwdwyLGxrH`，共 `3` 项且各自 `READY`；good Preview Protection=`all_except_custom_domains`、Preview env=`0`；Production alias count=`2`，normalized mapping SHA-256=`c06eeb6c408c562d7d6906cf1ccd71776beea381afae47e94547c696133f79aa`；不记录 alias 字符串、URL、token、cookie 或环境值。
 - PR#5 当时以 head=`b02715be` 保持 `OPEN`、非 Draft、`mergeable`；该 exact-head Actions run=`33084137265` / job=`98559030766` 的 install/typecheck/lint/build 已成功；`main=af6d7419956ce6640c0b4af5df4db0369e793f77` 未改变。该事实仅作为当时代码候选快照，不预写 docs-only closeout 后继 head/run。
-- 当前 Gate：close-bad 已完成；当前仅待 docs-only closeout 后新 current-head Actions、independent merge review、Owner G1-19 与明确的 main merge 授权。不得预写 merge，G1 Exit 继续 `NO-GO`。
+- 记录时点 Gate：close-bad 已完成；当时仅待 docs-only closeout 后新 current-head Actions、independent merge review、Owner G1-19 与明确的 main merge 授权。不得预写 merge，记录时点 G1 Exit 继续 `NO-GO`。当前 G1 Exit 已为 `GO`，G2-A0 远端 docs-only reconciliation 已完成，G2-A1 为无资源 Entry preparation、技术阶段未开始。
 
 关联记录：[G1.3-1 provider/Preview preflight](../2026-08-27-g1-3-1-provider-preview-preflight/README.md)、[G1 Owner 验收清单](../../../stages/G1-Owner验收清单.md)、[G1 阶段合同](../../../stages/G1-工程底座与环境隔离.md)、[15 项目状态与阶段台账](../../../15-项目状态与阶段台账.md)、[Prototype quality workflow](../../../../.github/workflows/prototype-quality.yml)。
 
@@ -157,6 +157,6 @@ vercel curl / \
 
 - Owner 原话：`确认 G1.3 technical closeout 通过；验收 ref=d51f1c7cb47e2fe2932b29bd39420f5d092a8160；签署 G1-19，G1 Exit GO，日期 2026-08-27，并授权打开 G2-A0。授权从该 main 新建 codex/g1-final-closeout docs-only 分支，非强制 push、创建 PR 和运行 Actions；若差异仅为批准的文档、exact-head Actions 与独立复审通过，允许以 merge commit 合并 main。禁止 squash、rebase、force/direct push、删除分支或 deployment，以及 Production/promote/deploy/Supabase/Auth/DB 操作。`
 - 已确认 main 事实：PR #5 merge=`d51f1c7cb47e2fe2932b29bd39420f5d092a8160`，parent 1=`af6d7419956ce6640c0b4af5df4db0369e793f77`，parent 2=`824dd27f37792b3f487ec7a9ab21270b4b97fb84`；main Actions run=`33089108238` / job=`98576781415`，install、typecheck、lint、build 四步均 success。
-- G1.3 technical closeout 与 G1-19 已签署；G1 Exit 为 `GO`。G2-A0 已授权/打开准备入口但未实施，G2-A1 未打开；本文件不把该授权解释为 Auth/DB/Storage/RLS、secret/env 值或真实数据实施。
+- G1.3 technical closeout 与 G1-19 已签署；G1 Exit 为 `GO`。G2-A0 Exit GO 且远端 docs-only reconciliation 已完成；G2-A1 为无资源 Entry preparation、技术阶段未开始；本文件不把该阶段状态解释为 Auth/DB/Storage/RLS、secret/env 值或真实数据实施。
 - bad PR #4、good/bad Preview、Production asset/aliases fingerprint、Deployment Protection、provider `rootDirectory=prototype` 与 Preview env 等既有不变量保持；本 docs-only closeout 不新增 Preview、不 promote、不 deploy。
 - `codex/g1-final-closeout` 后继 SHA、PR、exact-head Actions、独立复审和 merge commit 在实际事件发生前均为 `N/A`；仅批准文档差异、exact-head Actions 成功、独立复审 GO 后，才允许非强制 merge commit。禁止 squash、rebase、force/direct push、删除任何分支或 deployment。
