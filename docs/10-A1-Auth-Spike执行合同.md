@@ -1,8 +1,8 @@
 # A1 Auth Spike 执行合同
 
-文档状态：**G2-A1 执行中（A1-B1 最小连接与配置/能力只读预检已完成；B2 本地安全基础已合并 main/远端闭环通过；PR #12 merge=`96ee24a4e5ba7eaee684731eacf707d4da29c44b`，main Actions run=`33209420614`/job=`98978680399` success，`test:auth` 12/12 且仅运行一次，exact merge 的 GitHub deployments=`0`，来源分支保留；该闭环仅关闭本地基础交付，不等于完整 B2/Auth/G2-A1 整体通过；Auth/OAuth/SMTP/DB/Storage/user/session/MFA 未开始；不打开完整 B2 运行或任何 Auth/DB/Storage/OAuth/SMTP/费用/部署/Production Gate；下一步仅可进入 B2 外部入口 Gate 设计/资源检查；不预写 external Auth success；完整 resource/cost/secret/Auth/DB/Storage/OAuth/SMTP/真实 PII/部署/Production Gate 关闭**；G2-A0 Exit GO，远端 docs-only reconciliation 已完成；七项 Owner 政策已采纳；即使资源已存在，也须另行完成 Auth/secret/DB 等技术 Gate 后才可进入独立测试
+文档状态：**G2-A1 执行中（B1 最小连接与配置/能力只读预检、B2 本地安全基础及其远端闭环已完成；当前 B2 external entry Gate design/preflight 已完成）**；PR #13 docs-only closeout merge=`b3e53a71ca40729b139724a492e8d20afd02f341`，main Actions run=`33212054195`/job=`98987321203` success，`test:auth` 12 项且仅运行一次，exact merge 的 GitHub deployments=`0`，Vercel 无新增部署；该闭环仅关闭文档 Gate 设计与本地基础交付，不等于完整 B2/Auth/G2-A1 整体通过；Auth/OAuth/SMTP/DB/Storage/user/session/MFA 未开始；E1 local bootstrap 仍待独立审查后按本 Gate打开；E2–E5、hosted Auth/SMTP/DB/Storage/Production/deploy 全部继续 CLOSED；完整 resource/cost/secret/Auth/DB/Storage/OAuth/SMTP/真实 PII/部署/Production Gate 关闭**；G2-A0 Exit GO，七项 Owner 政策已采纳；即使资源已存在，也须另行完成 Auth/secret/DB 等技术 Gate 后才可进入独立测试
 适用范围：验证 Rebuy 三入口认证、OAuth callback、identity linking、邀请邮箱控制权、MFA、会话和最小服务端集成边界  
-当前允许：A1-B1 最小连接与配置/能力只读预检已完成；B2 本地安全基础已合并 main/远端闭环通过，范围仍仅为安全 redirect 规范化、受控 callback decision、同源 no-store route 重定向、有限登录提示及其契约测试/CI 记录。该远端闭环不自动打开 B2 真实 Auth 运行；下一步仅可进行 B2 外部入口 Gate 设计/资源检查，不预写 external Auth success。本批不改变已冻结的 G0/P1 UI，也不打开完整 B2 或任何 Auth/DB/Storage/OAuth/SMTP/费用/部署/Production Gate。
+当前允许：A1-B1 最小连接与配置/能力只读预检、B2 本地安全基础及其远端闭环、B2 external entry Gate design/preflight 已完成；本批文档只定义 E1–E5 的依赖、隔离端口、免费资源与 SMTP/OAuth 边界、停止/回退/清理和后续 Owner Gate。独立审查通过并合并本 docs-only 分支后，最多自动打开 E1 local bootstrap；不预写 external Auth success。本批不改变已冻结的 G0/P1 UI，也不打开 E2–E5、完整 B2 或任何 Auth/DB/Storage/OAuth/SMTP/费用/部署/Production Gate。
 当前不允许：不得把 A1 标记为“技术验证通过”；除已授权 B1 窄范围内只读取得 project URL + modern publishable key 外，不得读取任何 key/secret，不得配置或连接 Supabase Auth/OAuth/SMTP，不得建表/写数据，不得连接 production、真实业务数据、真实客户邮箱或真实证件；本 A1 合同不授予 service_role、secret key、db password 或其他管理凭据使用权。
 关联文档：[完整账号系统规划](./07-完整账号系统规划.md)、[账号系统思维导图](./08-账号系统思维导图.md)、[A0 账号架构 ADR 与威胁模型](./09-A0-账号架构ADR与威胁模型.md)、[G2-A1 准备与资源门禁](./stages/G2-A1-Auth-Spike准备与资源门禁.md)、[资源成本与密钥 Gate 模板](./templates/G2-A1-资源成本与密钥Gate模板.md)、[Auth 实测矩阵模板](./templates/G2-A1-Auth实测矩阵模板.md)。
 
@@ -338,21 +338,21 @@ resource/cost/secret Gate 通过前，仅可继续维护无资源后端原型、
 - 该状态承接紧前完整授权：允许公开本阶段 12 个 Markdown、相关 Git 历史、Owner 姓名、账号安全架构、威胁模型、角色权限和阶段治理信息到 `kyox215/REBUY_SHARE`，并在 docs-only、exact-head Actions 成功、独立复审通过后按非强制 branch push/PR/merge commit 边界执行；A1 的资源、费用、secret、Auth、DB、Storage、OAuth、SMTP、部署和 Production Gate 继续关闭。
 - G2-A1 仍为“未开始”。A0 Exit 只开放准备门；provider、plan、region、session、真实账号、真实 PII 和任何外部连接仍待独立资源授权与后续阶段证据，不得由本合同自动开始。
 
-## 21. 2026-08-28 G2-A1 无资源 Entry preparation 与资源存在性预检当前状态（历史快照；当前见第 24 节）
+## 21. 2026-08-28 G2-A1 无资源 Entry preparation 与资源存在性预检当前状态（历史快照；当前见第 27 节）
 
 - G2-A0 远端 reconciliation 已完成：PR #7 merge=`fd9b712c7b07bf34399f9838eebb75846425c1d1`，parents=`7ea1e45ad22ab29105910665baf4bbd7212241c5` + `1433e7c7c141df0f5498fff7cd645a8d5c92340c`；main Actions run=`33122238997` / job=`98691703085` 的 install/typecheck/lint/build 全部 success，merge SHA 的 GitHub deployments=`0`，来源分支保留。完整摘要见[G2-A1 Entry preparation 证据](./evidence/G2-A1/2026-08-28-entry-preparation/README.md)。
 - （历史状态）当时正式状态为：**G2-A1 技术阶段未开始；最小资源存在性/基础预检已完成；独立安全复审已完成、首轮 finding 已关闭；Owner/主代理批准打开 A1-B1 最小技术范围（已授权/待执行）；完整 resource/cost/secret/Auth/DB/Storage/OAuth/SMTP/真实 PII/部署/Production Gate 关闭**。无资源 Entry preparation 已归档；当时窄范围预检仅核对独立 Free 组织、项目、区域、provider quote 确认和管理面健康状态。当前 B1 配置/能力预检见第 24 节；连接结果见第 23.5 节；不预写 Auth/DB/Storage/OAuth/SMTP 结果，不读取 secret/env/PII，不部署或修改 Production。
 - A1 资源 Gate 字段与 Auth 矩阵分别见[资源成本与密钥 Gate 模板](./templates/G2-A1-资源成本与密钥Gate模板.md)和[Auth 实测矩阵模板](./templates/G2-A1-Auth实测矩阵模板.md)。资源存在性与 A1-B1 最小连接验证已完成，但完整 resource/cost/secret、secret/env、Auth、DB/schema/RLS、Storage、OAuth、SMTP、真实数据、部署和 Production Gate 仍关闭；B1 配置/能力只读预检已完成；下一步为 B2 专项风险 Gate 草案独立复审与 Owner/主代理 Gate。service_role、secret key、db password 继续禁止，B1 结果不能写成 G2-A1 Auth/B1 技术通过。
 - 2026-08-28 官方来源刷新、EU `eu-central-1` proposal、Node 20→22、OAuth 2xx、Data API grants/RLS 分离、Free SMTP 限制、Pro session 约束与 region/GDPR 边界见[G2-A1 准备与资源门禁](./stages/G2-A1-Auth-Spike准备与资源门禁.md)；这些是规划依据，不是实现证据。
 
-## 22. 2026-08-28 Free Supabase 资源存在性/基础预检事实（历史资源快照；当前运行时状态见 23.5）
+## 22. 2026-08-28 Free Supabase 资源存在性/基础预检事实（历史资源快照；当前 B2 外部入口 Gate 见第 27 节）
 
 - 独立 Supabase 组织 `Rebuy Lab` 已创建，connector 核验 `plan=Free`；独立项目 `rebuy-auth-spike` 已在 `eu-central-1`（Frankfurt）创建，限定用于 EU non-production Auth spike，数据模式为 synthetic-only。
 - provider project quote 实际返回 `amount=0`、`recurrence=monthly`；API 未返回 currency。Owner 已确认该实际 quote，随后已完成 `confirm_cost`。这不等于税费、Spend Cap 或完整成本责任确认。
 - （历史运行窗口）管理面状态为 `ACTIVE_HEALTHY`；仅证明当时资源存在且管理面健康，不证明 Auth、MFA、session、DB、RLS、Storage、OAuth、SMTP 或 SSR 已验证。独立运行时复审期间 connector 无法再次列出精确目标，当前管理面状态无法复验。
 - （资源预检历史时点）当时没有读取、记录或传播 secrets、keys、passwords、环境变量值、host、URL、project ref、组织/项目 ID 或其他账号资源标识；后续 B1 仅按授权将原值存入 gitignored local env，执行结果见第 23.5 节。没有配置 Auth/DB/Storage/OAuth/SMTP，没有建表、写数据、创建真实账号、部署、promote、alias 或 Production 操作。
 
-## 23. 2026-08-28 A1-B1 最小 Auth spike 风险 Gate 与复用优先预检（历史设计快照；当前 B2 见第 25 节）
+## 23. 2026-08-28 A1-B1 最小 Auth spike 风险 Gate 与复用优先预检（历史设计快照；当前 B2 见第 27 节）
 
 本节是 A1-B1 的最小风险 Gate 与复用预检记录。既有文档治理复审首轮 finding 已关闭；本批 findings 由 `7952d16` 修复；独立定向复审对该 exact head 给出 REVIEW GO，无未关闭 P0/P1/P2；该 GO 只关闭 B1 capability preflight 审查，不打开 B2 或任何 Auth/DB/Storage/OAuth/SMTP/费用/部署/Production Gate；不预写 push、PR、Actions 或 merge。Owner/主代理批准打开 A1-B1 最小技术范围。本节设计快照与实际执行结果分开，详见 23.5；不代表 G2-A1 Auth/B1 技术通过。该批按关键风险路由执行：`luna_worker / max`、默认一个执行代理。
 
@@ -404,7 +404,7 @@ resource/cost/secret Gate 通过前，仅可继续维护无资源后端原型、
 - 复用现有 config、browser/SSR client 与 `/api/health/supabase`：无配置返回 HTTP `503`，真实 local synthetic-only 连接返回 HTTP `200`，均为固定最小 JSON 并带 `Cache-Control: no-store`；health 200 不代表 Auth、MFA、session、DB、RLS、Storage、OAuth、SMTP 或 SSR 技术通过。
 - Node `22.12.0`、pnpm `10.33.3` 下 `pnpm typecheck`、`pnpm lint`、`pnpm build` 已成功；未修改源码、依赖、lockfile、workflow 或配置，build 生成的 `next-env.d.ts` 漂移已按 HEAD 恢复。localhost agent-browser 已完成 networkidle、非空、无可见 Next 错误覆盖层、console `[]`、关键元素快照与搜索→结果→商品详情导航；dev server 与浏览器均已关闭。
 - （历史运行窗口）当前结论仅为 **B1 最小连接验证完成（窄范围）**；G2-A1 仍执行中，Auth/OAuth/SMTP/DB/Storage/user/session/MFA 未开始，完整 resource/cost/secret/Auth/DB/Storage/OAuth/SMTP/真实 PII/部署/Production Gate 继续 CLOSED。独立运行时复审首次结论为 REVIEW NO-GO，本批 findings 由 `c15b11c` 修复；独立定向复审针对 `c15b11c` 给出 REVIEW GO，无未关闭 P0/P1 finding；该 review GO 仅表示本批复审闭环，不改变 B1/B2 或完整 Gate。下一步为 B1 配置/能力只读预检，不自动进入 B2。
-## 24. 2026-08-28 G2-A1-B1 配置/能力只读预检（历史快照；当前 B2 见第 25 节）
+## 24. 2026-08-28 G2-A1-B1 配置/能力只读预检（历史快照；当前 B2 见第 27 节）
 
 - B1 配置/能力只读预检已完成，范围仅为指定 Supabase Auth 配置页面的脱敏能力观察；signup/provider、URL/redirect、邮件/SMTP、MFA、session、rate limits、attack protection 与 hooks 的分类证据见[B1 配置/能力预检证据](./evidence/G2-A1/2026-08-28-b1-capability-preflight/README.md)。
 - 观察到的 Free 能力限制、TOTP/phone MFA 状态、AAL1 会话限制、session 可配置边界、邮件模板/SMTP限制和限流字段只作为配置事实记录，不等于 Auth、用户、邮件、OAuth callback、session、MFA 或 SSR 运行时通过。
@@ -412,7 +412,7 @@ resource/cost/secret Gate 通过前，仅可继续维护无资源后端原型、
 - 本批 findings 由 `7952d16` 修复；独立定向复审对该 exact head 给出 REVIEW GO，无未关闭 P0/P1/P2；该 GO 只关闭 B1 capability preflight 审查，不打开 B2 或任何 Auth/DB/Storage/OAuth/SMTP/费用/部署/Production Gate；不预写 push、PR、Actions 或 merge。当前 B2 草案采用 hosted SMTP 仅预授权项目团队邮箱、当前基线每小时 2 封且可能变化、无 SLA/非生产探索的约束；`.invalid` 只用于 no-send/负向/反枚举，成功 OTP/Magic Link 必须使用专用 synthetic mailbox/domain、隔离 catcher 或另行批准的 custom SMTP。
 - 当前 capability-preflight worktree 不包含 `prototype/.env.local`；此前连接 worktree 的 ignored/owner-only 状态不可复用。B2 执行前必须在实际 worktree 重新验证 ignored、untracked 与 mode `600`，并重新完成 action-time Owner Gate；custom SMTP credential/secret、费用、持久连接及浏览器/控制台配置动作继续 CLOSED。
 
-## 25. 2026-08-28｜G2-A1-B2 本地安全基础实现（本地候选历史；当前远端闭环见第 26 节）
+## 25. 2026-08-28｜G2-A1-B2 本地安全基础实现（本地候选历史；当前外部入口 Gate 见第 27 节）
 
 - 本批在隔离的 local worktree 实现 B2 最小 callback 安全基础：复用既有 Supabase config、browser/SSR client 与登录演示；新增 safe-next 规范化、受控 callback decision、可注入 callback handler、仅绑定 SSR client 的 `/auth/callback` 同源 no-store redirect、有限错误码映射、Node 内置契约测试和一次性 CI 测试步骤。未新建第二套 client/env/health，也未改变冻结视觉结构。
 - 本批证明源码契约、typecheck、lint、build 和 12 项 Node `node:test` 契约通过；契约覆盖 code 输入门禁、稳定解码/深层编码/dot-segment、route 303/headers/origin 二次校验和 exchange 0/1 次。隔离端口 `3102` 的首页按 agent-browser-verify 完成 open/networkidle、截图、非空、无 Next 错误覆盖层、console `[]` 和交互快照；浏览器与 dev server 已关闭。因无有效 Auth 凭据或授权 code，未执行 callback 缺 code/假 code HTTP 或 Auth 运行证据。详细脱敏记录见[B2 本地安全基础证据](./evidence/G2-A1/2026-08-28-b2-local-foundation/README.md)。
@@ -422,9 +422,18 @@ resource/cost/secret Gate 通过前，仅可继续维护无资源后端原型、
 - 下一步为独立安全复审；复审前不打开 B2 真实 Auth 运行、B3、P2 或任何外部配置。回退方式为移除本批新增 callback 模块、测试与登录提示，保留 B1 骨架和脱敏证据。
 - 未点击 Save、Enable、Create、Reveal 或 Copy；未读取 API Keys、SQL/Table Editor、DB/Storage 数据、用户、Audit Logs 数据或管理凭据。connector 精确目标当前不可复验，未访问其他项目或执行外部写入。
 
-## 26. 2026-08-28｜G2-A1-B2 本地安全基础远端闭环（当前）
+## 26. 2026-08-28｜G2-A1-B2 本地安全基础远端闭环（历史快照；当前外部入口 Gate 见第 27 节）
 
 - B2 本地安全基础已合并 main/远端闭环通过：PR #12 已以 merge commit 合并到远端 `main`，head=`55b7497953bc22e002e4c75a4b039c5b08fd98e7`，merge=`96ee24a4e5ba7eaee684731eacf707d4da29c44b`，parents=`689d9679293f255c44feb314428a2678b9fe4d06` + `55b7497953bc22e002e4c75a4b039c5b08fd98e7`；来源分支 `codex/g2-a1-b2-local-foundation` 保留。
 - 远端 `main` exact head=`96ee24a4e5ba7eaee684731eacf707d4da29c44b`；main Actions run=`33209420614` / job=`98978680399` success，`test:auth` 12/12 且仅运行一次；exact merge 的 GitHub deployments=`0`。Vercel 仍为 `3` 个既有 deployments，Production 仍为 `READY`，aliases=`2`，本次无新增 Preview/Production deployment。
 - 该 closeout 仅关闭本地安全基础的远端 source/CI 交付记录；完整 B2、real Auth/OAuth/SMTP/session/DB/Storage/Production 与外部 action-time Owner Gate 继续 CLOSED。下一步仅可进入 B2 外部入口 Gate 设计/资源检查，不预写 external Auth success；不自动打开 B3、P2 或 Production。
 - 本次仅更新文档记录，不运行本地 build/tests/browser，不执行 Supabase/Auth/DB/Storage/SMTP、secret、部署或 Production 操作。
+
+## 27. 2026-08-28｜G2-A1-B2 外部入口 Gate 设计与资源 preflight（当前）
+
+- 本批完成 B2 external entry Gate design/preflight，风险等级 critical，执行代理 `luna_worker / max`，单一写入者，需独立安全审查；本批只写权威 Markdown 与 evidence README，不等于 B2/Auth/G2-A1 技术通过。
+- 当前 `main` 为 PR #13 docs-only closeout merge=`b3e53a71ca40729b139724a492e8d20afd02f341`；main Actions run=`33212054195`/job=`98987321203` success，`test:auth` 12 项且仅运行一次，exact merge 的 GitHub deployments=`0`；Vercel 保持 3 个既有 READY deployments，本批无新增部署。
+- E1 local bootstrap 仅在独立审查并合并后按条件打开，限新 Rebuy local config、合成数据、55320–55329 隔离端口和缓存复用；不登录/link hosted project、不读取 hosted secret、不干预现有 SSH/容器。E2 local email OTP/invite 依赖 E1 健康且成功邮件只进入 local catcher；E3 Google、E4 Apple、E5 hosted callback/linking/invite、custom SMTP、hosted Auth writes、DB/Storage/Production/deploy 继续 CLOSED，各需 action-time Gate。
+- 只读刷新与本地 preflight：connector 目前无法列出目标资源；Chrome 历史只读观察曾确认独立 Free、EU Central/Frankfurt、`ACTIVE_HEALTHY` 且未暂停，Email/signup/confirm 开启，Phone/Google/Apple/manual linking/custom SMTP 关闭，redirect allowlist 为 0，TOTP 开启、Phone MFA 关闭，Free session controls 受限；Supabase CLI `2.101.0`、Docker `29.5.2/29.2.1` 可达；55320–55329 空闲，54321–54324 现有 SSH 监听不触碰；Mailpit PATH 缺失但缓存可见且兼容性待确认；Node 20 默认、Node `22.12.0` 已安装，既有 SSR/callback/tests 可复用。
+- Hosted 默认 SMTP 仅预授权团队地址，限额动态、无 SLA；早期每小时 2 封只作历史基线。`.invalid` 只用于 no-send/负向/反枚举，成功 OTP/Magic Link/invite 使用专用 synthetic mailbox/domain 或 local catcher，不使用真实个人/客户邮箱。Google 仅 `openid`/`email`/`profile` 最小范围；Apple 需付费能力，保持 disabled/PAID-BLOCKED，不付款、注册或生成 secret。
+- 任何非零费用、额外 scope、secret/PII、生产 redirect/邮件、端口冲突、现有容器变更、控制台写入或无法清理均 STOP 并另开 Gate。回退只移除未来 E1 新建的 local 对象，不删除既有 SSH、容器、远端资源或历史证据。详见[B2 外部入口 Gate 证据](./evidence/G2-A1/2026-08-28-b2-external-entry-gate/README.md)。
