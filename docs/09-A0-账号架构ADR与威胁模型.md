@@ -1,6 +1,6 @@
 # A0 账号架构 ADR 与威胁模型
 
-文档状态：截至 2026-08-28，G2-A0 Exit GO；远端 docs-only reconciliation 已完成（PR #7 merge=`fd9b712c7b07bf34399f9838eebb75846425c1d1`，parents=`7ea1e45ad22ab29105910665baf4bbd7212241c5` + `1433e7c7c141df0f5498fff7cd645a8d5c92340c`，main Actions run=`33122238997`/job=`98691703085` 全绿，GitHub deployments=0，来源分支保留）；这些是 docs-only/CI 事实，不等于 Auth/DB/运行时通过。G2-A1 技术阶段未开始；无资源 Entry preparation 已完成/待 exact-head 文档复审；resource/cost/secret Gate 关闭；P2–P8 未打开。七项 Owner 政策已于 2026-08-27 采纳
+文档状态：截至 2026-08-28，G2-A0 Exit GO；远端 docs-only reconciliation 已完成（PR #7 merge=`fd9b712c7b07bf34399f9838eebb75846425c1d1`，parents=`7ea1e45ad22ab29105910665baf4bbd7212241c5` + `1433e7c7c141df0f5498fff7cd645a8d5c92340c`，main Actions run=`33122238997`/job=`98691703085` 全绿，GitHub deployments=0，来源分支保留）；这些是 docs-only/CI 事实，不等于 Auth/DB/运行时通过。G2-A1 技术阶段尚未开始；最小资源存在性/基础预检已完成；完整 resource/cost/secret Gate 仍关闭；P2–P8 未打开。七项 Owner 政策已于 2026-08-27 采纳。当前资源事实见[G2-A1 Entry preparation 证据](./evidence/G2-A1/2026-08-28-entry-preparation/README.md)
 适用范围：Rebuy 多商家、批发与零售平台的身份、组织、权限、经营资格、文件和隐私信任边界  
 证据边界：本文是 A0 架构决定和威胁模型执行合同，不代表已连接 Supabase、OAuth、SMTP、Storage、数据库或生产环境。  
 关联文档：[完整账号系统规划](./07-完整账号系统规划.md)、[账号系统思维导图](./08-账号系统思维导图.md)、[A1 Auth spike 执行合同](./10-A1-Auth-Spike执行合同.md)、[G2-A0 阶段记录](./stages/G2-A0-账号安全合同与威胁模型验收.md)。
@@ -18,7 +18,7 @@ A0 要锁定账号系统在 A1 之前不能再被实现代理自行改变的安�
 - OAuth 短时材料一次性消费，不持久保存原值，只留下必要的脱敏安全事件。
 - support、reviewer、auditor、platform admin 的读写和决定权限分离。
 
-2026-08-27 Owner 已签署 G1-19、G1 Exit=GO，并授权打开 G2-A0。G2-A0 Exit 已 GO（验收 ref=`140ea15d9c3f178a326709d35ad1750a156df0d1`）；截至 2026-08-28，远端 docs-only reconciliation 已完成，具体 PR/merge/run 事实见本文末尾当前状态纠正。上述 docs-only/CI 事实不等于 Auth/DB/运行时通过；G2-A1 技术阶段未开始，无资源 Entry preparation 已完成/待 exact-head 文档复审，resource/cost/secret Gate 关闭，P2–P8 未打开。不授权 Supabase/Auth/DB/Storage/Realtime、secret/env、真实账号或任何部署/外部资源写入。
+2026-08-27 Owner 已签署 G1-19、G1 Exit=GO，并授权打开 G2-A0。G2-A0 Exit 已 GO（验收 ref=`140ea15d9c3f178a326709d35ad1750a156df0d1`）；截至 2026-08-28，远端 docs-only reconciliation 已完成，具体 PR/merge/run 事实见本文末尾当前状态纠正。上述 docs-only/CI 事实不等于 Auth/DB/运行时通过；G2-A1 技术阶段尚未开始，最小资源存在性/基础预检已完成，完整 resource/cost/secret Gate 仍关闭，P2–P8 未打开。不授权 Supabase/Auth/DB/Storage/Realtime、secret/env、真实账号或任何部署/外部资源写入。
 
 本 A0 只覆盖账号、组织、权限、资格、证明文件、会话、MFA、OAuth、隐私和相关审计。商品、订单、支付、税务、物流和生产部署仍受 00、04、05 的独立阶段门禁约束。
 
@@ -230,13 +230,13 @@ A0 通过前，Owner 或指定审查人必须能从 07、08、09 逐项核对：
 
 ## 11. Owner Gate
 
-Owner Gate A0 的通过决定只允许打开 [A1 Auth spike 执行合同](./10-A1-Auth-Spike执行合同.md)的准备门，不等于批准连接环境或进入真实账号。七项政策已由 Owner 于 2026-08-27 采纳，G2-A0 Exit 已 GO 且远端 docs-only reconciliation 已完成。G2-A1 无资源 Entry preparation 已完成/待 exact-head 文档复审；resource/cost/secret Gate 仍关闭。Owner Gate 记录如下：
+Owner Gate A0 的通过决定只允许打开 [A1 Auth spike 执行合同](./10-A1-Auth-Spike执行合同.md)的准备门，不等于批准连接环境或进入真实账号。七项政策已由 Owner 于 2026-08-27 采纳，G2-A0 Exit 已 GO 且远端 docs-only reconciliation 已完成。G2-A1 技术阶段尚未开始；最小资源存在性/基础预检已完成；完整 resource/cost/secret Gate 仍关闭。Owner Gate 记录如下：
 
 1. 七项政策及本 ADR 的 `A0-01～A0-15`、日期化 Entry 补充和上述安全不变量已接受并写入；未列入七项的实现细节仍须对应阶段决策，不得由实现代理推断。
 2. 接受 A1 只能连接独立 local/preview-staging，绝不连接 production 或真实 PII；这不等于批准资源或费用。
 3. 在单独的资源/成本/secret Gate 中指定 A1 的 non-production 环境、provider、计划、区域、密钥和 Google/Apple/SMTP 责任人；A0 不锁定或授权这些事项。
 4. decision-ready baseline `9b11f375080db68353dd6952774bcd5e75c4153c` 的独立文档治理审查已完成（findings `none/GO`），覆盖身份、隐私、Storage、RLS、跨租户、会话和威胁矩阵的一致性；这不是运行时或 Auth/安全测试，A4/A5 仍必须专项审查。
-5. Owner 已签署 A0 Exit GO，且远端 docs-only reconciliation 已完成；A1 技术阶段仍未开始，无资源 Entry preparation 待 exact-head 文档复审，不得因七项政策或文档审查直接开始 Auth 实测或打开资源 Gate。
+5. Owner 已签署 A0 Exit GO，且远端 docs-only reconciliation 已完成；A1 技术阶段仍未开始，最小资源存在性/基础预检已完成，完整 resource/cost/secret Gate 仍关闭；不得因七项政策、文档审查或资源健康状态直接开始 Auth 实测或打开完整资源 Gate。
 
 ## 12. 正式来源与交叉链接
 
@@ -256,4 +256,4 @@ Owner Gate A0 的通过决定只允许打开 [A1 Auth spike 执行合同](./10-A
 
 ## 14. 2026-08-28 当前状态纠正
 
-G2-A0 Exit GO（验收 ref=`140ea15d9c3f178a326709d35ad1750a156df0d1`），且远端 docs-only reconciliation 已完成：PR #7 merge=`fd9b712c7b07bf34399f9838eebb75846425c1d1`，parents=`7ea1e45ad22ab29105910665baf4bbd7212241c5` + `1433e7c7c141df0f5498fff7cd645a8d5c92340c`，main Actions run=`33122238997`/job=`98691703085` 全绿，GitHub deployments=0，来源分支保留；这些是 docs-only/CI 事实，不等于 Auth/DB/运行时通过。G2-A1 技术阶段未开始；无资源 Entry preparation 已完成/待 exact-head 文档复审；resource/cost/secret Gate 关闭；P2–P8 未打开。详见 [G2-A1 entry preparation 证据](./evidence/G2-A1/2026-08-28-entry-preparation/README.md)。
+G2-A0 Exit GO（验收 ref=`140ea15d9c3f178a326709d35ad1750a156df0d1`），且远端 docs-only reconciliation 已完成：PR #7 merge=`fd9b712c7b07bf34399f9838eebb75846425c1d1`，parents=`7ea1e45ad22ab29105910665baf4bbd7212241c5` + `1433e7c7c141df0f5498fff7cd645a8d5c92340c`，main Actions run=`33122238997`/job=`98691703085` 全绿，GitHub deployments=0，来源分支保留；这些是 docs-only/CI 事实，不等于 Auth/DB/运行时通过。G2-A1 技术阶段尚未开始；最小资源存在性/基础预检已完成；完整 resource/cost/secret Gate 仍关闭；P2–P8 未打开。详见 [G2-A1 entry preparation 证据](./evidence/G2-A1/2026-08-28-entry-preparation/README.md)。

@@ -1,13 +1,13 @@
 # G2-A1 Auth Spike 准备与资源门禁
 
-文档状态：**G2-A1 技术阶段未开始；无资源 Entry preparation 已完成/待审；resource/cost/secret Gate 关闭**
+文档状态：**G2-A1 技术阶段未开始；最小资源存在性/基础预检已完成；完整 resource/cost/secret Gate 关闭**
 记录日期：2026-08-28（Europe/Rome）
-证据级别：规划 + 本地静态（docs-only）；不代表 Auth、Staging、数据库或生产能力
+证据级别：规划 + 外部资源存在性核验 + 本地静态（docs-only）；不代表 Auth、Staging、数据库或生产能力
 前置阶段：G2-A0 Exit GO，远端 docs-only reconciliation 已完成，事实见[本批 Entry preparation 证据](../evidence/G2-A1/2026-08-28-entry-preparation/README.md)
 
 ## 1. 本批声明与边界
 
-本文件记录 G2-A1 的无资源 Entry preparation。它完成了后续执行合同、资源/费用/密钥 Gate 字段、Auth 实测矩阵和公开证据边界的准备；**没有开始 G2-A1 技术验证**。当前不创建或连接 Supabase 项目，不连接 Auth/DB/Storage/OAuth/SMTP，不读取或写入 secret，不创建真实账号或 fixture，不部署、不改变 Production，也不修改已冻结的 G0/P1 UI、prototype、workflow、package 或 lockfile。
+本文件先记录 G2-A1 的无资源 Entry preparation：它完成了后续执行合同、资源/费用/密钥 Gate 字段、Auth 实测矩阵和公开证据边界的准备。2026-08-28 随后只完成了独立 Free Supabase 资源的管理面存在性/基础健康预检；**G2-A1 Auth 技术验证仍未开始**。当前项目尚未接入 Auth/DB/Storage/OAuth/SMTP，不读取或写入 secret，不创建真实账号或 fixture，不部署、不改变 Production，也不修改已冻结的 G0/P1 UI、prototype、workflow、package 或 lockfile。
 
 G2-A0 的远端闭环已经在 `main` 完成：PR #7 的 merge commit 为 `fd9b712c7b07bf34399f9838eebb75846425c1d1`，parents 为 `7ea1e45ad22ab29105910665baf4bbd7212241c5` 与 `1433e7c7c141df0f5498fff7cd645a8d5c92340c`。这只证明已批准的 G2-A0 docs-only 变更完成远端闭环，不把 A1 变成技术通过。
 
@@ -18,11 +18,12 @@ G2-A0 的远端闭环已经在 `main` 完成：PR #7 的 merge commit 为 `fd9b7
 | Gate | 当前状态 | 允许动作 | 不能据此声称 |
 |---|---|---|---|
 | G2-A0 Exit | 已通过；远端 reconciliation 已完成 | 进入 A1 无资源准备 | Supabase/Auth/DB/Storage 已连接 |
-| G2-A1 无资源 Entry preparation | 已完成/待审 | 文档、接口草图、测试矩阵、合成字段定义 | A1 技术验证开始或通过 |
-| resource/cost/secret Gate | **关闭** | 仅维护[资源成本与密钥 Gate 模板](../templates/G2-A1-资源成本与密钥Gate模板.md) | 组织、项目、套餐、区域、费用或密钥已批准 |
-| G2-A1 技术阶段 | **未开始** | 等待独立资源授权后按四批合同执行 | Staging、真实登录、Auth/MFA、DB/RLS 或生产验收 |
+| G2-A1 无资源 Entry preparation | 已完成/已归档 | 文档、接口草图、测试矩阵、合成字段定义 | A1 技术验证开始或通过 |
+| G2-A1 最小资源存在性/基础预检 | **已完成（窄范围）** | 核对独立组织、Free 项目、区域、报价确认和健康状态 | Auth、secret/env、DB/RLS、Storage、OAuth、SMTP 或生产能力 |
+| 完整 resource/cost/secret Gate | **关闭** | 仅允许维护[资源成本与密钥 Gate 模板](../templates/G2-A1-资源成本与密钥Gate模板.md)及窄范围资源预检 | secret、环境变量、Auth/DB/Storage/OAuth/SMTP 或任何付费/生产能力已批准 |
+| G2-A1 技术阶段 | **未开始** | 先形成新的最小 Auth spike 设计与风险 Gate | Staging、真实登录、Auth/MFA、DB/RLS 或生产验收 |
 
-推荐的后续入口顺序是：先完成本文件和模板的 Owner/安全复核；再由 Owner 另行确认 provider、组织、项目、计划、区域、环境、成本上限、密钥责任人与停止联系人；最后才可打开资源 Gate。A1 结果不能自动打开 P2/P3+，A0–A6 与 P0–P8 的映射仍需在 P2 之前由 Owner/主计划明确。
+当前已完成的仅是资源存在性/基础预检。下一步必须形成新的最小 Auth spike 设计与风险 Gate，并重新明确测试范围、版本/计划限制、secret 责任和停止条件；Free 计划的能力不能被推断为已满足 Pro 专属的 session 配置要求。完整 resource/cost/secret Gate 仍关闭，A1 结果不能自动打开 P2/P3+，A0–A6 与 P0–P8 的映射仍需在 P2 之前由 Owner/主计划明确。
 
 ## 3. 四批后续执行合同
 
@@ -99,7 +100,7 @@ G2-A0 的远端闭环已经在 `main` 完成：PR #7 的 merge commit 为 `fd9b7
 | 停止联系人 | 待指定 | 一旦越界，立即冻结入口、撤销测试配置并通知 Owner |
 | 法律/隐私/税务顾问 | A5/专业顾问待接手 | 不在 A1 对 GDPR、税务、跨境或处理者合同作结论 |
 
-## 5. 公开 Supabase inventory 摘要与候选提案
+## 5. 公开 Supabase inventory 摘要与候选提案（无资源阶段历史快照）
 
 本批只允许记录最小化公开摘要：**只读 inventory 没有发现已获批准、可用于 Rebuy 的独立 non-production project；任何无关项目禁止复用。** 本批不公开任何 Supabase inventory 的组织/项目名称、ID、数量、套餐、host 或现有 region；也不记录 key、token 或环境值。
 
@@ -130,7 +131,7 @@ G2-A0 的远端闭环已经在 `main` 完成：PR #7 的 merge commit 为 `fd9b7
 
 出现以下任一情况，停止当前批次，不用绕过方式继续：
 
-- resource/cost/secret Gate 未明确通过却需要创建项目、读取密钥、启用 OAuth/SMTP/Storage 或产生费用；无法证明组织、项目、区域和 Production 隔离。
+- 超出本记录第 9 节窄范围、在完整 resource/cost/secret Gate 未明确通过时需要读取密钥、启用 OAuth/SMTP/Storage、写入数据或产生费用；无法证明组织、项目、区域和 Production 隔离。
 - 任何真实邮箱、电话、地址、客户/商家资料、证件、订单、真实支付信息、生产 cookie、token、OTP、TOTP seed、OAuth code、SMTP/service key 或原始日志进入仓库、聊天、截图、客户端、数据库或证据。
 - callback 接受错误/重放 code、错误 PKCE/state/nonce、跨环境 client、open redirect、额外 Google scope 或 provider token 留存。
 - linking/邀请在邮箱控制权、重新认证、目标精确匹配或并发/一次性消费未通过时仍产生 membership/权限；人工恢复缺少双人职责分离、AAL/会话重置、通知或审计。
@@ -150,4 +151,22 @@ G2-A0 的远端闭环已经在 `main` 完成：PR #7 的 merge commit 为 `fd9b7
 - [G2-A0 阶段记录](./G2-A0-账号安全合同与威胁模型验收.md)
 - [项目状态与阶段台账](../15-项目状态与阶段台账.md)
 
-Owner/安全审查通过后，15 台账可以把 G2-A1 记录为“准备中（无资源 Entry preparation 已完成/待审）”，但技术阶段仍必须保持“未开始”，直到新的 resource/cost/secret Gate 明确通过。
+当前 15 台账已记录为“准备中（最小资源存在性/基础预检已完成）”；技术阶段仍必须保持“未开始”，完整 resource/cost/secret Gate 仍关闭，下一步只能进入新的最小 Auth spike 设计与风险 Gate。
+
+## 9. 2026-08-28｜Free Supabase 资源存在性与基础预检（窄 Gate）
+
+记录类型：外部资源管理面核验；不是 Auth 运行时证据，也不是完整 resource/cost/secret Gate 批准。
+
+- 独立 Supabase 组织 `Rebuy Lab` 已创建；Supabase connector 只读核验该组织 `plan=Free`。
+- 独立项目 `rebuy-auth-spike` 已在 `eu-central-1`（Frankfurt）创建；用途限定为 EU non-production Auth spike，数据模式为 synthetic-only。
+- provider project quote 已返回 `amount=0`、`recurrence=monthly`；该 API 未返回 currency。Owner 已确认该实际 quote，随后已完成 `confirm_cost`。此记录不把 quote 当作税费、Spend Cap 或完整成本责任确认。
+- 项目当前管理面状态为 `ACTIVE_HEALTHY`。健康状态只证明资源存在且 provider 管理面报告健康，不等于 Auth、MFA、session、DB、RLS、Storage、OAuth、SMTP 或 SSR 验证通过。
+- 本批没有读取、记录或传播 secrets、keys、passwords、环境变量值、host、URL、project ref、组织/项目 ID 或其他账号资源标识；没有配置 Auth/DB/Storage/OAuth/SMTP，没有建表、写数据、创建真实账号、部署、promote、alias 或 Production 操作。
+
+| Gate | 当前状态 | 允许范围 | 明确关闭 |
+|---|---|---|---|
+| 最小资源存在性/基础预检 | **已打开并完成（窄范围）** | 组织/Free 计划、项目名称、区域、quote 确认、管理面健康状态 | 不延伸为运行时/Auth/DB 证据 |
+| 完整 resource/cost/secret Gate | **关闭** | 仅维护脱敏记录和新的风险 Gate 设计 | secret/env、成本责任/税费/Spend Cap 完整确认、Auth/DB/Storage/OAuth/SMTP |
+| 真实数据与 Production | **关闭** | 无 | 真实客户/商户/PII、真实账号、部署、Production/promote/写入 |
+
+下一步是新的最小 Auth spike 设计与风险 Gate：在明确实际测试能力、Free 计划限制、secret 责任和清理/停止条件前，不读取 key、不配置 Auth/SMTP/OAuth、不建表/写数据，也不把 `ACTIVE_HEALTHY` 外推为技术通过。

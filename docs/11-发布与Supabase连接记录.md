@@ -1,13 +1,13 @@
 # 发布与 Supabase 连接记录
 
-文档状态：本地连接骨架；G2-A1 尚未开始；本工作范围未连接 Supabase 项目，外部实际存在性 unknown
+文档状态：本地连接骨架 + 独立资源存在性预检；G2-A1 Auth 技术阶段尚未开始；完整 resource/cost/secret Gate 关闭
 
 ## 1. A1 边界
 
-本记录只描述 GitHub/Vercel/Supabase 独立测试环境的连接骨架，不代表已经创建或连接任何外部项目。
+本记录描述 GitHub/Vercel/Supabase 独立测试环境的连接骨架，并追加独立资源管理面存在性预检；不代表应用已经连接或配置 Auth、DB、Storage、OAuth、SMTP 或生产环境。
 
 - GitHub 仓库可见性保持用户指定的现状；本记录不执行可见性变更、提交、推送或部署。
-- 本工作范围未创建或连接 Supabase 项目；外部项目实际存在性 unknown。
+- 独立 Supabase 资源已创建并完成管理面存在性/基础健康预检；应用仍未连接该资源，完整 resource/cost/secret Gate 继续关闭。
 - 尚未配置 Vercel 环境变量。
 - 尚未启用真实登录、OAuth 或 SMTP。
 - 不连接 production，不写入真实业务数据，不使用真实客户、商家或员工 PII。
@@ -54,7 +54,15 @@
 
 当前证据如下：`pnpm typecheck`、`pnpm lint`、`pnpm build` 全部通过。复用的本地开发服务器上，无环境变量的 `/api/health/supabase` 返回 HTTP 503，响应为 `{"configured":false,"reachable":false,"status":503}` 并带 `Cache-Control: no-store`。此前同一服务器上的 `/` 与 `/account/login` 均返回 200。
 
-这些证据只证明本地 A1 连接骨架可构建、可运行和能安全处理未配置状态；仍未创建 Supabase 项目、配置 Vercel env、启用真实登录/OAuth/SMTP，也不构成生产批准。
+这些证据只证明本地 A1 连接骨架可构建、可运行和能安全处理未配置状态；独立 Supabase 资源的管理面状态另见下节。仍未配置 Vercel env、启用真实登录/OAuth/SMTP，也不构成 Auth、DB 或生产批准。
+
+## 5.1 2026-08-28 独立资源存在性/基础预检
+
+- 独立组织 `Rebuy Lab` 已创建并由 Supabase connector 核验 `plan=Free`。
+- 独立项目 `rebuy-auth-spike` 已在 `eu-central-1`（Frankfurt）创建，限定 EU non-production Auth spike、synthetic-only；管理面状态为 `ACTIVE_HEALTHY`。
+- provider project quote 实际返回 `amount=0`、`recurrence=monthly`；API 未返回 currency。Owner 已确认该实际 quote，随后已完成 `confirm_cost`。
+- 本节只记录资源管理面事实。没有读取、记录或传播 secrets、keys、passwords、环境变量值、host、URL、project ref、组织/项目 ID 或其他账号资源标识；没有配置 Auth/DB/Storage/OAuth/SMTP，没有建表、写数据、创建真实账号、部署、promote、alias 或 Production 操作。
+- Gate 仅打开到最小资源存在性/基础预检；完整 resource/cost/secret、secret/env、Auth、DB/schema/RLS、Storage、OAuth、SMTP、真实数据与 Production Gate 继续关闭。`ACTIVE_HEALTHY` 不等于 Auth/DB/运行时通过。
 
 ## 6. SSR 与发布前安全边界
 
