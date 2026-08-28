@@ -1,6 +1,6 @@
 # 发布与 Supabase 连接记录
 
-文档状态：本地连接骨架 + 独立资源存在性预检 + A1-B1 最小连接验证已完成（既有文档治理复审首轮 finding 已关闭；本次独立运行时复审首次结论为 REVIEW NO-GO，本批 findings 由 `c15b11c` 修复；独立定向复审针对 `c15b11c` 给出 REVIEW GO，无未关闭 P0/P1 finding；该 review GO 仅表示本批复审闭环，不改变 B1/B2 或完整 Gate）；G2-A1 仍执行中，Auth/OAuth/SMTP/DB/Storage/user/session/MFA 未开始；完整 resource/cost/secret Gate 关闭
+文档状态：本地连接骨架 + 独立资源存在性预检 + A1-B1 最小连接与配置/能力只读预检已完成（既有文档治理复审首轮 finding 已关闭；本批 findings 由 `7952d16` 修复；独立定向复审对该 exact head 给出 REVIEW GO，无未关闭 P0/P1/P2；该 GO 只关闭 B1 capability preflight 审查，不打开 B2 或任何 Auth/DB/Storage/OAuth/SMTP/费用/部署/Production Gate；不预写 push、PR、Actions 或 merge）；G2-A1 仍执行中，Auth/OAuth/SMTP/DB/Storage/user/session/MFA 未开始；完整 resource/cost/secret Gate 关闭
 
 ## 1. A1 边界
 
@@ -83,8 +83,17 @@
 
 - 复用现有 `prototype/lib/supabase/client.ts`、`server.ts`、`config.ts`、`.env.example` 与 `/api/health/supabase`；不新建第二套 client/config/health 实现。
 - `prototype/app/account/login/LoginPrototype.tsx` 继续保持本地演示边界；Apple、Google、邮箱 OTP 点击不改写为真实 Auth，不创建真实 session。
-- A1-B1 最小连接验证已完成；既有文档治理复审首轮 finding 已关闭。本次独立运行时复审首次结论为 REVIEW NO-GO，本批 findings 由 `c15b11c` 修复；独立定向复审针对 `c15b11c` 给出 REVIEW GO，无未关闭 P0/P1 finding；该 review GO 仅表示本批复审闭环，不改变 B1/B2 或完整 Gate。B1 已按授权复核官方 docs/changelog，初次运行窗口读取目标 project URL + active modern publishable key，确认 `.gitignore` 阻止 env，仅存入 gitignored local env，并用 EU non-production local synthetic-only 连接验证不依赖 service_role。
+- A1-B1 最小连接与配置/能力只读预检已完成；既有文档治理复审首轮 finding 已关闭。本批 findings 由 `7952d16` 修复；独立定向复审对该 exact head 给出 REVIEW GO，无未关闭 P0/P1/P2；该 GO 只关闭 B1 capability preflight 审查，不打开 B2 或任何 Auth/DB/Storage/OAuth/SMTP/费用/部署/Production Gate；不预写 push、PR、Actions 或 merge。B1 已按授权复核官方 docs/changelog，初次运行窗口读取目标 project URL + active modern publishable key，确认 `.gitignore` 阻止 env，仅存入 gitignored local env，并用 EU non-production local synthetic-only 连接验证不依赖 service_role。
 - 这不是 broad waiver（全局豁免），也不代表 G2-A1 Auth/B1 技术通过。完整 resource/cost/secret、secret/env、Auth、DB/schema/RLS、Storage、OAuth、SMTP、真实 PII、部署和 Production Gate 继续关闭；service_role、secret key、db password 继续禁止，不触碰 Production。
-- 下一步仅为 B1 配置/能力只读预检，不自动进入 B2。脱敏 Gate 证据见[G2-A1 B1 风险 Gate 证据](./evidence/G2-A1/2026-08-28-b1-risk-gate/README.md)；完整资源/技术结果仍须按[阶段记录](./stages/G2-A1-Auth-Spike准备与资源门禁.md)和[15 台账](./15-项目状态与阶段台账.md)更新。
+- B1 配置/能力只读预检已完成；下一步为 B2 专项风险 Gate 草案的独立安全复审与 Owner/主代理 Gate，不自动进入 B2。脱敏结果见[B1 配置/能力预检证据](./evidence/G2-A1/2026-08-28-b1-capability-preflight/README.md)和[B1 风险 Gate 证据](./evidence/G2-A1/2026-08-28-b1-risk-gate/README.md)；完整资源/技术结果仍须按[阶段记录](./stages/G2-A1-Auth-Spike准备与资源门禁.md)和[15 台账](./15-项目状态与阶段台账.md)更新。
 
 规划依据：[Supabase SSR client](https://supabase.com/docs/guides/auth/server-side/creating-a-client)、[Supabase sessions](https://supabase.com/docs/guides/auth/sessions)、[Supabase securing your API](https://supabase.com/docs/guides/api/securing-your-api)。官方页面和本地骨架都不能替代 A1/A3/A4 运行证据。
+## 8. 2026-08-28 A1-B1 配置/能力只读预检
+
+- 通过已登录 Supabase dashboard 的指定 Auth configuration 页面完成脱敏只读观察：signup/provider、URL/redirect、Email/SMTP/template、MFA、session、rate limits、attack protection 与 hooks。精确目标的组织/项目/Free 标签可见；Auth 页面未显示区域，区域沿用既有 EU non-production 资源记录。
+- 未点击 Save、Enable、Create、Reveal 或 Copy；未读取 API Keys、SQL/Table Editor、数据库/Storage 数据、用户、Audit Logs、secret、service_role、DB password 或真实 PII；未发送邮件、启用 OAuth、配置 MFA、写入 DB/Storage 或修改 Production。
+- 当前结论仅为 B1 配置/能力只读预检完成，不能写成 Auth/B1 技术通过。B2 专项风险 Gate 草案与三入口前提见[B1 配置/能力预检证据](./evidence/G2-A1/2026-08-28-b1-capability-preflight/README.md)，B2 与完整 resource/cost/secret/Auth/DB/Storage/OAuth/SMTP/真实 PII/部署/Production Gate 继续 CLOSED。
+- connector 当前无法再次列出精确目标，未访问其他项目或执行外部写入；该管理面漂移和 ignored local env cleanup 仍是残余风险。
+- 依据 [Supabase Custom SMTP](https://supabase.com/docs/guides/auth/auth-smtp)、[Auth rate limits](https://supabase.com/docs/guides/auth/rate-limits) 与 [Free 邮件模板变更](https://supabase.com/changelog/46599-changes-to-email-template-customisation-on-free-tier)，hosted 默认 SMTP 仅向项目团队预授权邮箱发送，当前基线每小时 2 封且可能变化、无 SLA，仅用于非生产探索；`.invalid` 只用于 no-send/负向/反枚举，成功 OTP/Magic Link 必须使用专用 synthetic test mailbox/domain、隔离 catcher 或另行批准的 custom SMTP。
+- custom SMTP credential/secret、费用、持久连接及浏览器/控制台配置动作继续 CLOSED；每次实际动作需要 action-time Owner Gate，不能以总体批准替代。当前 capability-preflight worktree 不包含 `prototype/.env.local`，B2 执行前必须重新验证 ignored、untracked 和 mode `600`，不能沿用旧连接 worktree 权限结论。
+- 本批 findings 由 `7952d16` 修复；独立定向复审对该 exact head 给出 REVIEW GO，无未关闭 P0/P1/P2；该 GO 只关闭 B1 capability preflight 审查，不打开 B2 或任何 Auth/DB/Storage/OAuth/SMTP/费用/部署/Production Gate；不预写 push、PR、Actions 或 merge。

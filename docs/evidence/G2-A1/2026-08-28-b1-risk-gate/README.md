@@ -3,7 +3,7 @@
 记录日期：2026-08-28（Europe/Rome）
 批次：G2-A1 / A1-B1 risk Gate、复用预检与最小本地连接验证
 证据级别：本地静态 + 本地运行 + agent-browser + 外部资源只读核验摘要
-阶段状态：**G2-A1 执行中（仅 B1 最小连接验证已完成；后续 B1 配置/能力只读预检待执行）；Auth/OAuth/SMTP/DB/Storage/user/session/MFA 未开始；本次独立运行时复审首次结论为 REVIEW NO-GO，本批 findings 由 `c15b11c` 修复；独立定向复审针对 `c15b11c` 给出 REVIEW GO，无未关闭 P0/P1 finding；该 review GO 仅表示本批复审闭环，不改变 B1/B2 或完整 Gate；完整 resource/cost/secret/Auth/DB/Storage/OAuth/SMTP/真实 PII/部署/Production Gate 关闭**
+阶段状态：**G2-A1 执行中（B1 最小连接及配置/能力只读预检已完成；下一步为 B2 专项风险 Gate 草案待独立安全复审与 Owner/主代理 Gate）；Auth/OAuth/SMTP/DB/Storage/user/session/MFA 未开始；本次独立运行时复审首次结论为 REVIEW NO-GO，本批 findings 由 `c15b11c` 修复；本批 findings 由 `7952d16` 修复；独立定向复审对该 exact head 给出 REVIEW GO，无未关闭 P0/P1/P2；该 GO 只关闭 B1 capability preflight 审查，不打开 B2 或任何 Auth/DB/Storage/OAuth/SMTP/费用/部署/Production Gate；不预写 push、PR、Actions 或 merge；完整 resource/cost/secret/Auth/DB/Storage/OAuth/SMTP/真实 PII/部署/Production Gate 关闭**
 
 本 README 是批次证据摘要，不是第二份状态源。当前阶段状态、Owner 决定和下一动作以[项目状态与阶段台账](../../../15-项目状态与阶段台账.md)为准；阶段合同见[G2-A1 准备与资源门禁](../../../stages/G2-A1-Auth-Spike准备与资源门禁.md)。
 
@@ -37,14 +37,14 @@
 | Gate | 当前状态 | 条件与限制 |
 |---|---|---|
 | 最小资源存在性/基础预检 | 已完成（窄范围） | 仅核对组织、Free 计划、项目标签、区域、quote 确认和管理面健康 |
-| A1-B1 最小 Auth spike 风险 Gate | **最小连接验证已完成（窄范围）** | 既有文档治理复审首轮 finding 已关闭；本次独立运行时复审首次结论为 REVIEW NO-GO；本批 findings 由 `c15b11c` 修复；独立定向复审针对 `c15b11c` 给出 REVIEW GO，无未关闭 P0/P1 finding；该 review GO 仅表示本批复审闭环，不改变 B1/B2 或完整 Gate；初次运行窗口已只读取得 active modern publishable key，写入 gitignored local env，并复用现有 SSR/client/health 完成 EU non-production synthetic-only 本地连接验证；已记录 Free 限制、STOP/cleanup |
+| A1-B1 最小 Auth spike 风险 Gate | **最小连接验证已完成（窄范围）** | 既有文档治理复审首轮 finding 已关闭；本次独立运行时复审首次结论为 REVIEW NO-GO；本批 findings 由 `c15b11c` 修复；本批 findings 由 `7952d16` 修复；独立定向复审对该 exact head 给出 REVIEW GO，无未关闭 P0/P1/P2；该 GO 只关闭 B1 capability preflight 审查，不打开 B2 或任何 Auth/DB/Storage/OAuth/SMTP/费用/部署/Production Gate；不预写 push、PR、Actions 或 merge；该复审状态不改变 B1/B2 或完整 Gate；初次运行窗口已只读取得 active modern publishable key，写入 gitignored local env，并复用现有 SSR/client/health 完成 EU non-production synthetic-only 本地连接验证；已记录 Free 限制、STOP/cleanup |
 | 完整 resource/cost/secret/Auth/DB/Storage/OAuth/SMTP/真实 PII/部署/Production Gate | **关闭** | 不读取或使用 secret/service_role/secret key/db password，不配置 Auth/OAuth/SMTP/Storage，不建表/写数据，不创建真实账号或 PII，不部署、不 promote、不 alias、不触碰 Production |
-| G2-A1 技术阶段 | **执行中（仅 B1 最小连接完成）** | 仅记录配置边界、health 可达和本地页面验证；不记录 Auth、MFA、session、DB、RLS、Storage、OAuth、SMTP 或 SSR 运行时通过 |
+| G2-A1 技术阶段 | **执行中（B1 连接及配置/能力只读预检已完成）** | 仅记录配置边界、health 可达和本地页面验证；不记录 Auth、MFA、session、DB、RLS、Storage、OAuth、SMTP 或 SSR 运行时通过 |
 | P2–P8 / Production | **关闭** | 不部署、不 promote、不 alias、不写入真实业务数据 |
 
 ### 3.1 B1 最小动作执行结果与下一步
 
-既有文档治理复审首轮 finding 已关闭；本次独立运行时复审首次结论为 REVIEW NO-GO，本批 findings 由 `c15b11c` 修复；独立定向复审针对 `c15b11c` 给出 REVIEW GO，无未关闭 P0/P1 finding；该 review GO 仅表示本批复审闭环，不改变 B1/B2 或完整 Gate。Owner/主代理已批准并完成 A1-B1 最小技术范围。以下动作已按最小顺序完成；下一步仅为 B1 配置/能力只读预检，不自动进入 B2：
+既有文档治理复审首轮 finding 已关闭；本次独立运行时复审首次结论为 REVIEW NO-GO，本批 findings 由 `c15b11c` 修复；本批 findings 由 `7952d16` 修复；独立定向复审对该 exact head 给出 REVIEW GO，无未关闭 P0/P1/P2；该 GO 只关闭 B1 capability preflight 审查，不打开 B2 或任何 Auth/DB/Storage/OAuth/SMTP/费用/部署/Production Gate；不预写 push、PR、Actions 或 merge。Owner/主代理已批准并完成 A1-B1 最小技术范围。以下动作已按最小顺序完成；B1 配置/能力只读预检详见 [B1 配置/能力预检证据](../2026-08-28-b1-capability-preflight/README.md)；下一步为 B2 专项风险 Gate 草案的独立安全复审与 Owner/主代理 Gate，不自动进入 B2：
 
 1. 已通过 Supabase 官方 docs/changelog 核对 SSR `createServerClient`、`getClaims`、现代 publishable key 与 Free 限制；运行时为 Node `22.12.0`、pnpm `10.33.3`，SDK 版本沿用仓库固定值。
 2. 初次运行窗口已只读取得精确目标项目 active modern publishable key；已证明 `.gitignore` 忽略 `prototype/.env.local`，原值按授权写入该本地文件。
@@ -61,7 +61,7 @@ project URL/key 原值按策略不得写入仓库、证据、聊天、日志、�
 |---|---|
 | Product / cost / stop / provider admin | Hexiang Huang；负责范围、费用确认、provider 管理面和立即停止 |
 | 技术执行 | Codex 自动化执行；后续由 `luna_worker / max` 执行明确批次；Owner 保留责任和停止权 |
-| 独立安全复审 | 既有文档治理复审首轮 finding 已关闭；本次独立运行时复审首次结论为 **REVIEW NO-GO**；本批 findings 由 `c15b11c` 修复；独立定向复审针对 `c15b11c` 给出 **REVIEW GO**，无未关闭 P0/P1 finding；该 review GO 仅表示本批复审闭环，不改变 B1/B2 或完整 Gate |
+| 独立安全复审 | 既有文档治理复审首轮 finding 已关闭；本次独立运行时复审首次结论为 **REVIEW NO-GO**；本批 findings 由 `c15b11c` 修复；本批 findings 由 `7952d16` 修复；独立定向复审对该 exact head 给出 REVIEW GO，无未关闭 P0/P1/P2；该 GO 只关闭 B1 capability preflight 审查，不打开 B2 或任何 Auth/DB/Storage/OAuth/SMTP/费用/部署/Production Gate；不预写 push、PR、Actions 或 merge；该复审状态不改变 B1/B2 或完整 Gate |
 | secret/key owner | Hexiang Huang；原值只在 provider/Vercel secret store 或 gitignored local env；证据只记录引用/摘要 |
 | 证据保管 | 仓库脱敏摘要 + provider 审计记录；策略上不保存 URL/host/ref/ID、token、cookie、OTP、TOTP seed、secret 或真实 PII；当前只确认 tracked tree/diff 未发现完整 active key/host/ref/secret |
 | 法律/隐私/税务 | A5 / 专业顾问待处理；不在 A1 作 GDPR、税务、跨境或处理者合同结论 |
@@ -97,13 +97,13 @@ project URL/key 原值按策略不得写入仓库、证据、聊天、日志、�
 | 关键交互 | 搜索框填入非敏感 `usb` 后进入“分类与搜索”，再进入商品详情；关键元素快照通过；未触发登录、数据库或写入 |
 | 代码质量检查 | `pnpm typecheck`、`pnpm lint`、`pnpm build`（Node `22.12.0`、pnpm `10.33.3`）全部退出 `0`；生成的 `next-env.d.ts` 漂移已按 HEAD 精确恢复 |
 | 文档静态检查 | 本次文档更新后运行 `git diff --check`；相对链接/fragment；Markdown fence/backtick；当前状态 stale；敏感值/URL/host/ref/key/ID 扫描 |
-| 独立复审 | 既有文档治理复审首轮为一项状态漂移 NO-GO，已修复并由主代理核对关闭；本次独立运行时复审首次结论为 REVIEW NO-GO，本批 findings 由 `c15b11c` 修复；独立定向复审针对 `c15b11c` 给出 REVIEW GO，无未关闭 P0/P1 finding；不改变 B1/B2 或完整 Gate |
+| 独立复审 | 既有文档治理复审首轮为一项状态漂移 NO-GO，已修复并由主代理核对关闭；本次独立运行时复审首次结论为 REVIEW NO-GO，本批 findings 由 `c15b11c` 修复；本批 findings 由 `7952d16` 修复；独立定向复审对该 exact head 给出 REVIEW GO，无未关闭 P0/P1/P2；该 GO 只关闭 B1 capability preflight 审查，不打开 B2 或任何 Auth/DB/Storage/OAuth/SMTP/费用/部署/Production Gate；不预写 push、PR、Actions 或 merge |
 | 哈希 | 未做；本批不是确定性生成或文件传输校验，且无异常覆盖迹象 |
 
 ## 7. 独立安全复审与 Owner/主代理当前授权
 
 - 既有独立文档治理复审首轮结论为 **NO-GO**；唯一的 P1 finding 是文档状态漂移，另有一项 P2 旧证据表述已按历史快照标注，已由前一批按范围修复并关闭。
-- 本次独立运行时复审首次结论为 **REVIEW NO-GO**；本轮敏感表述、状态、checkpoint、connector 漂移和权限 findings 已由 `c15b11c` 按范围修复；独立定向复审针对 `c15b11c` 给出 **REVIEW GO**，无未关闭 P0/P1 finding。该 review GO 仅完成本批复审闭环，不改变 B1/B2 或完整 Gate；不补写未保留的具体时间。
+- 本次独立运行时复审首次结论为 **REVIEW NO-GO**；本轮敏感表述、状态、checkpoint、connector 漂移和权限 findings 已由 `c15b11c` 按范围修复；本批 findings 由 `7952d16` 修复；独立定向复审对该 exact head 给出 REVIEW GO，无未关闭 P0/P1/P2；该 GO 只关闭 B1 capability preflight 审查，不打开 B2 或任何 Auth/DB/Storage/OAuth/SMTP/费用/部署/Production Gate；不预写 push、PR、Actions 或 merge；不补写未保留的具体时间。
 - Owner 当前消息批准继续；该批准仅打开 A1-B1 最小技术范围，本批已完成 project URL + active modern publishable key 的只读取得、gitignored local env 保存、现有 SSR/client/health 的 EU non-production synthetic-only 连接验证与 Free 限制/STOP/cleanup 记录。
 - 这不是 broad waiver（全局豁免）。完整 resource/cost/secret/Auth/DB/Storage/OAuth/SMTP/真实 PII/部署/Production Gate 继续 CLOSED；service_role、secret key、db password 继续禁止；G2-A1 仍在执行中，B1 仅为“最小连接验证完成”，不代表 G2-A1 Auth 或完整 B1 已通过。
 
@@ -116,7 +116,7 @@ project URL/key 原值按策略不得写入仓库、证据、聊天、日志、�
 - agent-browser 使用 localhost 页面完成 load/networkidle、非空/主结构、无 Next 错误覆盖层、console `[]`、关键元素快照与搜索→结果→商品详情导航；服务器与浏览器会话均已关闭，截图留在 `/private/tmp`，不作为仓库证据输入。
 - 本批无源码修复；复用选择维持“复用现有 client/config/SSR/health，暂不新建 Auth handlers/hooks/types/test suite”。
 - 当前残余风险：`prototype/.env.local` 仍是 ignored、owner-only 的本地隔离文件；后续 expiry/cleanup 尚未在本批完成，不能把“ignored”表述为已清理。该文件内容不进入本证据或其他 tracked 文件。
-- 下一步：B1 配置/能力只读预检；不自动进入 B2。Auth/OAuth/SMTP/DB/Storage/user/session/MFA 仍未开始，完整 resource/cost/secret/Auth/DB/Storage/OAuth/SMTP/真实 PII/部署/Production Gate 继续 CLOSED。
+- B1 配置/能力只读预检已完成；下一步为 B2 专项风险 Gate 草案的独立安全复审与 Owner/主代理 Gate；不自动进入 B2。Auth/OAuth/SMTP/DB/Storage/user/session/MFA 仍未开始，完整 resource/cost/secret/Auth/DB/Storage/OAuth/SMTP/真实 PII/部署/Production Gate 继续 CLOSED。
 
 ## 9. 关联文档
 
