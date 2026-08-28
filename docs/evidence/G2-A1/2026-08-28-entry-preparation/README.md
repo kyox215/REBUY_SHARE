@@ -1,7 +1,7 @@
 # G2-A1 Entry preparation 与资源存在性预检证据
 
 记录日期：2026-08-28（Europe/Rome）
-阶段状态：**G2-A1 技术阶段未开始；最小资源存在性/基础预检已完成；完整 resource/cost/secret Gate 关闭**
+阶段状态：**G2-A1 技术阶段未开始；最小资源存在性/基础预检已完成；独立安全复审已完成、首轮 finding 已关闭；A1-B1 最小技术范围已授权/待执行；完整 resource/cost/secret/Auth/DB/Storage/OAuth/SMTP/真实 PII/部署/Production Gate 关闭**
 证据级别：本地静态（docs-only）+ 外部资源存在性核验 + 已完成的 G2-A0 远端闭环摘要
 执行范围：Entry preparation 文档、阶段导航、资源 Gate 模板和 Auth 实测矩阵模板；另附独立资源管理面预检摘要
 
@@ -9,7 +9,7 @@
 
 本批完成 G2-A1 的无资源准备：建立四批后续执行合同、资源/成本/密钥 Gate 字段、Auth 实测矩阵字段、官方资料刷新和脱敏证据边界。该无资源准备本身**没有开始 G2-A1 Auth 技术验证**；随后追加的资源事件仅完成独立 Free Supabase 资源的管理面存在性/基础健康预检，没有连接应用或配置 Auth/DB/Storage/OAuth/SMTP，没有读取 secret/env/PII，没有创建真实账号或 fixture，没有部署、promote、alias、Production 写入或 UI/代码变更。
 
-完整 resource/cost/secret Gate 继续关闭；仅打开到“最小资源存在性/基础预检”这一窄范围。下一步必须形成新的最小 Auth spike 设计与风险 Gate，不能把资源健康状态外推为 Auth/DB 验证；secret/env、Auth、DB/schema/RLS、Storage、OAuth、SMTP、真实数据和 Production 继续关闭。
+完整 resource/cost/secret Gate 继续关闭；仅打开到“最小资源存在性/基础预检”这一窄范围。**以下“下一步必须形成新的最小 Auth spike 设计与风险 Gate”是前一批 Entry preparation 完成时的历史时点表述。** 当前批次的 A1-B1 最小技术范围已获授权但待执行，独立安全复审已完成且首轮 finding 已关闭；详见[B1 风险 Gate 证据](../2026-08-28-b1-risk-gate/README.md)。当时不能把资源健康状态外推为 Auth/DB 验证；完整 resource/cost/secret/Auth/DB/Storage/OAuth/SMTP、真实 PII、部署和 Production 继续关闭，service_role、secret key、db password 继续禁止。
 
 关联入口：
 
@@ -80,7 +80,7 @@
 - 当前差异扫描未发现 secret、token、JWT、OTP、TOTP seed、真实 email、phone、address、host 或未授权外部资源值；官方文档链接、公开 Git SHA 和必要 deployment ID 属于可追溯引用，不是凭据。
 - 不运行 typecheck/lint/build：源码、依赖、workflow、lockfile、配置和生成物均未变化；复用精确 `main` Actions run `33122238997` / job `98691703085` 的 install/typecheck/lint/build 全绿证据。
 - 未做 hash：本批不是确定性生成或文件传输校验，且没有异常覆盖迹象。
-- 未启动独立运行时审查：本记录覆盖无资源 Entry preparation 及其后的管理面资源存在性/基础预检，未进行 provider 技术实施或候选比较；应用未连接 Auth/DB/Storage/OAuth/SMTP；完整 resource/cost/secret Gate 仍关闭。文档级复核不等于运行时证据，后续仍需由主代理/Owner 按新的 Auth spike 风险 Gate 处理。
+- 未启动独立运行时审查：本记录覆盖无资源 Entry preparation 及其后的管理面资源存在性/基础预检，未进行 provider 技术实施或候选比较；应用未连接 Auth/DB/Storage/OAuth/SMTP；完整 resource/cost/secret Gate 仍关闭。文档级复核不等于运行时证据；当前仅由主代理/Owner 按已完成复审的 A1-B1 最小风险 Gate 授权下一步执行，仍不得扩大至完整 Auth/资源或 Production。
 
 ## 6.1 2026-08-28 独立文档审查修复记录
 
@@ -90,7 +90,7 @@
 - 本提交已将 A1 原型边界改为 `resource/cost/secret Gate` 通过前仅可继续无资源后端原型、接口合同、测试矩阵和合成字段维护；不再暗示 G2-A0 未通过。
 - `615de47` 的历史 diff 仍是不可重写的既有提交；其中已被 supersede 的 inventory 数量/套餐表述已从当前 tree 移除，本批不改写 Git history。
 - 当前 tree 已脱敏，但既有公开 Git history 仍可能保留历史名称；Owner 已授权公开历史，本批不做破坏性 rewrite。
-- 本提交修复已完成；exact new head 待独立复审。此处不预写复审 GO、PR、Actions 或 merge 结果。
+- （该修复批次的历史状态）本提交修复已完成；exact new head 当时待独立复审。此处不预写复审 GO、PR、Actions 或 merge 结果。
 
 ## 7. 停止、回退与遗留风险
 
@@ -124,4 +124,4 @@
 | 完整 resource/cost/secret | **关闭** | 仅保留脱敏事实并设计后续风险 Gate | secret/env、密钥责任、税费/Spend Cap 完整确认、任何技术连接 |
 | 真实数据与 Production | **关闭** | 无 | 真实客户/商户/PII、真实账号、部署、Production/promote/写入 |
 
-下一步是新的最小 Auth spike 设计与风险 Gate。Free 计划与 Pro 专属 session 配置之间的差异必须在设计中单独处理；在新 Gate 明确前不读取 key、不配置 Auth/SMTP/OAuth、不建表/写数据，不把 `ACTIVE_HEALTHY` 外推为技术通过。
+**历史时点（Entry preparation 完成时）：** 下一步是新的最小 Auth spike 设计与风险 Gate。当前 B1 evidence 已记录 A1-B1 最小技术范围“已授权/待执行”，独立安全复审已完成且首轮 finding 已关闭，详见[B1 风险 Gate 证据](../2026-08-28-b1-risk-gate/README.md)。Free 计划与 Pro 专属 session 配置之间的差异必须在设计中单独处理；当前仍不读取或传播 secret、service_role、secret key、db password，不把 `ACTIVE_HEALTHY` 外推为技术通过；完整 Auth/资源/Production Gate 继续关闭。

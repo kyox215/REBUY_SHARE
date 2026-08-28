@@ -1,13 +1,13 @@
 # G2-A1 Auth Spike 准备与资源门禁
 
-文档状态：**G2-A1 技术阶段未开始；最小资源存在性/基础预检已完成；完整 resource/cost/secret Gate 关闭**
+文档状态：**G2-A1 技术阶段未开始；独立安全复审已完成、首轮 finding 已关闭；Owner/主代理批准打开 A1-B1 最小技术范围（已授权/待执行）；完整 resource/cost/secret/Auth/DB/Storage/OAuth/SMTP/真实 PII/部署/Production Gate 关闭**
 记录日期：2026-08-28（Europe/Rome）
 证据级别：规划 + 外部资源存在性核验 + 本地静态（docs-only）；不代表 Auth、Staging、数据库或生产能力
 前置阶段：G2-A0 Exit GO，远端 docs-only reconciliation 已完成，事实见[本批 Entry preparation 证据](../evidence/G2-A1/2026-08-28-entry-preparation/README.md)
 
 ## 1. 本批声明与边界
 
-本文件先记录 G2-A1 的无资源 Entry preparation：它完成了后续执行合同、资源/费用/密钥 Gate 字段、Auth 实测矩阵和公开证据边界的准备。2026-08-28 随后只完成了独立 Free Supabase 资源的管理面存在性/基础健康预检；**G2-A1 Auth 技术验证仍未开始**。当前项目尚未接入 Auth/DB/Storage/OAuth/SMTP，不读取或写入 secret，不创建真实账号或 fixture，不部署、不改变 Production，也不修改已冻结的 G0/P1 UI、prototype、workflow、package 或 lockfile。
+本文件先记录 G2-A1 的无资源 Entry preparation：它完成了后续执行合同、资源/费用/密钥 Gate 字段、Auth 实测矩阵和公开证据边界的准备。2026-08-28 随后只完成了独立 Free Supabase 资源的管理面存在性/基础健康预检；**G2-A1 Auth 技术验证仍未开始**。本批新增了“最小 Auth spike 风险 Gate”设计和复用优先预检；独立安全复审已完成且首轮 finding 已关闭，Owner/主代理仅批准 A1-B1 最小技术范围，当前仍是“已授权/待执行”，不能写成 G2-A1 Auth/B1 技术通过。当前项目尚未接入 Auth/DB/Storage/OAuth/SMTP，不读取或写入 secret，不创建真实账号或 fixture，不部署、不改变 Production，也不修改已冻结的 G0/P1 UI、prototype、workflow、package 或 lockfile。
 
 G2-A0 的远端闭环已经在 `main` 完成：PR #7 的 merge commit 为 `fd9b712c7b07bf34399f9838eebb75846425c1d1`，parents 为 `7ea1e45ad22ab29105910665baf4bbd7212241c5` 与 `1433e7c7c141df0f5498fff7cd645a8d5c92340c`。这只证明已批准的 G2-A0 docs-only 变更完成远端闭环，不把 A1 变成技术通过。
 
@@ -20,10 +20,11 @@ G2-A0 的远端闭环已经在 `main` 完成：PR #7 的 merge commit 为 `fd9b7
 | G2-A0 Exit | 已通过；远端 reconciliation 已完成 | 进入 A1 无资源准备 | Supabase/Auth/DB/Storage 已连接 |
 | G2-A1 无资源 Entry preparation | 已完成/已归档 | 文档、接口草图、测试矩阵、合成字段定义 | A1 技术验证开始或通过 |
 | G2-A1 最小资源存在性/基础预检 | **已完成（窄范围）** | 核对独立组织、Free 项目、区域、报价确认和健康状态 | Auth、secret/env、DB/RLS、Storage、OAuth、SMTP 或生产能力 |
+| G2-A1 最小 Auth spike 风险 Gate | **已授权/待执行** | 独立安全复审已完成、首轮 finding 已关闭；仅可按 B1 最小动作只读取得 project URL + modern publishable key，写入 gitignored local env，复用/定向扩展现有 SSR/client/health 做 EU non-production synthetic-only 连接验证，并记录 Free 限制、STOP/cleanup | 当前不连接 Auth，不启用 OAuth/SMTP/Storage，不建表/写数据；不使用 secret/service_role/secret key/db password |
 | 完整 resource/cost/secret Gate | **关闭** | 仅允许维护[资源成本与密钥 Gate 模板](../templates/G2-A1-资源成本与密钥Gate模板.md)及窄范围资源预检 | secret、环境变量、Auth/DB/Storage/OAuth/SMTP 或任何付费/生产能力已批准 |
-| G2-A1 技术阶段 | **未开始** | 先形成新的最小 Auth spike 设计与风险 Gate | Staging、真实登录、Auth/MFA、DB/RLS 或生产验收 |
+| G2-A1 技术阶段 | **未开始** | A1-B1 最小技术范围已获授权但待执行；下一步按该窄范围进行 B1 复用/连接验证 | Staging、真实登录、Auth/MFA、DB/RLS 或生产验收 |
 
-当前已完成的仅是资源存在性/基础预检。下一步必须形成新的最小 Auth spike 设计与风险 Gate，并重新明确测试范围、版本/计划限制、secret 责任和停止条件；Free 计划的能力不能被推断为已满足 Pro 专属的 session 配置要求。完整 resource/cost/secret Gate 仍关闭，A1 结果不能自动打开 P2/P3+，A0–A6 与 P0–P8 的映射仍需在 P2 之前由 Owner/主计划明确。
+当前已完成资源存在性/基础预检，独立安全复审已完成且首轮 finding 已关闭；Owner/主代理批准打开 A1-B1 最小技术范围，当前为“已授权/待执行”。该批准不是 broad waiver（全局豁免），也不表示 G2-A1 Auth/B1 技术通过。Free 计划的能力不能被推断为已满足 Pro 专属的 session 配置要求。完整 resource/cost/secret/Auth/DB/Storage/OAuth/SMTP/真实 PII/部署/Production Gate 仍关闭，service_role、secret key、db password 继续禁止，A1 结果不能自动打开 P2/P3+，A0–A6 与 P0–P8 的映射仍需在 P2 之前由 Owner/主计划明确。
 
 ## 3. 四批后续执行合同
 
@@ -151,7 +152,7 @@ G2-A0 的远端闭环已经在 `main` 完成：PR #7 的 merge commit 为 `fd9b7
 - [G2-A0 阶段记录](./G2-A0-账号安全合同与威胁模型验收.md)
 - [项目状态与阶段台账](../15-项目状态与阶段台账.md)
 
-当前 15 台账已记录为“准备中（最小资源存在性/基础预检已完成）”；技术阶段仍必须保持“未开始”，完整 resource/cost/secret Gate 仍关闭，下一步只能进入新的最小 Auth spike 设计与风险 Gate。
+当前 15 台账已记录为“准备中（最小资源存在性/基础预检已完成）”；技术阶段仍必须保持“未开始”，独立安全复审已完成且首轮 finding 已关闭，Owner/主代理批准打开 A1-B1 最小技术范围，当前为“已授权/待执行”。完整 resource/cost/secret Gate 仍关闭；下一步执行 B1 最小范围，不扩大到完整 Auth/资源或 Production。
 
 ## 9. 2026-08-28｜Free Supabase 资源存在性与基础预检（窄 Gate）
 
@@ -169,4 +170,67 @@ G2-A0 的远端闭环已经在 `main` 完成：PR #7 的 merge commit 为 `fd9b7
 | 完整 resource/cost/secret Gate | **关闭** | 仅维护脱敏记录和新的风险 Gate 设计 | secret/env、成本责任/税费/Spend Cap 完整确认、Auth/DB/Storage/OAuth/SMTP |
 | 真实数据与 Production | **关闭** | 无 | 真实客户/商户/PII、真实账号、部署、Production/promote/写入 |
 
-下一步是新的最小 Auth spike 设计与风险 Gate：在明确实际测试能力、Free 计划限制、secret 责任和清理/停止条件前，不读取 key、不配置 Auth/SMTP/OAuth、不建表/写数据，也不把 `ACTIVE_HEALTHY` 外推为技术通过。
+独立安全复审已完成且首轮 finding 已关闭；Owner/主代理已批准 A1-B1 最小技术范围，当前为“已授权/待执行”。该批准不是 broad waiver；完整 resource/cost/secret/Auth/DB/Storage/OAuth/SMTP/真实 PII/部署/Production Gate 继续关闭，service_role、secret key、db password 继续禁止。执行前仍不得把 `ACTIVE_HEALTHY` 外推为技术通过。
+
+## 10. 2026-08-28｜A1-B1 最小 Auth spike 风险 Gate 与复用优先预检
+
+本批执行级别为**关键**：范围涉及认证、密钥、隐私和外部 non-production 资源；执行代理档位为 `luna_worker / max`；默认一个执行代理。独立安全复审已完成且首轮 finding 已关闭，Owner/主代理批准打开 A1-B1 最小技术范围。本节是风险 Gate 与复用预检记录，不是技术执行结果，不代表 G2-A1 Auth/B1 已通过，也不打开完整 resource/cost/secret/Auth/DB Gate。
+
+### 10.1 Gate 决定与最小授权范围
+
+| 项目 | 本批决定 |
+|---|---|
+| Gate 状态 | **A1-B1 最小技术范围已授权/待执行**；独立安全复审已完成、首轮 finding 已关闭；不代表 G2-A1 Auth/B1 技术通过 |
+| 目标资源 | Supabase 组织 `Rebuy Lab`（Free）；项目 `rebuy-auth-spike`；`eu-central-1`（Frankfurt）；仅 EU non-production、synthetic-only |
+| 已核验成本事实 | provider project quote 返回 `amount=0`、`recurrence=monthly`；API 未返回 currency；Owner 已确认该实际 quote 并完成 `confirm_cost` |
+| 成本边界 | 不授权任何非零费用、add-on、upgrade、自定义 SMTP 或其他付费能力；tax/VAT/billing-address effect、Spend Cap 状态/覆盖范围和完整成本责任仍待另行只读核验 |
+| 管理面事实 | `ACTIVE_HEALTHY`；只证明资源存在且管理面健康，不证明 Auth、MFA、session、DB、RLS、Storage、OAuth、SMTP 或 SSR 通过 |
+| 当前阶段 | G2-A1 技术阶段仍未开始；没有真实账号、真实 PII、Auth/DB/Storage/OAuth/SMTP 配置或运行时证据 |
+| 下一批可申请动作 | 复核当前官方 docs/changelog；只读取得 project URL + modern publishable key；确认 `.gitignore` 阻止 env；复用/扩展现有 SSR client 与 health route；在 EU non-production local synthetic-only 连接中验证不依赖 service_role；记录 Free limitations 与 STOP/cleanup |
+| 密钥保存边界 | project URL 与 modern publishable key 仅可进入 gitignored local env 或受控 Preview env；本仓库、证据、聊天、日志、截图和客户端 bundle 不保存原值；不得读取或使用 secret/service_role/secret key/db password |
+| 明确未授权 | 不配置 Auth/OAuth/SMTP，不建表/写数据，不启用 Storage，不创建真实账号/fixture，不部署、promote、alias、Production 或 Supabase 生产资源 |
+
+上述“下一批可申请动作”现为已授权但待执行的 B1 最小动作清单，不是 broad waiver，也不等于 G2-A1 Auth/B1 技术通过。任何实际连接成功、配置成功或技术通过都必须在后续批次以实时证据记录；本节不预写结果。
+
+### 10.2 责任与停止合同
+
+| 责任项 | 当前指定 | 边界 |
+|---|---|---|
+| Product / cost / stop / provider admin | Hexiang Huang | 负责范围、费用确认、provider 管理面与立即停止；不得以“无需重复批准”扩大到付费、真实 PII 或 Production |
+| 技术执行 | Codex 自动化执行（后续由 `luna_worker / max` 按批次执行） | 只执行明确的 non-production 最小动作；Owner 保留最终责任和停止权；不得自行扩大范围 |
+| 独立安全复审 | 首轮独立只读 Codex reviewer 结论为 NO-GO；实现代理修复状态 finding，主代理只读核对精确 diff 后关闭 finding；Owner/主代理当前批准继续 | 本授权仍只覆盖 B1 最小动作；不扩大到完整资源、Auth/DB/Storage/OAuth/SMTP 或 Production |
+| secret/key owner | Hexiang Huang | 原值只允许存在 provider/Vercel secret store 或 gitignored local env；证据只写名称/引用/不可逆摘要，不写原值 |
+| 证据保管 | 仓库脱敏摘要 + provider 审计记录 | 不保存 secret、URL/host/ref/ID、cookie、token、OTP、TOTP seed 或真实 PII；阶段事实仍以 15 台账为唯一当前状态源 |
+| 法律 / 隐私 / 税务 | A5 / 专业顾问待处理 | 不在 A1 对 GDPR、税务、跨境或处理者合同作结论 |
+
+### 10.3 复用优先预检结论
+
+本批先以 `rg` 定向检查既有实现，再决定复用/扩展/新建；没有代码写入。
+
+| 目标能力 | 现有证据 | 本批结论 |
+|---|---|---|
+| 浏览器 Supabase client | `prototype/lib/supabase/client.ts` 已存在，使用 `createBrowserClient` 与统一配置读取 | **复用**；后续只在需要时扩展，不新建第二个浏览器 client |
+| SSR Supabase client | `prototype/lib/supabase/server.ts` 已存在，按调用创建 `createServerClient`，读取 request cookies，并保留受控 cookie 写回 | **复用/定向扩展**；B1 仅核验每请求创建、未配置处理与未来 Proxy 边界，不重复新建 factory |
+| 配置与 env 名称 | `prototype/lib/supabase/config.ts` 与 `prototype/.env.example` 已统一为 `NEXT_PUBLIC_SUPABASE_URL`、`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`，缺失/非法配置会受控失败 | **复用**；只读取得值后写入 gitignored local env，不新增别名或 secret env |
+| Supabase health | `prototype/app/api/health/supabase/route.ts` 已请求 `/auth/v1/settings`，固定最小 JSON、`no-store`、503/502/200 分支，不返回 URL/key/堆栈 | **复用/定向扩展**；B1 验证配置缺失、独立项目可达与错误脱敏，不把 health 200 当作 Auth 通过 |
+| Auth UI/handlers | `prototype/app/account/login/LoginPrototype.tsx` 是明确的本地演示，Apple/Google 与邮箱 OTP 仅写“等待 A1/界面演示”，不创建会话 | **复用现有演示边界**；B1 不把 UI 点击改写为真实 Auth，不新建业务 handler |
+| 类型、测试与业务 domain | 本批定向扫描未发现 Supabase Auth 业务 hooks/types 或可复用真实登录测试；未发现 `prototype` 下独立 test/spec 目录 | **暂不新建**；待 B1 复核最小需求后，由执行代理提出最小扩展并单独评估文件边界 |
+| 依赖与工具链 | `prototype/package.json` 已固定 `@supabase/ssr=0.12.5`、`@supabase/supabase-js=2.112.4`，Node `22.x`、pnpm `10.33.3` | **复用**；B1 记录运行版本，未经新授权不改依赖、lockfile 或配置 |
+
+预检选择为“复用现有 client/config/SSR/health；必要时在原文件内定向扩展；暂不新建 Auth 业务 handler、hooks、types 或测试套件”。该选择不证明现有骨架已经安全连接或已通过 A1。
+
+### 10.4 B1 最小验收与停止条件
+
+在独立安全复审完成、首轮 finding 关闭且 Owner/主代理批准后，B1 已获最小范围授权但仍待执行；按下列最小证据顺序执行：
+
+1. 重新核对 Supabase 官方 docs/changelog、Node/SDK 版本和 Free 计划限制，记录日期与版本；不从本节推断 Pro 专属 session 能力。
+2. 只读取得 project URL + modern publishable key；确认仓库 `.gitignore` 阻止 env；仅写入 gitignored local env 或受控 Preview env，并以 secret scan/文件状态证明未入仓库。
+3. 复用现有 browser/SSR client 与 `/api/health/supabase`；验证 local synthetic-only 连接只使用 publishable key，不依赖或读取 service_role、secret key、DB password。
+4. 记录配置缺失、远端不可达、非 2xx、可达等脱敏结果；health/管理面结果不得写成 Auth、MFA、session、DB、RLS、Storage、OAuth、SMTP 或生产通过。
+5. 记录 Free limitations、测试期限、STOP 联系人、expiry/cleanup/回退路径；不启用 Auth/OAuth/SMTP/Storage，不建表、不写数据、不创建真实账号。
+
+任一真实 PII/secret、Production 连接、非零费用、生产 redirect/SMTP、service_role 依赖、环境串线、日志/Network/bundle 泄露或无法清理，立即停止并保留脱敏失败摘要；不得用绕过方式继续。B1 仍不自动打开 B2/B3、P2 或 Production。
+
+### 10.5 本批证据入口
+
+本批复用预检和风险 Gate 的脱敏证据见[2026-08-28 B1 风险 Gate 证据](../evidence/G2-A1/2026-08-28-b1-risk-gate/README.md)。证据 README 只记录批次事实、复用结论和验证结果，不替代 [15 台账](../15-项目状态与阶段台账.md) 的当前状态。

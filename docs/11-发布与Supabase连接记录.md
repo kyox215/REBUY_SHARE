@@ -1,6 +1,6 @@
 # 发布与 Supabase 连接记录
 
-文档状态：本地连接骨架 + 独立资源存在性预检；G2-A1 Auth 技术阶段尚未开始；完整 resource/cost/secret Gate 关闭
+文档状态：本地连接骨架 + 独立资源存在性预检 + A1-B1 最小技术范围已授权/待执行（独立安全复审已完成、首轮 finding 已关闭）；G2-A1 Auth 技术阶段尚未开始；完整 resource/cost/secret Gate 关闭
 
 ## 1. A1 边界
 
@@ -70,5 +70,13 @@
 - Next.js Server Components 不能自行写 cookie；未来 Proxy 必须负责刷新 Auth token，并把刷新后的 cookie 正确写回 request/response。当前没有 cookie refresh、过期 session、并发刷新或竞态的运行证明，这些全部留给 A1 独立测试环境。
 - A1 必须覆盖过期 session、刷新延迟、两个并发请求、同一用户多设备、不同用户并发、刷新失败重试和 cookie 清理；证据只保存脱敏时间线和结果，不保存 token/cookie 原值。
 - `/api/health/supabase` 未配置时预期返回 503；这只证明配置缺失边界，不证明 provider 可达、Auth 已启用或 SSR 安全成立。
+
+## 7. 2026-08-28 A1-B1 复用与 Gate 入口
+
+- 复用现有 `prototype/lib/supabase/client.ts`、`server.ts`、`config.ts`、`.env.example` 与 `/api/health/supabase`；不新建第二套 client/config/health 实现。
+- `prototype/app/account/login/LoginPrototype.tsx` 继续保持本地演示边界；Apple、Google、邮箱 OTP 点击不改写为真实 Auth，不创建真实 session。
+- A1-B1 最小技术范围已获授权但待执行；独立安全复审已完成、首轮 finding 已关闭。B1 只允许复核官方 docs/changelog，读取 project URL + modern publishable key，确认 `.gitignore` 阻止 env，仅存入 gitignored local env/受控 Preview env，并用 EU non-production local synthetic-only 连接验证不依赖 service_role；不预写连接成功。
+- 这不是 broad waiver（全局豁免），也不代表 G2-A1 Auth/B1 技术通过。完整 resource/cost/secret、secret/env、Auth、DB/schema/RLS、Storage、OAuth、SMTP、真实 PII、部署和 Production Gate 继续关闭；service_role、secret key、db password 继续禁止，不触碰 Production。
+- 脱敏 Gate 证据见[G2-A1 B1 风险 Gate 证据](./evidence/G2-A1/2026-08-28-b1-risk-gate/README.md)；完整资源/技术结果仍须按[阶段记录](./stages/G2-A1-Auth-Spike准备与资源门禁.md)和[15 台账](./15-项目状态与阶段台账.md)更新。
 
 规划依据：[Supabase SSR client](https://supabase.com/docs/guides/auth/server-side/creating-a-client)、[Supabase sessions](https://supabase.com/docs/guides/auth/sessions)、[Supabase securing your API](https://supabase.com/docs/guides/api/securing-your-api)。官方页面和本地骨架都不能替代 A1/A3/A4 运行证据。
