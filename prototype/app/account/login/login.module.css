@@ -140,6 +140,19 @@
   box-shadow: 0 18px 40px color-mix(in srgb, var(--accent) 8%, transparent);
 }
 
+.authStatus {
+  margin-bottom: 16px;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--danger) 35%, var(--line));
+  border-left-width: 3px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--danger) 8%, var(--surface));
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
 .providerStack,
 .form {
   display: grid;
