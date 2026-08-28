@@ -1,9 +1,9 @@
 # G2-A1 A1-B1 最小 Auth spike 风险 Gate 与复用预检
 
 记录日期：2026-08-28（Europe/Rome）
-批次：G2-A1 / A1-B1 risk Gate 设计与复用优先预检
-证据级别：本地静态（docs-only）+ 外部资源存在性核验摘要
-阶段状态：**G2-A1 技术阶段未开始；独立安全复审已完成、首轮 finding 已关闭；Owner/主代理批准打开 A1-B1 最小技术范围（已授权/待执行）；完整 resource/cost/secret/Auth/DB/Storage/OAuth/SMTP/真实 PII/部署/Production Gate 关闭**
+批次：G2-A1 / A1-B1 risk Gate、复用预检与最小本地连接验证
+证据级别：本地静态 + 本地运行 + agent-browser + 外部资源只读核验摘要
+阶段状态：**G2-A1 执行中（仅 B1 最小连接验证已完成；后续 B1 配置/能力只读预检待执行）；Auth/OAuth/SMTP/DB/Storage/user/session/MFA 未开始；完整 resource/cost/secret/Auth/DB/Storage/OAuth/SMTP/真实 PII/部署/Production Gate 关闭**
 
 本 README 是批次证据摘要，不是第二份状态源。当前阶段状态、Owner 决定和下一动作以[项目状态与阶段台账](../../../15-项目状态与阶段台账.md)为准；阶段合同见[G2-A1 准备与资源门禁](../../../stages/G2-A1-Auth-Spike准备与资源门禁.md)。
 
@@ -15,8 +15,9 @@
 - 完整读取并对照 G2-A1 阶段合同、A1 执行合同、发布与 Supabase 连接记录、资源 Gate 模板、Auth 矩阵模板和当前 Entry preparation evidence。
 - 使用 `rg` 对 prototype 现有 Supabase client、SSR client、配置/env 名称、health route、Auth UI/handlers/types/tests 做定向复用预检；不修改代码。
 - 在阶段记录、A1 合同、状态台账、连接记录和阶段索引中追加最小 Auth spike 风险 Gate，并保持唯一状态源关系。
+- 按已授权窄范围完成一次 B1 本地连接验证：复用现有配置、browser/SSR client 与 health route；未修改源码、依赖、lockfile、workflow 或配置。
 
-本批没有修改源码、依赖、lockfile、workflow、配置、env、生成物或外部资源；没有读取 project URL/key、secret、service_role、DB password 或任何环境值；没有配置 Auth/DB/Storage/OAuth/SMTP、建表、写数据、创建真实账号、部署或触碰 Production。
+本批只把当前 active modern publishable key 与项目 URL 存入已由 `.gitignore` 阻止跟踪的 `prototype/.env.local`；原值未进入 tracked 文件、文档、聊天、命令输出、日志或截图。除该本地隔离连接外，没有配置 Auth/DB/Storage/OAuth/SMTP、建表、写数据、创建真实账号、部署或触碰 Production；没有读取或使用 secret/service_role key、secret key 或 DB password。
 
 ## 2. 已核验资源事实（仅管理面摘要）
 
@@ -36,22 +37,23 @@
 | Gate | 当前状态 | 条件与限制 |
 |---|---|---|
 | 最小资源存在性/基础预检 | 已完成（窄范围） | 仅核对组织、Free 计划、项目标签、区域、quote 确认和管理面健康 |
-| A1-B1 最小 Auth spike 风险 Gate | **已授权/待执行** | 独立安全复审已完成，首轮文档状态漂移 finding 已关闭；仅可只读取得 project URL + modern publishable key，写入 gitignored local env，复用/定向扩展现有 SSR/client/health 做 EU non-production synthetic-only 连接验证，并记录 Free 限制、STOP/cleanup |
+| A1-B1 最小 Auth spike 风险 Gate | **最小连接验证已完成（窄范围）** | 独立安全复审已完成，首轮文档状态漂移 finding 已关闭；已只读取得当前 active modern publishable key，写入 gitignored local env，并复用现有 SSR/client/health 完成 EU non-production synthetic-only 本地连接验证；已记录 Free 限制、STOP/cleanup |
 | 完整 resource/cost/secret/Auth/DB/Storage/OAuth/SMTP/真实 PII/部署/Production Gate | **关闭** | 不读取或使用 secret/service_role/secret key/db password，不配置 Auth/OAuth/SMTP/Storage，不建表/写数据，不创建真实账号或 PII，不部署、不 promote、不 alias、不触碰 Production |
-| G2-A1 技术阶段 | **未开始** | 不记录 Auth、MFA、session、DB、RLS、Storage、OAuth、SMTP 或 SSR 运行时通过 |
+| G2-A1 技术阶段 | **执行中（仅 B1 最小连接完成）** | 仅记录配置边界、health 可达和本地页面验证；不记录 Auth、MFA、session、DB、RLS、Storage、OAuth、SMTP 或 SSR 运行时通过 |
 | P2–P8 / Production | **关闭** | 不部署、不 promote、不 alias、不写入真实业务数据 |
 
-### 3.1 已授权但待执行的 B1 最小动作
+### 3.1 B1 最小动作执行结果与下一步
 
-独立安全复审已完成，首轮 finding 已关闭，Owner/主代理已批准打开 A1-B1 最小技术范围；该范围仍待执行，按以下最小顺序进行：
+独立安全复审已完成，首轮 finding 已关闭，Owner/主代理已批准并完成 A1-B1 最小技术范围。以下动作已按最小顺序完成；下一步仅为 B1 配置/能力只读预检，不自动进入 B2：
 
-1. 重新核对当前 Supabase 官方 docs/changelog、Node/SDK 版本和 Free 计划限制，并记录日期/版本。
-2. 只读取得 project URL + modern publishable key；确认 `.gitignore` 阻止 env；只存入 gitignored local env 或受控 Preview env。
-3. 复用现有 browser/SSR client 与 `/api/health/supabase`，在 local synthetic-only 连接中验证只依赖 publishable key，不依赖或读取 service_role、secret key、DB password。
-4. 记录配置缺失、远端不可达、非 2xx、可达等脱敏结果；不把 health 200 或管理面健康写成 Auth 技术通过。
-5. 记录 Free limitations、STOP 联系人、expiry/cleanup、回退和清理摘要；不启用 Auth/OAuth/SMTP/Storage、不建表、不写数据、不创建真实账号。
+1. 已通过 Supabase 官方 docs/changelog 核对 SSR `createServerClient`、`getClaims`、现代 publishable key 与 Free 限制；运行时为 Node `22.12.0`、pnpm `10.33.3`，SDK 版本沿用仓库固定值。
+2. 已只读取得精确目标项目当前 active modern publishable key；已证明 `.gitignore` 忽略 `prototype/.env.local`，原值仅存于该本地文件。
+3. 已复用现有 browser/SSR client、统一 config 与 `/api/health/supabase`；无配置时 HTTP `503`，真实 Free non-production 连接时 HTTP `200`，均为固定最小 JSON 并带 `Cache-Control: no-store`。
+4. 已启动隔离端口 `3101`，用 `localhost` 完成 agent-browser `networkidle`、非空页面、无可见 Next 错误覆盖层、console errors 为空、关键元素快照；以非敏感词 `usb` 验证搜索结果和商品详情导航。
+5. 已记录首次 Chrome 截断参数触发的 `401 invalid-credential-response` 与主动 STOP，以及 connector 当前 active key 的 `200 healthy-settings-response`；不记录长度、前后缀、host、ref、key 或原始响应。
+6. 已记录 Free 计划两项目配额、usage/egress/数据库/暂停等限制类别与 STOP/cleanup；未启用 Auth/OAuth/SMTP/Storage，不建表、不写数据、不创建真实账号。
 
-project URL/key 原值不得写入仓库、证据、聊天、日志、截图或客户端 bundle。以上是窄范围、已授权但待执行的 B1 动作清单，不是 broad waiver（全局豁免），也不代表 G2-A1 Auth/B1 技术通过；本 README 不预写连接成功。
+project URL/key 原值不得写入仓库、证据、聊天、日志、截图或客户端 bundle；本地 env 仍只作隔离验证输入。以上是窄范围 B1 连接结果，不是 broad waiver（全局豁免），也不代表 G2-A1 Auth/B1 技术通过。
 
 ## 4. 责任、审查与停止
 
@@ -86,11 +88,15 @@ project URL/key 原值不得写入仓库、证据、聊天、日志、截图或�
 
 | 检查 | 结果 |
 |---|---|
-| 远端基线 | `git fetch origin main` 后，`git rev-parse origin/main` 为 `3b2b8aed4c97b64f36338021adae0a45bec2215d` |
+| 远端基线 | `git fetch origin main` 后，`git rev-parse origin/main` 为 `3b2b8aed4c97b64f36338021adae0a45bec2215d`；本批 HEAD 为 `5e7484b819631cbab88b9d75719af97fde24cd7d` |
 | 隔离 worktree | `/private/tmp/rebuy-g2-a1-b1-risk-gate`；分支 `codex/g2-a1-b1-risk-gate`；基于上述 main |
-| 文件范围 | 仅 Markdown；未改 prototype 源码、package、lockfile、workflow、配置、env 或生成物 |
-| 文档静态检查 | `git diff --check`；相对链接/fragment；Markdown fence/backtick；当前状态 stale；敏感值/URL/host/ref/key/ID 扫描 |
-| 构建类检查 | 不运行 build/lint/typecheck：源码、依赖、workflow、lockfile、配置、生成物均未变化；后续连接阶段必须重新验证 |
+| 文件/凭据范围 | tracked diff 仅为 Markdown；`prototype/.env.local` 由 `.gitignore:11` 忽略；未改 prototype 源码、package、lockfile、workflow、配置或生成物；原值未进入 tracked diff/证据 |
+| 无配置失败 | 隔离端口 `3101` 上 `/api/health/supabase` 返回 HTTP `503`、固定 `configured=false/reachable=false/status=503` 与 `Cache-Control: no-store` |
+| 真实 Free 连接 | 同一路由返回 HTTP `200`、固定 `configured=true/reachable=true/status=200` 与 `Cache-Control: no-store`；不作为 Auth 通过 |
+| 浏览器验证 | Node `22.12.0` + `npm exec agent-browser`；localhost 页面 `networkidle` 完成，页面非空且有 `main`，console errors=`[]`，Next dialog/overlay 均无可见错误；截图仅保存至 `/private/tmp` |
+| 关键交互 | 搜索框填入非敏感 `usb` 后进入“分类与搜索”，再进入商品详情；关键元素快照通过；未触发登录、数据库或写入 |
+| 代码质量检查 | `pnpm typecheck`、`pnpm lint`、`pnpm build`（Node `22.12.0`、pnpm `10.33.3`）全部退出 `0`；生成的 `next-env.d.ts` 漂移已按 HEAD 精确恢复 |
+| 文档静态检查 | 本次文档更新后运行 `git diff --check`；相对链接/fragment；Markdown fence/backtick；当前状态 stale；敏感值/URL/host/ref/key/ID 扫描 |
 | 独立复审 | 首轮结论为一项文档状态漂移 NO-GO；实现代理已按范围修复，主代理只读核对精确 diff 后关闭 finding；不声称 reviewer 第二轮或未保留的具体时间 |
 | 哈希 | 未做；本批不是确定性生成或文件传输校验，且无异常覆盖迹象 |
 
@@ -98,10 +104,20 @@ project URL/key 原值不得写入仓库、证据、聊天、日志、截图或�
 
 - 首轮独立安全复审结论为 **NO-GO**；唯一的 P1 finding 是当前文档状态漂移，另有一项 P2 旧证据表述已按历史快照标注。
 - 实现代理已在同一 worktree 内按范围修复；主代理只读核对精确 diff 后关闭该 finding。本记录不声称 reviewer 第二轮复审，也不补写未保留的具体分钟。
-- Owner 当前消息批准继续；该批准仅打开 A1-B1 最小技术范围：只读取得 project URL + modern publishable key、仅存入 gitignored local env、复用/定向扩展现有 SSR/client/health 做 EU non-production synthetic-only 连接验证、记录 Free 限制与 STOP/cleanup。
-- 这不是 broad waiver（全局豁免）。完整 resource/cost/secret/Auth/DB/Storage/OAuth/SMTP/真实 PII/部署/Production Gate 继续 CLOSED；service_role、secret key、db password 继续禁止；G2-A1 技术阶段仍未开始，B1 仅为“已授权/待执行”，不代表 G2-A1 Auth 或 B1 已通过。
+- Owner 当前消息批准继续；该批准仅打开 A1-B1 最小技术范围，本批已完成 project URL + active modern publishable key 的只读取得、gitignored local env 保存、现有 SSR/client/health 的 EU non-production synthetic-only 连接验证与 Free 限制/STOP/cleanup 记录。
+- 这不是 broad waiver（全局豁免）。完整 resource/cost/secret/Auth/DB/Storage/OAuth/SMTP/真实 PII/部署/Production Gate 继续 CLOSED；service_role、secret key、db password 继续禁止；G2-A1 仍在执行中，B1 仅为“最小连接验证完成”，不代表 G2-A1 Auth 或完整 B1 已通过。
 
-## 8. 关联文档
+## 8. 2026-08-28｜B1 最小连接验证执行记录
+
+- 目标资源经 connector 再次核对为 `Rebuy Lab` / `rebuy-auth-spike`、Free、`eu-central-1`、`ACTIVE_HEALTHY`；仅保留脱敏分类，不记录 host/ref/ID。
+- 真实执行曾先使用 Chrome 交接的截断参数，health 返回 `401 invalid-credential-response`，按停止条件主动停止；Owner/主代理随后授权改用 connector 对精确目标返回的唯一 active modern publishable key，未创建、轮换或删除 key。
+- active key 仅经 connector 取值并写入被忽略的 `prototype/.env.local`；目标 URL/key 原值未出现在命令回显、server/browser 输出、截图、tracked diff、commit 或本 README。
+- 真实连接验证只调用现有 `/api/health/supabase` 的 settings health 请求；返回 `200` 的意义限于 provider settings 可达，不等于 Auth、session、MFA、DB、RLS、Storage、OAuth、SMTP 或 SSR 安全通过。
+- agent-browser 使用 localhost 页面完成 load/networkidle、非空/主结构、无 Next 错误覆盖层、console `[]`、关键元素快照与搜索→结果→商品详情导航；服务器与浏览器会话均已关闭，截图留在 `/private/tmp`，不作为仓库证据输入。
+- 本批无源码修复；复用选择维持“复用现有 client/config/SSR/health，暂不新建 Auth handlers/hooks/types/test suite”。
+- 下一步：B1 配置/能力只读预检；不自动进入 B2。Auth/OAuth/SMTP/DB/Storage/user/session/MFA 仍未开始，完整 resource/cost/secret/Auth/DB/Storage/OAuth/SMTP/真实 PII/部署/Production Gate 继续 CLOSED。
+
+## 9. 关联文档
 
 - [G2-A1 准备与资源门禁](../../../stages/G2-A1-Auth-Spike准备与资源门禁.md)
 - [A1 Auth Spike 执行合同](../../../10-A1-Auth-Spike执行合同.md)
