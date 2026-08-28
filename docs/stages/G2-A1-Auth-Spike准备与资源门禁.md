@@ -1,6 +1,6 @@
 # G2-A1 Auth Spike 准备与资源门禁
 
-文档状态：**G2-A1 执行中（A1-B1 最小连接与配置/能力只读预检已完成；B2 本地 callback 安全基础完成候选，待独立安全复审与 Owner/主代理 Gate）；真实 Auth/OAuth/SMTP/DB/Storage/user/session/MFA 未开始；既有文档治理复审首轮 finding 已关闭；本批 findings 由 `7952d16` 修复；独立定向复审对该 exact head 给出 REVIEW GO，无未关闭 P0/P1/P2；该 GO 只关闭 B1 capability preflight 审查，不打开完整 B2 运行验证或任何 Auth/DB/Storage/OAuth/SMTP/费用/部署/Production Gate；不预写 push、PR、Actions 或 merge；完整 resource/cost/secret/Auth/DB/Storage/OAuth/SMTP/真实 PII/部署/Production Gate 关闭**
+文档状态：**G2-A1 执行中（A1-B1 最小连接与配置/能力只读预检已完成；B2 本地安全基础通过/可进入远端 PR 候选；candidate exact-head `761de2b3a8ce22247501cddbad2da6e2cfc3ae59` 独立定向复审 REVIEW GO，P0/P1/P2=0；该 GO 仅关闭 B2 本地安全基础 review，不等于 B2/Auth/G2-A1 整体通过；真实 Auth/OAuth/SMTP/DB/Storage/user/session/MFA 未开始；既有文档治理复审首轮 finding 已关闭；本批 findings 由 `7952d16` 修复；复审 shell Node `20.20.2` 的 `test:auth` 12/12 与 typecheck 出现 engine warning，复用候选 exact-head Node `22.12.0` 的 build/lint/browser 证据；不打开真实 Auth 运行或任何 Auth/DB/Storage/OAuth/SMTP/费用/部署/Production Gate；不预写 push、PR、Actions 或 merge；完整 resource/cost/secret/Auth/DB/Storage/OAuth/SMTP/真实 PII/部署/Production Gate 关闭**
 记录日期：2026-08-28（Europe/Rome）
 证据级别：规划 + 外部资源只读核验 + 本地静态/运行 + agent-browser；不代表 Auth、Staging、数据库或生产能力
 前置阶段：G2-A0 Exit GO，远端 docs-only reconciliation 已完成，事实见[本批 Entry preparation 证据](../evidence/G2-A1/2026-08-28-entry-preparation/README.md)
@@ -20,11 +20,11 @@ G2-A0 的远端闭环已经在 `main` 完成：PR #7 的 merge commit 为 `fd9b7
 | G2-A0 Exit | 已通过；远端 reconciliation 已完成 | 进入 A1 无资源准备 | Supabase/Auth/DB/Storage 已连接 |
 | G2-A1 无资源 Entry preparation | 已完成/已归档 | 文档、接口草图、测试矩阵、合成字段定义 | A1 技术验证开始或通过 |
 | G2-A1 最小资源存在性/基础预检 | **已完成（窄范围）** | 核对独立组织、Free 项目、区域、报价确认和健康状态 | Auth、secret/env、DB/RLS、Storage、OAuth、SMTP 或生产能力 |
-| G2-A1 最小 Auth spike 风险 Gate | **B1 最小连接及配置/能力只读预检已完成；B2 本地 callback 安全基础完成候选，待独立安全复审** | 既有文档治理复审首轮 finding 已关闭；本批 findings 由 `7952d16` 修复；独立定向复审对该 exact head 给出 REVIEW GO，仅关闭 B1 capability preflight 审查；本批 B2 只复用现有 client/config/health，增加受控 redirect、callback decision、同源 route、有限登录提示与契约测试；不预写 push、PR、Actions 或 merge | B2 真实 Auth 仍 CLOSED；当前不启用 OAuth/SMTP/Storage，不建表/写数据，不创建真实账号；不使用 service_role/secret key/db password |
+| G2-A1 最小 Auth spike 风险 Gate | **B1 最小连接及配置/能力只读预检已完成；B2 本地安全基础通过/可进入远端 PR 候选**；candidate exact-head `761de2b3a8ce22247501cddbad2da6e2cfc3ae59` 独立定向复审 REVIEW GO，P0/P1/P2=0；该 GO 仅关闭 B2 本地安全基础 review，不等于 B2/Auth/G2-A1 整体通过 | 本批 B2 只复用现有 client/config/health，增加受控 redirect、callback decision、同源 route、有限登录提示与契约测试；不预写 push、PR、Actions 或 merge | B2 真实 Auth 仍 CLOSED；当前不启用 OAuth/SMTP/Storage，不建表/写数据，不创建真实账号；不使用 service_role/secret key/db password |
 | 完整 resource/cost/secret Gate | **关闭** | 仅允许维护[资源成本与密钥 Gate 模板](../templates/G2-A1-资源成本与密钥Gate模板.md)及窄范围资源预检 | secret、环境变量、Auth/DB/Storage/OAuth/SMTP 或任何付费/生产能力已批准 |
-| G2-A1 技术阶段 | **执行中（B1 完成；B2 本地 callback 安全基础完成候选）** | 下一步为 B2 候选独立安全复审与 action-time Owner/主代理 Gate；不自动打开 B2 真实运行 | Staging、真实登录、Auth/MFA、session、DB/RLS、Storage、OAuth、SMTP 或生产验收 |
+| G2-A1 技术阶段 | **执行中（B1 完成；B2 本地安全基础通过/可进入远端 PR 候选）** | 独立定向复审已对 candidate exact-head 给出 REVIEW GO，P0/P1/P2=0；下一步由主代理决定是否进入远端 PR 候选治理；不自动打开 B2 真实运行 | Staging、真实登录、Auth/MFA、session、DB/RLS、Storage、OAuth、SMTP 或生产验收 |
 
-当前已完成资源存在性/基础预检与 B1 最小本地连接验证；既有文档治理复审首轮 finding 已关闭，本次独立运行时复审首次结论为 REVIEW NO-GO，本批 findings 由 `c15b11c` 修复；本批 findings 由 `7952d16` 修复；独立定向复审对该 exact head 给出 REVIEW GO，无未关闭 P0/P1/P2；该 GO 只关闭 B1 capability preflight 审查，不打开 B2 或任何 Auth/DB/Storage/OAuth/SMTP/费用/部署/Production Gate；不预写 push、PR、Actions 或 merge；Owner/主代理批准的窄范围已完成，B1 配置/能力只读预检已完成；当前 B2 本地 callback 安全基础已形成完成候选，下一步为该候选的独立安全复审与 action-time Owner/主代理 Gate。该批准不是 broad waiver（全局豁免），也不表示 G2-A1 Auth/B1 技术通过。Free 计划的能力不能被推断为已满足 Pro 专属的 session 配置要求。完整 resource/cost/secret/Auth/DB/Storage/OAuth/SMTP/真实 PII/部署/Production Gate 仍关闭，service_role、secret key、db password 继续禁止，B1 结果不能自动打开 B2/P2/P3+，A0–A6 与 P0–P8 的映射仍需在 P2 之前由 Owner/主计划明确。
+当前已完成资源存在性/基础预检与 B1 最小本地连接验证；既有文档治理复审首轮 finding 已关闭，本次独立运行时复审首次结论为 REVIEW NO-GO，本批 findings 由 `c15b11c` 修复；本批 findings 由 `7952d16` 修复；独立定向复审随后针对 candidate exact-head `761de2b3a8ce22247501cddbad2da6e2cfc3ae59` 给出 REVIEW GO，P0/P1/P2=0；复审 shell Node `20.20.2` 的 `test:auth` 12/12 与 typecheck 出现 engine warning，复用候选 exact-head Node `22.12.0` 的 build/lint/browser 证据。该 GO 仅关闭 B2 本地安全基础 review，不等于 B2/Auth/G2-A1 整体通过；不预写 push、PR、Actions 或 merge；Owner/主代理批准的窄范围已完成，B1 配置/能力只读预检已完成；当前 B2 本地安全基础通过/可进入远端 PR 候选，下一步由主代理决定是否进入远端 PR 候选治理。该批准不是 broad waiver（全局豁免）。Free 计划的能力不能被推断为已满足 Pro 专属的 session 配置要求。真实 Auth callback/session refresh/replay/rate-limit/OAuth/SMTP/DB/Storage/Production 仍 CLOSED，service_role、secret key、db password 继续禁止，B1 结果不能自动打开 B2/P2/P3+，A0–A6 与 P0–P8 的映射仍需在 P2 之前由 Owner/主计划明确。
 
 ## 3. 四批后续执行合同
 
@@ -152,7 +152,7 @@ G2-A0 的远端闭环已经在 `main` 完成：PR #7 的 merge commit 为 `fd9b7
 - [G2-A0 阶段记录](./G2-A0-账号安全合同与威胁模型验收.md)
 - [项目状态与阶段台账](../15-项目状态与阶段台账.md)
 
-当前 15 台账已记录为“执行中（B1 完成；B2 本地 callback 安全基础完成候选）”；既有文档治理复审首轮 finding 已关闭；本批 findings 由 `7952d16` 修复；独立定向复审对该 exact head 给出 REVIEW GO，仅关闭 B1 capability preflight 审查；本批 B2 仅完成候选级本地 callback 安全基础，待独立安全复审与 action-time Owner/主代理 Gate。完整 resource/cost/secret Gate 仍关闭；Auth/OAuth/SMTP/DB/Storage/真实账号/PII、部署和 Production 继续关闭。
+当前 15 台账已记录为“执行中（B1 完成；B2 本地安全基础通过/可进入远端 PR 候选）”；既有文档治理复审首轮 finding 已关闭；本批 findings 由 `7952d16` 修复；candidate exact-head `761de2b3a8ce22247501cddbad2da6e2cfc3ae59` 的独立定向复审为 REVIEW GO，P0/P1/P2=0，仅关闭 B2 本地安全基础 review；本批 B2 不等于 B2/Auth/G2-A1 整体通过，下一步由主代理决定是否进入远端 PR 候选治理。完整 resource/cost/secret Gate 仍关闭；真实 Auth/OAuth/SMTP/session/DB/Storage/Production 继续关闭。
 
 ## 9. 2026-08-28｜Free Supabase 资源存在性与基础预检（历史资源快照；当前 B1 状态见第 11 节）
 
@@ -256,9 +256,9 @@ G2-A0 的远端闭环已经在 `main` 完成：PR #7 的 merge commit 为 `fd9b7
 - custom SMTP credential/secret、费用、持久连接及任何浏览器/控制台配置动作继续 CLOSED，每次实际动作需要 action-time Owner Gate，不能以总体批准替代；当前 capability-preflight worktree 不包含 `prototype/.env.local`，B2 执行前必须在实际 worktree 重新验证 ignored、untracked 与 mode `600`，不得沿用旧 worktree 权限结论。
 - 本批 findings 由 `7952d16` 修复；独立定向复审对该 exact head 给出 REVIEW GO，无未关闭 P0/P1/P2；该 GO 只关闭 B1 capability preflight 审查，不打开 B2 或任何 Auth/DB/Storage/OAuth/SMTP/费用/部署/Production Gate；不预写 push、PR、Actions 或 merge。
 
-## 13. 2026-08-28｜G2-A1-B2 本地安全基础实现（当前候选）
+## 13. 2026-08-28｜G2-A1-B2 本地安全基础实现（当前 closeout）
 
 - 本批复用既有 `prototype/lib/supabase/config.ts`、`client.ts`、`server.ts`、登录演示和 health route；新增 safe-next 规范化、callback decision、同源 no-store callback route、有限错误提示、Node 内置契约测试和一次性 workflow 测试步骤。未新建第二套 client/env/health。
-- 本批只形成 B2 本地 callback 基础完成候选；`test:auth`、typecheck、lint、build 通过，隔离端口 `3102` 首页按 agent-browser-verify 完成 open/networkidle、截图、非空、无错误覆盖层、console `[]` 与交互快照并已关闭 server；因无有效 Auth 凭据或授权 code，未产生 callback/Auth 运行证据。详细脱敏证据见[B2 本地安全基础](../evidence/G2-A1/2026-08-28-b2-local-foundation/README.md)。
-- 首轮独立安全复审为 REVIEW NO-GO，发现 1 项 P1 与 2 项 P2；当前 checkpoint 已修正 callback code 输入上限/空白与控制字符门禁、safe-next 总长度与稳定解码边界、可注入 route handler 及最终 origin 二次校验，并补齐 12 项 Node `node:test` 契约；当前仍待独立定向复审，不预写 REVIEW GO、PR、Actions 或 merge。
-- 真实 Auth/OAuth/SMTP/email/OTP/Magic Link、session/user、MFA、DB/Storage、真实 PII、部署和 Production Gate 继续 CLOSED；下一步为独立安全复审与 action-time Owner/主代理 Gate，不自动进入 B3/P2。
+- 本批形成 **B2 本地安全基础通过/可进入远端 PR 候选**；`test:auth`、typecheck、lint、build 通过，隔离端口 `3102` 首页按 agent-browser-verify 完成 open/networkidle、截图、非空、无错误覆盖层、console `[]` 与交互快照并已关闭 server；因无有效 Auth 凭据或授权 code，未产生 callback/Auth 运行证据。详细脱敏证据见[B2 本地安全基础](../evidence/G2-A1/2026-08-28-b2-local-foundation/README.md)。
+- 首轮独立安全复审为 REVIEW NO-GO，发现 1 项 P1 与 2 项 P2；当前 checkpoint 已修正 callback code 输入上限/空白与控制字符门禁、safe-next 总长度与稳定解码边界、可注入 route handler 及最终 origin 二次校验，并补齐 12 项 Node `node:test` 契约。独立定向复审随后针对 candidate exact-head `761de2b3a8ce22247501cddbad2da6e2cfc3ae59` 给出 REVIEW GO，P0/P1/P2=0；复审 shell Node `20.20.2` 的 `test:auth` 12/12 与 typecheck 出现 engine warning，复用候选 exact-head Node `22.12.0` 的 build/lint/browser 证据；不预写 PR、Actions 或 merge。
+- 真实 Auth/OAuth/SMTP/email/OTP/Magic Link、session/user、MFA、DB/Storage、真实 PII、部署和 Production Gate 继续 CLOSED；下一步由主代理决定是否进入远端 PR 候选治理，不自动进入 B3/P2。

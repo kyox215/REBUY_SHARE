@@ -1,15 +1,15 @@
 # G2-A1-B2 本地安全基础实现
 
-状态：**G2-A1 执行中；B2 本地 callback 基础完成候选，待独立安全复审与 Owner/主代理 Gate**
+状态：**G2-A1 执行中；B2 本地安全基础通过/可进入远端 PR 候选**（仅关闭本地基础 review，不等于 B2/Auth/G2-A1 整体通过）
 记录日期：2026-08-28（Europe/Rome）
 证据级别：本地源码、契约测试、依赖/构建检查、隔离本地首页浏览器复核；不代表 Auth 运行时通过
 执行风险：关键；执行代理 `luna_worker / max`，单一写入代理；Owner 保留最终责任、停止权和后续 Gate 决定
 
 ## 1. 范围与结论
 
-本批在隔离的本地 Next.js 原型中实现最小 callback 安全基础，仅覆盖同源相对 `next` 规范化、受控 callback decision、服务端 callback route 的错误/成功重定向边界，以及登录页对有限错误码的通用提示。结论是 **候选完成**，不是 B2 或 G2-A1 Auth 技术通过。
+本批在隔离的本地 Next.js 原型中实现最小 callback 安全基础，仅覆盖同源相对 `next` 规范化、受控 callback decision、服务端 callback route 的错误/成功重定向边界，以及登录页对有限错误码的通用提示。结论是 **B2 本地安全基础通过/可进入远端 PR 候选**，不等于 B2/Auth/G2-A1 整体或 Auth 运行时技术通过。
 
-当前状态统一为：G2-A1 执行中；B1 最小连接与配置/能力只读预检已完成；B2 本地 callback 基础完成候选；下一步为独立安全复审与 action-time Owner/主代理 Gate。完整 resource/cost/secret/Auth/DB/Storage/OAuth/SMTP/真实 PII/部署/Production Gate 继续 CLOSED，不自动进入 B3、P2 或 Production。
+当前状态统一为：G2-A1 执行中；B1 最小连接与配置/能力只读预检已完成；B2 本地安全基础通过/可进入远端 PR 候选；独立定向复审已对 exact-head 给出 REVIEW GO。该 GO 仅关闭本地基础 review；下一步由主代理决定是否进入远端 PR 候选治理，本记录不预写 PR、Actions 或 merge。完整 resource/cost/secret/Auth/DB/Storage/OAuth/SMTP/真实 PII/部署/Production Gate 继续 CLOSED，不自动进入 B3、P2 或 Production。
 
 ## 2. 复用优先结论
 
@@ -43,6 +43,7 @@
 | `corepack pnpm@10.33.3 typecheck` | 通过 | 包含 Next 16 route/page 类型检查 |
 | `corepack pnpm@10.33.3 lint` | 通过 | 无新增 lint 错误 |
 | `corepack pnpm@10.33.3 build` | 通过 | Next 16.3.2 编译 callback route 与登录页；build 生成物未作为证据提交 |
+| 独立定向 review | REVIEW GO | 针对 candidate exact-head `761de2b3a8ce22247501cddbad2da6e2cfc3ae59`，P0/P1/P2=0；复审 shell Node `20.20.2` 运行 `test:auth` 12/12 与 typecheck，并出现 engine warning；复用该 exact-head 的 Node `22.12.0` build/lint/browser smoke 证据 |
 | `.github/workflows/prototype-quality.yml` | 已更新 | `test:auth` 仅在 typecheck 后、lint 前运行一次；没有重复 post-build 测试 |
 | 浏览器/开发服务器 | 首页复核通过（callback 未运行） | 隔离端口 `3102` 按 agent-browser-verify 完成 open/networkidle、截图、非空、无错误覆盖层、console errors `[]` 和交互快照；浏览器与 server 已关闭；未执行真实 callback/Auth exchange |
 
@@ -54,7 +55,7 @@
 
 本批已在当前 checkpoint 修正：callback code 上限固定为 `4096`，空值/全空白仍为 `missing_code`，首尾或内部空白、控制/格式字符和超长值为 `invalid_code`，均在 exchange 前拒绝；safe-next 总长度固定为 `2048`，最多执行 `3` 次解码且必须稳定，拒绝深层非稳定编码、dot-segment、Unicode 空白/格式字符和非法百分号；生产 route 仅绑定既有 SSR client，决策逻辑由可注入 handler 承载，契约测试覆盖 `303`、同源 Location、`no-store`、`no-referrer`、最终 origin 二次校验以及 exchange `0/1` 次。
 
-当前仍为 **待独立安全复审**；本批不预写 REVIEW GO、PR、Actions 或 merge，不打开任何真实 Auth 运行、OAuth、SMTP、DB/Storage、session/user、MFA、部署或 Production Gate。
+首轮独立安全复审结论为 **REVIEW NO-GO**；本批 checkpoint 已修正上述 finding。随后独立定向复审针对 candidate exact-head `761de2b3a8ce22247501cddbad2da6e2cfc3ae59` 给出 **REVIEW GO**，P0/P1/P2=0。复审 shell Node `20.20.2` 运行 `test:auth` 12/12 与 typecheck，并出现 engine warning；候选 exact-head 的 Node `22.12.0` build/lint/browser smoke 证据予以复用。该 GO 仅关闭 B2 本地安全基础 review，不等于 B2/Auth/G2-A1 整体通过；不预写 PR、Actions 或 merge，不打开任何真实 Auth 运行、OAuth、SMTP、DB/Storage、session/user、MFA、部署或 Production Gate。
 
 ## 5. 来源与安全控制
 
@@ -70,7 +71,8 @@
 ## 6. Gate、复审与下一步
 
 - 外部 OAuth client/redirect/secret、SMTP credential/secret、邮件投递、费用、持久连接、Auth provider enable、DB/Storage、真实用户/PII、部署和 Production Gate 继续 **CLOSED**。
-- B2 本地基础实现仅为候选；需独立安全复审并由 Owner/主代理作 action-time Gate 决定后，才能讨论下一项最小运行验证。不得以用户的 broad approval 绕过 secret、Auth、DB、SMTP 或 Production 门禁。
+- B2 本地安全基础已通过独立定向 review，可进入远端 PR 候选治理；该 GO 仅关闭本地基础 review，不自动打开下一项运行验证。不得以用户的 broad approval 绕过 secret、Auth、DB、SMTP 或 Production 门禁。
+- 真实 Auth callback/session refresh/replay/rate-limit/OAuth/SMTP/DB/Storage/Production 仍 CLOSED；任何后续动作仍需其自身的 action-time Owner Gate 和专项证据。
 - 当前仅完成隔离首页的 browser smoke；callback 缺 code/假 code 的浏览器 HTTP 路径仍未运行，后续如具备 action-time Gate 和受控运行条件，仍只能在隔离本地环境执行；成功 Auth、邮件投递、OAuth、session/user、DB/Storage 结果需另立专项证据和 Gate。
 - 回退方式：撤销本批新增 route/pure modules/tests/workflow step 与登录页提示，保留历史证据，不触碰现有 B1 骨架、Supabase 资源或 Production。
 
