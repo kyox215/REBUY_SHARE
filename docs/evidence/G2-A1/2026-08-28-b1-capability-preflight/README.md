@@ -3,7 +3,7 @@
 文档状态：本批只读证据；B1 配置/能力只读预检已完成，等待独立安全复审；不代表 G2-A1 Auth 技术通过，也不打开 B2。
 记录日期：2026-08-28（Europe/Rome）
 执行：Codex 自动化执行，luna_worker / max，单一写入代理
-独立审查：待专项复核；B2 开启前必须完成独立安全复审与 Owner/主代理 Gate
+独立审查：首次独立复审为 REVIEW NO-GO；本轮 findings 已按反馈修复，待定向复审；不预写 REVIEW GO、PR、Actions 或 merge；B2 开启前必须完成独立安全复审与 Owner/主代理 Gate
 基线：从远端 main 的 3ef16ea5cd2869d7456127dd8236f0def7dde93a 建立本地隔离 worktree；本批不预写最终提交 SHA
 
 ## 1. 目标、范围与事实边界
@@ -50,6 +50,14 @@ Email provider 的可见安全项为：secure email change 开启；secure passw
 | IP forwarding | 开关未开启；未改动 |
 
 当前 Free 限制依据官方文档与 changelog：新建 Free 项目使用默认 SMTP 时不能自定义 Auth 邮件模板；自定义 SMTP 或付费计划才提供相应能力。本批没有启用自定义 SMTP、没有发生非零费用、没有发送真实邮件。
+
+### 3.1 Hosted SMTP 与成功投递边界（B2 仍 CLOSED）
+
+依据 [Supabase Custom SMTP](https://supabase.com/docs/guides/auth/auth-smtp)、[Auth rate limits](https://supabase.com/docs/guides/auth/rate-limits) 与 [Free 邮件模板变更](https://supabase.com/changelog/46599-changes-to-email-template-customisation-on-free-tier) 的当前约束：hosted 默认 SMTP 仅向项目团队预授权的邮箱地址发送；当前基线为每小时 2 封，具体限额可能变化；该默认服务无 SLA，仅适合非生产探索。
+
+- `.invalid` 地址只用于 no-send、负向和反枚举路径，绝不能用于成功 OTP/Magic Link 投递。
+- 成功 OTP/Magic Link 路径必须使用专用 synthetic test mailbox/domain、隔离 catcher，或在另行批准后使用 custom SMTP；本批不执行成功投递。
+- custom SMTP credential/secret、费用、持久连接，以及任何浏览器/控制台配置动作继续 CLOSED；每次实际动作都需要 action-time Owner Gate，不能用总体批准替代。
 
 ## 4. MFA、session、攻击防护与 hooks
 
@@ -106,6 +114,8 @@ Email provider 的可见安全项为：secure email change 开启；secure passw
 | Google | 独立测试 OAuth client 与精确 non-production redirect；仅 openid、email、profile；覆盖 PKCE、state、nonce、取消、错误、重放和 token 不留存；不申请额外 scope |
 | Email OTP / Magic Link | 仅 .invalid 合成地址；使用本地 catcher 或隔离测试 SMTP；覆盖 TTL、一次性消费、重放、限流、反枚举、失败/取消/重试；不发送真实邮件 |
 
+身份 linking 前提沿用现有 [A1 Auth Spike 执行合同](../../../10-A1-Auth-Spike执行合同.md) 的 automatic/manual linking 约束：先证明目标邮箱控制权，再按受控流程 link；当前管理面 `manual linking` 关闭只是配置观察，不等于 linking 测试通过。B2 必须在独立 Gate 打开后分别验证自动 linking、手动 link/unlink、重新认证、至少保留一种可用登录方式和冲突恢复，不得把 UI 点击或配置状态写成成功结果。
+
 ### 7.3 明确继续关闭与 STOP
 
 - OAuth client、redirect allowlist、client secret、SMTP credential、Storage、DB/schema、用户/session/MFA 实测、任何费用/add-on/upgrade、部署、Preview、Production、promote、alias 和真实数据继续关闭。
@@ -116,15 +126,17 @@ Email provider 的可见安全项为：secure email change 开启；secure passw
 
 - **已完成：B1 配置/能力只读预检（窄范围）**。这是 Supabase dashboard Auth 配置页的能力分类和 Free 限制记录，不是 Auth 技术通过。
 - G2-A1 仍为执行中；B2 实施保持 CLOSED。完整 resource/cost/secret/Auth/DB/Storage/OAuth/SMTP/真实 PII/部署/Production Gate 继续 CLOSED。
+- 本候选首次独立复审结论为 REVIEW NO-GO；本轮 findings 已按反馈修复，待定向复审；不预写 REVIEW GO、PR、Actions 或 merge。
 - 当前无真实登录、OAuth callback、邮件、用户、session、MFA、DB、Storage、hook、audit 或生产结果。下一步为 B2 草案独立复审与 Owner/主代理 Gate，不自动开始 B2。
+- 当前 capability-preflight worktree 不包含 `prototype/.env.local`；此前连接 worktree 的 ignored/owner-only 状态不可复用。B2 执行前必须在实际 worktree 重新验证该文件被 `.gitignore` 阻止跟踪、保持 untracked 且权限为 mode `600`，不得沿用旧 worktree 权限结论。
 - 相关权威记录：[15 台账](../../../15-项目状态与阶段台账.md)、[G2-A1 阶段记录](../../../stages/G2-A1-Auth-Spike准备与资源门禁.md)、[A1 执行合同](../../../10-A1-Auth-Spike执行合同.md)、[连接记录](../../../11-发布与Supabase连接记录.md)、[阶段索引](../../../stages/README.md)、[B1 风险 Gate](../2026-08-28-b1-risk-gate/README.md)。
 
 ## 9. 脱敏验证记录（2026-08-28）
 
 - `git diff --check`：通过。
-- 相对 Markdown 链接与 fragment 检查：通过（本 worktree 共 54 份 Markdown 文件）。
-- Markdown fence/backtick 配对检查：通过（本 worktree 共 54 份 Markdown 文件）。
+- 相对 Markdown 链接与 fragment 检查：通过；本 worktree 共 56 份 tracked Markdown 文件，本批未引入新的相对目标或 fragment finding。
+- Markdown fence/backtick 配对检查：通过（本 worktree 共 56 份 tracked Markdown 文件）。
 - 敏感值扫描：通过；tracked 文档未发现项目 host/ref、publishable/secret key、JWT 或值赋值模式。
-- 当前状态 stale 扫描：通过；遗留旧状态均已明确标为历史快照/历史运行窗口，当前记录统一为 B1 配置/能力只读预检完成、下一步 B2 草案复审，B2 不自动开启。
+- 当前状态 stale 定向扫描：通过；当前段落统一为 G2-A1 执行中、B1 配置/能力只读预检完成、B2 CLOSED/待独立复审和专项 Gate；仍保留的旧 B1-only 文句均明确标为历史快照/历史运行窗口。本扫描仅覆盖仓库 Markdown，不推断非 tracked 日志或浏览器内部状态。
 - 本批为 docs-only；不重复运行 build、lint、typecheck、dev server 或应用浏览器检查，沿用未变化代码在 main 上已有的验证证据。
 - 验证结果必须保持“配置能力只读预检完成、B2 CLOSED”，不能写成 Auth 或 G2-A1 技术通过。
