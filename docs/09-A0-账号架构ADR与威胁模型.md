@@ -1,6 +1,6 @@
 # A0 账号架构 ADR 与威胁模型
 
-文档状态：G2-A0 Exit GO；远端 docs-only reconciliation 已获批、尚未执行（本次修复 closeout head 待独立复审）；Entry 已授权，七项 Owner 政策已于 2026-08-27 采纳
+文档状态：截至 2026-08-28，G2-A0 Exit GO；远端 docs-only reconciliation 已完成（PR #7 merge=`fd9b712c7b07bf34399f9838eebb75846425c1d1`，parents=`7ea1e45ad22ab29105910665baf4bbd7212241c5` + `1433e7c7c141df0f5498fff7cd645a8d5c92340c`，main Actions run=`33122238997`/job=`98691703085` 全绿，GitHub deployments=0，来源分支保留）；这些是 docs-only/CI 事实，不等于 Auth/DB/运行时通过。G2-A1 技术阶段未开始；无资源 Entry preparation 已完成/待 exact-head 文档复审；resource/cost/secret Gate 关闭；P2–P8 未打开。七项 Owner 政策已于 2026-08-27 采纳
 适用范围：Rebuy 多商家、批发与零售平台的身份、组织、权限、经营资格、文件和隐私信任边界  
 证据边界：本文是 A0 架构决定和威胁模型执行合同，不代表已连接 Supabase、OAuth、SMTP、Storage、数据库或生产环境。  
 关联文档：[完整账号系统规划](./07-完整账号系统规划.md)、[账号系统思维导图](./08-账号系统思维导图.md)、[A1 Auth spike 执行合同](./10-A1-Auth-Spike执行合同.md)、[G2-A0 阶段记录](./stages/G2-A0-账号安全合同与威胁模型验收.md)。
@@ -18,7 +18,7 @@ A0 要锁定账号系统在 A1 之前不能再被实现代理自行改变的安�
 - OAuth 短时材料一次性消费，不持久保存原值，只留下必要的脱敏安全事件。
 - support、reviewer、auditor、platform admin 的读写和决定权限分离。
 
-2026-08-27 Owner 已签署 G1-19、G1 Exit=GO，并授权打开 G2-A0。G2-A0 Exit 已 GO（验收 ref=`140ea15d9c3f178a326709d35ad1750a156df0d1`），当前仅维护已批准且尚未执行的 docs-only reconciliation；前一 exact-head 独立文档治理审查 findings `none/GO`，本次修复 closeout head 待独立复审，G2-A1 保持未开始。不授权 Supabase/Auth/DB/Storage/Realtime、secret/env、真实账号或任何部署/外部资源写入。
+2026-08-27 Owner 已签署 G1-19、G1 Exit=GO，并授权打开 G2-A0。G2-A0 Exit 已 GO（验收 ref=`140ea15d9c3f178a326709d35ad1750a156df0d1`）；截至 2026-08-28，远端 docs-only reconciliation 已完成，具体 PR/merge/run 事实见本文末尾当前状态纠正。上述 docs-only/CI 事实不等于 Auth/DB/运行时通过；G2-A1 技术阶段未开始，无资源 Entry preparation 已完成/待 exact-head 文档复审，resource/cost/secret Gate 关闭，P2–P8 未打开。不授权 Supabase/Auth/DB/Storage/Realtime、secret/env、真实账号或任何部署/外部资源写入。
 
 本 A0 只覆盖账号、组织、权限、资格、证明文件、会话、MFA、OAuth、隐私和相关审计。商品、订单、支付、税务、物流和生产部署仍受 00、04、05 的独立阶段门禁约束。
 
@@ -56,7 +56,7 @@ A0 要锁定账号系统在 A1 之前不能再被实现代理自行改变的安�
 
 ## 3.1 2026-08-26 Entry preflight 安全补充（历史预检；2026-08-27 政策已采纳）
 
-本节是独立只读安全预检的历史合同补充，不是自动生效的运行时授权，也不代表已连接 Supabase/Auth、数据库、Storage 或任何外部项目。原记录日 2026-08-26 的 G1 Exit 快照为 NO-GO；2026-08-27 已由 Owner 以 G1-19/ref=`d51f1c7cb47e2fe2932b29bd39420f5d092a8160` 签署 G1 Exit=GO 并打开 G2-A0 docs-only 执行。七项政策已由 Owner 采纳，前一 exact-head `140ea15d9c3f178a326709d35ad1750a156df0d1` 的独立文档治理审查 findings `none/GO`；G2-A0 Exit 已 GO，新 closeout head 仍待独立复审，G2-A1 保持未开始。完整记录见[G2-A0 Entry preflight 证据](./evidence/G2-A0/2026-08-26-entry-preflight/README.md)和[G2-A0 阶段记录](./stages/G2-A0-账号安全合同与威胁模型验收.md)。
+本节是独立只读安全预检的历史合同补充，不是自动生效的运行时授权，也不代表已连接 Supabase/Auth、数据库、Storage 或任何外部项目。原记录日 2026-08-26 的 G1 Exit 快照为 NO-GO；2026-08-27 已由 Owner 以 G1-19/ref=`d51f1c7cb47e2fe2932b29bd39420f5d092a8160` 签署 G1 Exit=GO 并打开 G2-A0 docs-only 执行。七项政策已由 Owner 采纳，前一 exact-head `140ea15d9c3f178a326709d35ad1750a156df0d1` 的独立文档治理审查 findings `none/GO`；该历史预检记录当时写作“G2-A0 Exit 已 GO、新 closeout head 仍待独立复审、G2-A1 保持未开始”，旧状态已由 2026-08-28 current correction 取代。完整记录见[G2-A0 Entry preflight 证据](./evidence/G2-A0/2026-08-26-entry-preflight/README.md)和[G2-A0 阶段记录](./stages/G2-A0-账号安全合同与威胁模型验收.md)。
 
 官方页面只作为 2026-08-26 的规划依据，实施时须按实际版本、区域和项目重新核验： [Securing your API](https://supabase.com/docs/guides/api/securing-your-api)、[Row Level Security](https://supabase.com/docs/guides/database/postgres/row-level-security)、[Database Functions](https://supabase.com/docs/guides/database/functions)、[Storage Access Control](https://supabase.com/docs/guides/storage/security/access-control)、[SSR client](https://supabase.com/docs/guides/auth/server-side/creating-a-client)、[sessions](https://supabase.com/docs/guides/auth/sessions)、[MFA](https://supabase.com/docs/guides/auth/auth-mfa) 和 [managed schema restrictions](https://supabase.com/changelog/34270-restricting-access-on-auth-storage-and-realtime-schemas-on-april-21-2025)。本批只读官方网页，不执行 provider/project 连接。
 
@@ -230,13 +230,13 @@ A0 通过前，Owner 或指定审查人必须能从 07、08、09 逐项核对：
 
 ## 11. Owner Gate
 
-Owner Gate A0 的通过决定只允许打开 [A1 Auth spike 执行合同](./10-A1-Auth-Spike执行合同.md)的准备门，不等于批准连接环境或进入真实账号。七项政策已由 Owner 于 2026-08-27 采纳，G2-A0 Exit 已 GO；本次 closeout 新 exact-head 仍需独立复审后才可执行远端 reconciliation。Owner Gate 记录如下：
+Owner Gate A0 的通过决定只允许打开 [A1 Auth spike 执行合同](./10-A1-Auth-Spike执行合同.md)的准备门，不等于批准连接环境或进入真实账号。七项政策已由 Owner 于 2026-08-27 采纳，G2-A0 Exit 已 GO 且远端 docs-only reconciliation 已完成。G2-A1 无资源 Entry preparation 已完成/待 exact-head 文档复审；resource/cost/secret Gate 仍关闭。Owner Gate 记录如下：
 
 1. 七项政策及本 ADR 的 `A0-01～A0-15`、日期化 Entry 补充和上述安全不变量已接受并写入；未列入七项的实现细节仍须对应阶段决策，不得由实现代理推断。
 2. 接受 A1 只能连接独立 local/preview-staging，绝不连接 production 或真实 PII；这不等于批准资源或费用。
 3. 在单独的资源/成本/secret Gate 中指定 A1 的 non-production 环境、provider、计划、区域、密钥和 Google/Apple/SMTP 责任人；A0 不锁定或授权这些事项。
 4. decision-ready baseline `9b11f375080db68353dd6952774bcd5e75c4153c` 的独立文档治理审查已完成（findings `none/GO`），覆盖身份、隐私、Storage、RLS、跨租户、会话和威胁矩阵的一致性；这不是运行时或 Auth/安全测试，A4/A5 仍必须专项审查。
-5. Owner 已签署 A0 Exit GO；本次 closeout 新 exact-head 复审和 exact-head Actions 成功后，才可按已批准边界执行远端 docs-only reconciliation；A1 仍保持“未开始/待资源授权”，不得因七项政策或文档审查直接开始 Auth 实测。
+5. Owner 已签署 A0 Exit GO，且远端 docs-only reconciliation 已完成；A1 技术阶段仍未开始，无资源 Entry preparation 待 exact-head 文档复审，不得因七项政策或文档审查直接开始 Auth 实测或打开资源 Gate。
 
 ## 12. 正式来源与交叉链接
 
@@ -248,9 +248,12 @@ Owner Gate A0 的通过决定只允许打开 [A1 Auth spike 执行合同](./10-A
 
 本文件与 07/08 的交叉链接只用于规划一致性；任何链接、Mermaid 图、静态检查或本地原型都不能替代 A1 实测、RLS/Storage 负向测试、独立审查或 Owner 的后续生产 Gate。
 
-## 13. 2026-08-27 G2-A0 Exit closeout 当前状态
+## 13. 2026-08-27 G2-A0 Exit closeout 当前状态（历史快照，已由 2026-08-28 current correction 取代）
 
-- G2-A0 Exit 已由 Owner 以 ref=`140ea15d9c3f178a326709d35ad1750a156df0d1` 于 2026-08-27 签署 GO；当前为 `Exit GO；远端 docs-only reconciliation 已获批、尚未执行`。前一 exact-head 独立文档治理审查 findings=`none/GO`，范围为文档治理一致性，不是 Auth/MFA/DB/RLS/Storage 或运行时测试；本次修复 closeout head 待独立复审。
-- 本次授权承接紧前完整 docs-only 外发文本：公开 12 个 Markdown、相关 Git 历史、Owner 姓名、账号安全架构、威胁模型、角色权限和阶段治理信息到 `kyox215/REBUY_SHARE`；非强制 branch push/PR/`prototype-quality` Actions 和条件式 merge commit 均须通过 docs-only、exact-head Actions 和独立复审条件。
-- 远端 preflight（140ea 历史）记录为 `main=7ea1e45ad22ab29105910665baf4bbd7212241c5`、目标 branch/PR 无；公开外发审计为 12 个 Markdown、`351437` bytes，无 binary/image/secret/phone/address/customer PII，且新增内容审计未发现新增邮箱但漏计继承内容。base/public main 及既有 Git author metadata 已含同一 Owner 邮箱，G2-A0 未引入不同邮箱；当前 G2-A0 12 路径候选中 docs/15 的 Owner 邮箱正文已脱敏；未改动的既有历史/evidence 文档及 Git author 历史可能仍含同一邮箱；不可声称 Git 历史无 email。Owner 此前明确授权公开仓库 Git 历史且最新消息同意当前闭环；此前 push 审批被拒且远端写入为零。本地修复 closeout head 未完成独立复审前不预写 PR、Actions run 或 merge；提交后由外部复审重新计算最终字节数，本提交不自引用最终字节数。
-- G2-A1/P2+、resource/cost/secret、Supabase/Auth/DB/Storage/OAuth/SMTP、真实账号/PII、Preview/Production deploy、promote、alias、rollback 和生产写入继续关闭；A0 Exit 仅打开 A1 准备门。
+- G2-A0 Exit 已由 Owner 以 ref=`140ea15d9c3f178a326709d35ad1750a156df0d1` 于 2026-08-27 签署 GO；本历史快照当时记录为 `Exit GO；远端 docs-only reconciliation 已获批、尚未执行`。前一 exact-head 独立文档治理审查 findings=`none/GO`，范围为文档治理一致性，不是 Auth/MFA/DB/RLS/Storage 或运行时测试；该 closeout head 待独立复审的旧状态已由 2026-08-28 current correction 取代。
+- 本历史快照承接紧前完整 docs-only 外发文本：公开 12 个 Markdown、相关 Git 历史、Owner 姓名、账号安全架构、威胁模型、角色权限和阶段治理信息到 `kyox215/REBUY_SHARE`；非强制 branch push/PR/`prototype-quality` Actions 和条件式 merge commit 均须通过 docs-only、exact-head Actions 和独立复审条件。
+- 本历史快照记录 G2-A1/P2+、resource/cost/secret、Supabase/Auth/DB/Storage/OAuth/SMTP、真实账号/PII、Preview/Production deploy、promote、alias、rollback 和生产写入继续关闭；当前状态以 2026-08-28 current correction 为准。
+
+## 14. 2026-08-28 当前状态纠正
+
+G2-A0 Exit GO（验收 ref=`140ea15d9c3f178a326709d35ad1750a156df0d1`），且远端 docs-only reconciliation 已完成：PR #7 merge=`fd9b712c7b07bf34399f9838eebb75846425c1d1`，parents=`7ea1e45ad22ab29105910665baf4bbd7212241c5` + `1433e7c7c141df0f5498fff7cd645a8d5c92340c`，main Actions run=`33122238997`/job=`98691703085` 全绿，GitHub deployments=0，来源分支保留；这些是 docs-only/CI 事实，不等于 Auth/DB/运行时通过。G2-A1 技术阶段未开始；无资源 Entry preparation 已完成/待 exact-head 文档复审；resource/cost/secret Gate 关闭；P2–P8 未打开。详见 [G2-A1 entry preparation 证据](./evidence/G2-A1/2026-08-28-entry-preparation/README.md)。
