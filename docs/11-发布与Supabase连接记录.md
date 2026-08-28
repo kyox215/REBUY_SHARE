@@ -1,6 +1,6 @@
 # 发布与 Supabase 连接记录
 
-文档状态：本地连接骨架 + 独立资源存在性预检 + A1-B1 最小连接与配置/能力只读预检已完成；B2 本地 callback 安全基础完成候选，待独立安全复审与 Owner/主代理 Gate（既有文档治理复审首轮 finding 已关闭；本批 findings 由 `7952d16` 修复；该 GO 只关闭 B1 capability preflight 审查，不打开完整 B2 运行验证或任何 Auth/DB/Storage/OAuth/SMTP/费用/部署/Production Gate；不预写 push、PR、Actions 或 merge）；G2-A1 仍执行中，真实 Auth/OAuth/SMTP/DB/Storage/user/session/MFA 未开始；完整 resource/cost/secret Gate 关闭
+文档状态：本地连接骨架 + 独立资源存在性预检 + A1-B1 最小连接与配置/能力只读预检已完成；B2 本地安全基础已合并 main/远端闭环通过（PR #12 merge=`96ee24a4e5ba7eaee684731eacf707d4da29c44b`，main Actions run=`33209420614`/job=`98978680399` success，`test:auth` 12/12 且仅运行一次，exact merge 的 GitHub deployments=`0`，来源分支保留）；该闭环仅关闭本地基础交付，不等于完整 B2/Auth/G2-A1 整体通过；G2-A1 仍执行中，真实 Auth/OAuth/SMTP/DB/Storage/user/session/MFA 未开始；下一步仅可进入 B2 外部入口 Gate 设计/资源检查，不预写 external Auth success；完整 resource/cost/secret Gate 关闭
 
 ## 1. A1 边界
 
@@ -98,9 +98,16 @@
 - custom SMTP credential/secret、费用、持久连接及浏览器/控制台配置动作继续 CLOSED；每次实际动作需要 action-time Owner Gate，不能以总体批准替代。当前 capability-preflight worktree 不包含 `prototype/.env.local`，B2 执行前必须重新验证 ignored、untracked 和 mode `600`，不能沿用旧连接 worktree 权限结论。
 - 本批 findings 由 `7952d16` 修复；独立定向复审对该 exact head 给出 REVIEW GO，无未关闭 P0/P1/P2；该 GO 只关闭 B1 capability preflight 审查，不打开 B2 或任何 Auth/DB/Storage/OAuth/SMTP/费用/部署/Production Gate；不预写 push、PR、Actions 或 merge。
 
-## 9. 2026-08-28｜G2-A1-B2 本地 callback 安全基础实现（当前候选）
+## 9. 2026-08-28｜G2-A1-B2 本地 callback 安全基础实现（本地候选历史；当前远端闭环见第 10 节）
 
 - 本批复用既有 `prototype/lib/supabase/config.ts`、`client.ts`、`server.ts`、登录演示和 health route；新增最小 safe-next/callback decision 纯函数、可注入 callback handler、仅绑定 SSR client 的 `/auth/callback` route、有限登录错误映射、Node 内置契约测试与一次性 workflow 测试步骤。未新建第二套 client、env、health 或业务 Auth handler。
 - callback 只接受同源相对 `next`，provider error/缺 code 不执行 exchange；空/全空白 code 为 `missing_code`，边界空白、控制/格式字符或超过 `4096` 字符为 `invalid_code`，有效 code 的 exchange 最多执行一次，异常或空结果归一到有限错误码；safe-next 总长度上限 `2048` 且最多 `3` 次稳定解码；route 使用同源 `303`、`no-store`/`no-referrer`，并做最终 origin 二次校验，不回显 callback 原始参数或 provider error。该结论来自源码和契约测试，不是成功 Auth exchange 证据。
 - `install --frozen-lockfile`、`test:auth`（12 项）、`typecheck`、`lint`、`build` 已通过。首轮独立安全复审为 REVIEW NO-GO，1 项 P1 与 2 项 P2 已在当前 checkpoint 修正，待独立定向复审；隔离端口 `3102` 首页按 agent-browser-verify 完成 open/networkidle、截图、非空、无错误覆盖层、console `[]` 和交互快照，server 已关闭；因无有效 Auth 凭据或授权 code，未执行 callback 缺 code/假 code HTTP 或 Auth 运行证据，详见[B2 本地安全基础证据](./evidence/G2-A1/2026-08-28-b2-local-foundation/README.md)。
 - 当前仅为 B2 本地 callback 基础完成候选，待独立安全复审与 action-time Owner/主代理 Gate；真实 Auth/OAuth/provider、email/OTP/Magic Link、session/user、MFA、DB/Storage、SMTP、真实 PII、部署和 Production Gate 均继续 CLOSED。
+
+## 10. 2026-08-28｜G2-A1-B2 本地安全基础远端闭环（当前）
+
+- B2 本地安全基础已合并 main/远端闭环通过：PR #12 已以 merge commit 合并到远端 `main`，head=`55b7497953bc22e002e4c75a4b039c5b08fd98e7`，merge=`96ee24a4e5ba7eaee684731eacf707d4da29c44b`，parents=`689d9679293f255c44feb314428a2678b9fe4d06` + `55b7497953bc22e002e4c75a4b039c5b08fd98e7`；来源分支 `codex/g2-a1-b2-local-foundation` 保留。
+- 远端 `main` exact head=`96ee24a4e5ba7eaee684731eacf707d4da29c44b`；main Actions run=`33209420614` / job=`98978680399` success，`test:auth` 12/12 且仅运行一次；exact merge 的 GitHub deployments=`0`。Vercel 仍为 `3` 个既有 deployments，Production 仍为 `READY`，aliases=`2`，本次无新增 Preview/Production deployment。
+- 该 closeout 仅关闭本地安全基础的远端 source/CI 交付记录；完整 B2、real Auth/OAuth/SMTP/session/DB/Storage/Production 与外部 action-time Owner Gate 继续 CLOSED。下一步仅可进入 B2 外部入口 Gate 设计/资源检查，不预写 external Auth success；不自动打开 B3、P2 或 Production。
+- 本次仅更新文档记录，不运行本地 build/tests/browser，不执行 Supabase/Auth/DB/Storage/SMTP、secret、部署或 Production 操作。

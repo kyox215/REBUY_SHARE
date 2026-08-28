@@ -1,15 +1,15 @@
 # G2-A1-B2 本地安全基础实现
 
-状态：**G2-A1 执行中；B2 本地安全基础通过/可进入远端 PR 候选**（仅关闭本地基础 review，不等于 B2/Auth/G2-A1 整体通过）
+状态：**G2-A1 执行中；B2 本地安全基础已合并 main/远端闭环通过**（仅关闭本批本地安全基础的远端交付闭环，不等于完整 B2/Auth/G2-A1 整体通过）
 记录日期：2026-08-28（Europe/Rome）
 证据级别：本地源码、契约测试、依赖/构建检查、隔离本地首页浏览器复核；不代表 Auth 运行时通过
 执行风险：关键；执行代理 `luna_worker / max`，单一写入代理；Owner 保留最终责任、停止权和后续 Gate 决定
 
 ## 1. 范围与结论
 
-本批在隔离的本地 Next.js 原型中实现最小 callback 安全基础，仅覆盖同源相对 `next` 规范化、受控 callback decision、服务端 callback route 的错误/成功重定向边界，以及登录页对有限错误码的通用提示。结论是 **B2 本地安全基础通过/可进入远端 PR 候选**，不等于 B2/Auth/G2-A1 整体或 Auth 运行时技术通过。
+本批在隔离的本地 Next.js 原型中实现最小 callback 安全基础，仅覆盖同源相对 `next` 规范化、受控 callback decision、服务端 callback route 的错误/成功重定向边界，以及登录页对有限错误码的通用提示。本地实现阶段结论是 **B2 本地安全基础通过/可进入远端 PR 候选**；该阶段结论随后由第 7 节的远端闭环记录承接，不等于 B2/Auth/G2-A1 整体或 Auth 运行时技术通过。
 
-当前状态统一为：G2-A1 执行中；B1 最小连接与配置/能力只读预检已完成；B2 本地安全基础通过/可进入远端 PR 候选；独立定向复审已对 exact-head 给出 REVIEW GO。该 GO 仅关闭本地基础 review；下一步由主代理决定是否进入远端 PR 候选治理，本记录不预写 PR、Actions 或 merge。完整 resource/cost/secret/Auth/DB/Storage/OAuth/SMTP/真实 PII/部署/Production Gate 继续 CLOSED，不自动进入 B3、P2 或 Production。
+当前状态统一为：G2-A1 执行中；B1 最小连接与配置/能力只读预检已完成；B2 本地安全基础已合并 main/远端闭环通过。PR #12 的 merge commit、main exact head 与 Actions 结果见第 7 节。该远端闭环仅关闭本批本地安全基础的交付与 CI 记录，不等于完整 B2/Auth/G2-A1 整体或 Auth 运行时技术通过。下一步仅可进入 B2 外部入口 Gate 设计/资源检查；完整 resource/cost/secret/Auth/DB/Storage/OAuth/SMTP/真实 PII/部署/Production Gate 继续 CLOSED，不预写外部 Auth 成功，不自动进入 B3、P2 或 Production。
 
 ## 2. 复用优先结论
 
@@ -71,9 +71,17 @@
 ## 6. Gate、复审与下一步
 
 - 外部 OAuth client/redirect/secret、SMTP credential/secret、邮件投递、费用、持久连接、Auth provider enable、DB/Storage、真实用户/PII、部署和 Production Gate 继续 **CLOSED**。
-- B2 本地安全基础已通过独立定向 review，可进入远端 PR 候选治理；该 GO 仅关闭本地基础 review，不自动打开下一项运行验证。不得以用户的 broad approval 绕过 secret、Auth、DB、SMTP 或 Production 门禁。
+- B2 本地安全基础已通过独立定向 review，并已完成 PR #12 → `main` 的远端 merge/Actions closeout；该闭环仅关闭本批本地基础交付记录，不自动打开下一项运行验证。不得以用户的 broad approval 绕过 secret、Auth、DB、SMTP 或 Production 门禁。
 - 真实 Auth callback/session refresh/replay/rate-limit/OAuth/SMTP/DB/Storage/Production 仍 CLOSED；任何后续动作仍需其自身的 action-time Owner Gate 和专项证据。
 - 当前仅完成隔离首页的 browser smoke；callback 缺 code/假 code 的浏览器 HTTP 路径仍未运行，后续如具备 action-time Gate 和受控运行条件，仍只能在隔离本地环境执行；成功 Auth、邮件投递、OAuth、session/user、DB/Storage 结果需另立专项证据和 Gate。
 - 回退方式：撤销本批新增 route/pure modules/tests/workflow step 与登录页提示，保留历史证据，不触碰现有 B1 骨架、Supabase 资源或 Production。
 
 当前阶段事实与路线入口：[G2-A1 准备与资源门禁](../../../stages/G2-A1-Auth-Spike准备与资源门禁.md)、[A1 执行合同](../../../10-A1-Auth-Spike执行合同.md)、[发布与 Supabase 连接记录](../../../11-发布与Supabase连接记录.md)、[项目状态与阶段台账](../../../15-项目状态与阶段台账.md)。本 README 是本批脱敏证据，不替代 15 的唯一当前状态源。
+
+## 7. 2026-08-28｜B2 本地安全基础远端闭环（当前）
+
+- PR #12 已以 merge commit 合并到远端 `main`：head=`55b7497953bc22e002e4c75a4b039c5b08fd98e7`，merge=`96ee24a4e5ba7eaee684731eacf707d4da29c44b`，parents=`689d9679293f255c44feb314428a2678b9fe4d06` + `55b7497953bc22e002e4c75a4b039c5b08fd98e7`；来源分支 `codex/g2-a1-b2-local-foundation` 保留。
+- 远端 `main` exact head=`96ee24a4e5ba7eaee684731eacf707d4da29c44b`；main Actions run=`33209420614` / job=`98978680399` 为 success，`test:auth` 12/12 且仅运行一次。该 exact merge commit 的 GitHub deployments=`0`。
+- Vercel 仍为 `3` 个既有 deployments；Production 仍为 `READY`，aliases=`2`；本次没有新增 Preview/Production deployment。
+- 当前结论为 **B2 本地安全基础已合并 main/远端闭环通过**。该结论仅关闭本地安全基础的远端 source/CI 交付闭环；完整 B2、real Auth/OAuth/SMTP/session/DB/Storage/Production 与外部 action-time Owner Gate 继续 **CLOSED**。下一步仅可进行 B2 外部入口 Gate 设计/资源检查，不预写 external Auth success。
+- 本次仅提交文档 closeout；未运行本地 build、tests 或 browser，未执行 Supabase/Auth/DB/Storage/SMTP、secret、部署或 Production 操作。
