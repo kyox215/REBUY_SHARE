@@ -1,9 +1,9 @@
 # G2-A1-B1 配置/能力只读预检
 
-文档状态：本批只读证据；B1 配置/能力只读预检已完成，等待独立安全复审；不代表 G2-A1 Auth 技术通过，也不打开 B2。
+文档状态：本批只读证据；B1 配置/能力只读预检已完成；本批 findings 由 `7952d16` 修复，独立定向复审对该 exact head 给出 REVIEW GO，无未关闭 P0/P1/P2；该 GO 只关闭 B1 capability preflight 审查，不打开 B2 或任何 Auth/DB/Storage/OAuth/SMTP/费用/部署/Production Gate；不代表 G2-A1 Auth 技术通过。
 记录日期：2026-08-28（Europe/Rome）
 执行：Codex 自动化执行，luna_worker / max，单一写入代理
-独立审查：首次独立复审为 REVIEW NO-GO；本轮 findings 已按反馈修复，待定向复审；不预写 REVIEW GO、PR、Actions 或 merge；B2 开启前必须完成独立安全复审与 Owner/主代理 Gate
+独立审查：本批 findings 由 `7952d16` 修复；独立定向复审对该 exact head 给出 REVIEW GO，无未关闭 P0/P1/P2；该 GO 只关闭 B1 capability preflight 审查，不打开 B2 或任何 Auth/DB/Storage/OAuth/SMTP/费用/部署/Production Gate；不预写 push、PR、Actions 或 merge；B2 开启前必须完成独立安全复审与 Owner/主代理 Gate
 基线：从远端 main 的 3ef16ea5cd2869d7456127dd8236f0def7dde93a 建立本地隔离 worktree；本批不预写最终提交 SHA
 
 ## 1. 目标、范围与事实边界
@@ -126,7 +126,7 @@ Email provider 的可见安全项为：secure email change 开启；secure passw
 
 - **已完成：B1 配置/能力只读预检（窄范围）**。这是 Supabase dashboard Auth 配置页的能力分类和 Free 限制记录，不是 Auth 技术通过。
 - G2-A1 仍为执行中；B2 实施保持 CLOSED。完整 resource/cost/secret/Auth/DB/Storage/OAuth/SMTP/真实 PII/部署/Production Gate 继续 CLOSED。
-- 本候选首次独立复审结论为 REVIEW NO-GO；本轮 findings 已按反馈修复，待定向复审；不预写 REVIEW GO、PR、Actions 或 merge。
+- 本批 findings 由 `7952d16` 修复；独立定向复审对该 exact head 给出 REVIEW GO，无未关闭 P0/P1/P2；该 GO 只关闭 B1 capability preflight 审查，不打开 B2 或任何 Auth/DB/Storage/OAuth/SMTP/费用/部署/Production Gate；不预写 push、PR、Actions 或 merge。
 - 当前无真实登录、OAuth callback、邮件、用户、session、MFA、DB、Storage、hook、audit 或生产结果。下一步为 B2 草案独立复审与 Owner/主代理 Gate，不自动开始 B2。
 - 当前 capability-preflight worktree 不包含 `prototype/.env.local`；此前连接 worktree 的 ignored/owner-only 状态不可复用。B2 执行前必须在实际 worktree 重新验证该文件被 `.gitignore` 阻止跟踪、保持 untracked 且权限为 mode `600`，不得沿用旧 worktree 权限结论。
 - 相关权威记录：[15 台账](../../../15-项目状态与阶段台账.md)、[G2-A1 阶段记录](../../../stages/G2-A1-Auth-Spike准备与资源门禁.md)、[A1 执行合同](../../../10-A1-Auth-Spike执行合同.md)、[连接记录](../../../11-发布与Supabase连接记录.md)、[阶段索引](../../../stages/README.md)、[B1 风险 Gate](../2026-08-28-b1-risk-gate/README.md)。
@@ -137,6 +137,6 @@ Email provider 的可见安全项为：secure email change 开启；secure passw
 - 相对 Markdown 链接与 fragment 检查：通过；本 worktree 共 56 份 tracked Markdown 文件，本批未引入新的相对目标或 fragment finding。
 - Markdown fence/backtick 配对检查：通过（本 worktree 共 56 份 tracked Markdown 文件）。
 - 敏感值扫描：通过；tracked 文档未发现项目 host/ref、publishable/secret key、JWT 或值赋值模式。
-- 当前状态 stale 定向扫描：通过；当前段落统一为 G2-A1 执行中、B1 配置/能力只读预检完成、B2 CLOSED/待独立复审和专项 Gate；仍保留的旧 B1-only 文句均明确标为历史快照/历史运行窗口。本扫描仅覆盖仓库 Markdown，不推断非 tracked 日志或浏览器内部状态。
+- 当前状态 stale 定向扫描：通过；当前段落统一为 G2-A1 执行中、B1 配置/能力只读预检完成且对 `7952d16` REVIEW GO、B2 CLOSED/待独立复审和专项 Gate；仍保留的旧 B1-only 文句均明确标为历史快照/历史运行窗口。本扫描仅覆盖仓库 Markdown，不推断非 tracked 日志或浏览器内部状态。
 - 本批为 docs-only；不重复运行 build、lint、typecheck、dev server 或应用浏览器检查，沿用未变化代码在 main 上已有的验证证据。
 - 验证结果必须保持“配置能力只读预检完成、B2 CLOSED”，不能写成 Auth 或 G2-A1 技术通过。

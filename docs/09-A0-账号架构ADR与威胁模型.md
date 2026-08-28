@@ -230,7 +230,7 @@ A0 通过前，Owner 或指定审查人必须能从 07、08、09 逐项核对：
 
 ## 11. Owner Gate
 
-Owner Gate A0 的通过决定只允许打开 [A1 Auth spike 执行合同](./10-A1-Auth-Spike执行合同.md)的准备门，不等于批准连接环境或进入真实账号。七项政策已由 Owner 于 2026-08-27 采纳，G2-A0 Exit 已 GO 且远端 docs-only reconciliation 已完成。G2-A1 执行中，B1 最小连接及配置/能力只读预检已完成；B2 CLOSED，待独立复审和专项 Gate；首次独立复审为 REVIEW NO-GO，本轮 findings 已按反馈修复，待定向复审；不预写 REVIEW GO、PR、Actions 或 merge；完整 resource/cost/secret Gate 仍关闭。Owner Gate 记录如下：
+Owner Gate A0 的通过决定只允许打开 [A1 Auth spike 执行合同](./10-A1-Auth-Spike执行合同.md)的准备门，不等于批准连接环境或进入真实账号。七项政策已由 Owner 于 2026-08-27 采纳，G2-A0 Exit 已 GO 且远端 docs-only reconciliation 已完成。G2-A1 执行中，B1 最小连接及配置/能力只读预检已完成；B2 CLOSED，待独立复审和专项 Gate；本批 findings 由 `7952d16` 修复；独立定向复审对该 exact head 给出 REVIEW GO，无未关闭 P0/P1/P2；该 GO 只关闭 B1 capability preflight 审查，不打开 B2 或任何 Auth/DB/Storage/OAuth/SMTP/费用/部署/Production Gate；不预写 push、PR、Actions 或 merge；完整 resource/cost/secret Gate 仍关闭。Owner Gate 记录如下：
 
 1. 七项政策及本 ADR 的 `A0-01～A0-15`、日期化 Entry 补充和上述安全不变量已接受并写入；未列入七项的实现细节仍须对应阶段决策，不得由实现代理推断。
 2. 接受 A1 只能连接独立 local/preview-staging，绝不连接 production 或真实 PII；这不等于批准资源或费用。
