@@ -1,6 +1,6 @@
 # 发布与 Supabase 连接记录
 
-文档状态：本地连接骨架 + 独立资源存在性预检 + A1-B1 最小连接验证已完成（独立安全复审已完成、首轮 finding 已关闭）；G2-A1 仍执行中，Auth/OAuth/SMTP/DB/Storage/user/session/MFA 未开始；完整 resource/cost/secret Gate 关闭
+文档状态：本地连接骨架 + 独立资源存在性预检 + A1-B1 最小连接验证已完成（既有文档治理复审首轮 finding 已关闭；本次独立运行时复审首次 REVIEW NO-GO，本轮 finding 已定向修复，待定向复审）；G2-A1 仍执行中，Auth/OAuth/SMTP/DB/Storage/user/session/MFA 未开始；完整 resource/cost/secret Gate 关闭
 
 ## 1. A1 边界
 
@@ -52,16 +52,16 @@
 
 首次受限环境尝试曾遇到 pnpm store symlink 权限和 registry DNS 阻塞；随后经用户批准的 escalated pnpm 命令成功完成依赖安装，未使用 npm，也未手改 lockfile。当前固定版本为：`@supabase/ssr` `0.12.5`、`@supabase/supabase-js` `2.112.4`。
 
-当前证据如下：`pnpm typecheck`、`pnpm lint`、`pnpm build` 全部通过。复用的本地开发服务器上，无环境变量的 `/api/health/supabase` 返回 HTTP 503，响应为 `{"configured":false,"reachable":false,"status":503}` 并带 `Cache-Control: no-store`；使用目标 Free 项目当前 active modern publishable key 后返回 HTTP 200，响应为 `{"configured":true,"reachable":true,"status":200}` 并同样带 `Cache-Control: no-store`。localhost 页面完成 networkidle、非空、无可见 Next 错误覆盖层、console errors 为空和关键元素快照；搜索→结果→商品详情导航通过。
+当前证据如下：`pnpm typecheck`、`pnpm lint`、`pnpm build` 全部通过。复用的本地开发服务器上，无环境变量的 `/api/health/supabase` 返回 HTTP 503，响应为 `{"configured":false,"reachable":false,"status":503}` 并带 `Cache-Control: no-store`；在当时 connector 返回的目标 Free 项目 active modern publishable key 下返回 HTTP 200，响应为 `{"configured":true,"reachable":true,"status":200}` 并同样带 `Cache-Control: no-store`。该 200 仅属于当时运行窗口的时间界定证据，不是当前持续健康保证；运行时复审期间 connector 无法再次列出精确目标。localhost 页面完成 networkidle、非空、无可见 Next 错误覆盖层、console errors 为空和关键元素快照；搜索→结果→商品详情导航通过。
 
 这些证据只证明本地 A1 连接骨架可构建、可运行、能安全处理未配置状态并可达目标 settings health；不构成 Auth、DB、SSR 或生产批准。仍未配置 Vercel env、启用真实登录/OAuth/SMTP。
 
-## 5.1 2026-08-28 独立资源存在性/基础预检
+## 5.1 2026-08-28 独立资源存在性/基础预检（历史资源快照；当前 B1 见 5.2）
 
 - 独立组织 `Rebuy Lab` 已创建并由 Supabase connector 核验 `plan=Free`。
-- 独立项目 `rebuy-auth-spike` 已在 `eu-central-1`（Frankfurt）创建，限定 EU non-production Auth spike、synthetic-only；管理面状态为 `ACTIVE_HEALTHY`。
+- 独立项目 `rebuy-auth-spike` 已在 `eu-central-1`（Frankfurt）创建，限定 EU non-production Auth spike、synthetic-only；在初次资源核验/运行窗口管理面状态为 `ACTIVE_HEALTHY`。
 - provider project quote 实际返回 `amount=0`、`recurrence=monthly`；API 未返回 currency。Owner 已确认该实际 quote，随后已完成 `confirm_cost`。
-- 本节只记录资源管理面历史事实；后续 B1 连接执行另见 5.2。资源预检本身没有记录或传播 secrets、passwords、环境变量值、host、URL、project ref、组织/项目 ID 或其他账号资源标识；没有配置 Auth/DB/Storage/OAuth/SMTP，没有建表、写数据、创建真实账号、部署、promote、alias 或 Production 操作。
+- 本节只记录资源管理面历史事实；后续 B1 连接执行另见 5.2。资源预检证据范围不包含 secrets、passwords、环境变量值、host、URL、project ref、组织/项目 ID 或其他账号资源标识；没有配置 Auth/DB/Storage/OAuth/SMTP，没有建表、写数据、创建真实账号、部署、promote、alias 或 Production 操作。
 - Gate 仅打开到最小资源存在性/基础预检；完整 resource/cost/secret、secret/env、Auth、DB/schema/RLS、Storage、OAuth、SMTP、真实数据与 Production Gate 继续关闭。`ACTIVE_HEALTHY` 不等于 Auth/DB/运行时通过。
 
 ## 6. SSR 与发布前安全边界
@@ -73,9 +73,9 @@
 
 ## 5.2 2026-08-28 A1-B1 最小连接验证
 
-- 目标经 connector 再次核对为 `Rebuy Lab` / `rebuy-auth-spike`、Free、`eu-central-1`、`ACTIVE_HEALTHY`；不在本记录保存 URL、host、ref、ID 或 key 原值。
+- 初次 B1 运行前 connector 曾核对目标为 `Rebuy Lab` / `rebuy-auth-spike`、Free、`eu-central-1`、`ACTIVE_HEALTHY`；独立运行时复审期间 connector 再次无法列出精确目标，当前管理面状态无法复验。未访问其他项目、未执行任何外部动作；此前本地 health `200` 仅为当时运行窗口的时间界定证据，不是当前持续健康保证。
 - 首次 Chrome 交接的截断参数触发 `401 invalid-credential-response`，已按停止条件主动停止；Owner/主代理随后授权改用 connector 对精确目标返回的唯一 active modern publishable key，未创建、轮换或删除 key。
-- 仅将当前 URL/key 原值写入被 `.gitignore:11` 忽略的 `prototype/.env.local`；原值未进入 tracked 文件、commit、聊天、日志、server/browser 输出、截图或证据。
+- 按授权将初次运行窗口的 URL/key 原值写入被 `.gitignore:11` 忽略且 owner-only 的 `prototype/.env.local`。Chrome DOM 与内部交接曾出现一个截断的 publishable 参数展示值，该值触发 `401 invalid-credential-response` 后停止，且不是当前 active key；当前 tracked tree/diff 未发现完整 active key、host、project ref 或 secret。不对所有非 tracked 聊天、日志、server/browser 输出或内部状态作绝对无值断言。
 - 无配置路径返回 HTTP `503` 固定最小 JSON；真实本地连接返回 HTTP `200` 固定最小 JSON；两者均为 `Cache-Control: no-store`。health 200 仅表示 settings endpoint 可达，不表示 Auth、MFA、session、DB、RLS、Storage、OAuth、SMTP 或 SSR 技术通过。
 - 用 Node `22.12.0`、pnpm `10.33.3`、固定 `@supabase/ssr`/`@supabase/supabase-js` 版本复用既有实现；无源码、依赖、lockfile、workflow 或配置改动。浏览器与 dev server 已关闭。
 
@@ -83,7 +83,7 @@
 
 - 复用现有 `prototype/lib/supabase/client.ts`、`server.ts`、`config.ts`、`.env.example` 与 `/api/health/supabase`；不新建第二套 client/config/health 实现。
 - `prototype/app/account/login/LoginPrototype.tsx` 继续保持本地演示边界；Apple、Google、邮箱 OTP 点击不改写为真实 Auth，不创建真实 session。
-- A1-B1 最小连接验证已完成；独立安全复审已完成、首轮 finding 已关闭。B1 已按授权复核官方 docs/changelog，读取目标 project URL + active modern publishable key，确认 `.gitignore` 阻止 env，仅存入 gitignored local env，并用 EU non-production local synthetic-only 连接验证不依赖 service_role。
+- A1-B1 最小连接验证已完成；既有文档治理复审首轮 finding 已关闭。本次独立运行时复审首次结论为 REVIEW NO-GO，本轮 finding 已定向修复，待独立定向复审，不得写成 review GO。B1 已按授权复核官方 docs/changelog，初次运行窗口读取目标 project URL + active modern publishable key，确认 `.gitignore` 阻止 env，仅存入 gitignored local env，并用 EU non-production local synthetic-only 连接验证不依赖 service_role。
 - 这不是 broad waiver（全局豁免），也不代表 G2-A1 Auth/B1 技术通过。完整 resource/cost/secret、secret/env、Auth、DB/schema/RLS、Storage、OAuth、SMTP、真实 PII、部署和 Production Gate 继续关闭；service_role、secret key、db password 继续禁止，不触碰 Production。
 - 下一步仅为 B1 配置/能力只读预检，不自动进入 B2。脱敏 Gate 证据见[G2-A1 B1 风险 Gate 证据](./evidence/G2-A1/2026-08-28-b1-risk-gate/README.md)；完整资源/技术结果仍须按[阶段记录](./stages/G2-A1-Auth-Spike准备与资源门禁.md)和[15 台账](./15-项目状态与阶段台账.md)更新。
 
