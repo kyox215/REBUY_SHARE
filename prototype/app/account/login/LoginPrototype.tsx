@@ -10,9 +10,13 @@ import styles from "./login.module.css";
 type LoginStep = "email" | "otp";
 type Theme = "dark" | "light";
 
+type LoginPrototypeProps = {
+  authStatus?: string;
+};
+
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export default function LoginPrototype() {
+export default function LoginPrototype({ authStatus }: LoginPrototypeProps) {
   const [theme, setTheme] = useState<Theme>("light");
   const [email, setEmail] = useState("");
   const [step, setStep] = useState<LoginStep>("email");
@@ -94,6 +98,12 @@ export default function LoginPrototype() {
           </div>
 
           <div className={styles.loginPanel}>
+            {authStatus ? (
+              <p className={styles.authStatus} role="alert">
+                {authStatus}
+              </p>
+            ) : null}
+
             {step === "email" ? (
               <>
                 <div className={styles.providerStack} role="group" aria-label="第三方登录入口">

@@ -47,6 +47,9 @@ jobs:
       - name: Typecheck
         run: corepack pnpm@10.33.3 typecheck
 
+      - name: Auth contract tests (pre-lint)
+        run: corepack pnpm@10.33.3 test:auth
+
       - name: Lint
         run: corepack pnpm@10.33.3 lint
 
