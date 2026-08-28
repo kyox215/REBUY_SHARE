@@ -10,23 +10,23 @@
 | G0/P1 买家端视觉验收与 UI 冻结 | 已通过并冻结 | 本地交互 | [G0-P1 事实记录](./G0-P1-视觉验收与UI冻结.md)；[Owner 视觉验收清单](./G0-P1-Owner视觉验收清单.md)；[分类目录 IA 复验证据](../evidence/G0-P1/2026-08-25-category-directory-ia/README.md)；[全流程验收证据](../evidence/G0-P1/2026-08-25-full-experience-acceptance/README.md) |
 | G1 工程底座与环境隔离 | 已通过 | 本地静态 + 本地等价 + archive 预检 + 远端只读 + 远端 Actions + main merge closeout + Owner Gate | [G1 Owner 验收清单](./G1-Owner验收清单.md)；[G1 final closeout](../evidence/G1/2026-08-27-g1-final-closeout/README.md)；[G1.2b main merge closeout](../evidence/G1/2026-08-27-g1-2b-main-merge/README.md)；[G1.3-0 本地环境预检](../evidence/G1/2026-08-26-g1-3-0-local-environment-preflight/README.md)；[G1 阶段合同](./G1-工程底座与环境隔离.md) |
 | G2-A0 账号安全合同与威胁模型 | 已通过（Exit GO；远端 docs-only reconciliation 已完成） | 本地静态 + 远端 merge/Actions + 独立复审 | [G2-A0 阶段记录](./G2-A0-账号安全合同与威胁模型验收.md)；[G2-A0 Owner 验收清单](./G2-A0-Owner验收清单.md)；[G2-A1 Entry preparation 证据](../evidence/G2-A1/2026-08-28-entry-preparation/README.md)；[A0 ADR 与威胁模型](../09-A0-账号架构ADR与威胁模型.md) |
-| G2-A1 独立 Auth spike | 准备中（技术阶段未开始；无资源 Entry preparation 已完成/待审；resource/cost/secret Gate 关闭） | 本地静态（docs-only） | [G2-A1 准备与资源门禁](./G2-A1-Auth-Spike准备与资源门禁.md)；[Entry preparation 证据](../evidence/G2-A1/2026-08-28-entry-preparation/README.md)；[资源成本与密钥 Gate 模板](../templates/G2-A1-资源成本与密钥Gate模板.md)；[Auth 实测矩阵模板](../templates/G2-A1-Auth实测矩阵模板.md) |
+| G2-A1 独立 Auth spike | 准备中（技术阶段未开始；最小资源存在性/基础预检已完成；完整 resource/cost/secret Gate 关闭） | 本地静态（docs-only）+ 外部资源存在性核验 | [G2-A1 准备与资源门禁](./G2-A1-Auth-Spike准备与资源门禁.md)；[Entry preparation 证据](../evidence/G2-A1/2026-08-28-entry-preparation/README.md)；[资源成本与密钥 Gate 模板](../templates/G2-A1-资源成本与密钥Gate模板.md)；[Auth 实测矩阵模板](../templates/G2-A1-Auth实测矩阵模板.md) |
 
-GOV-1 的阶段事实见其[独立记录](./GOV-1-治理文档与状态台账.md)，当前状态已由 Owner 于 2026-08-25 18:58:57 CEST 确认为“已通过”；G0/P1 的路径/装饰标题、统一选择器和分类目录 IA 修订已完成，当前 G0/P1 为“已通过并冻结”。G1 已于 2026-08-27 完成 G1-19/G1 Exit=GO，验收 ref=`d51f1c7cb47e2fe2932b29bd39420f5d092a8160`；merge main 与 exact-head Actions 证据见[G1 final closeout](../evidence/G1/2026-08-27-g1-final-closeout/README.md)。G2-A0 当前为 `Exit GO；远端 docs-only reconciliation 已完成`，验收 ref=`140ea15d9c3f178a326709d35ad1750a156df0d1`，merge=`fd9b712c7b07bf34399f9838eebb75846425c1d1`；G2-A1 技术阶段未开始，无资源 Entry preparation 已完成/待审，resource/cost/secret Gate 关闭。当前状态必须与 [15 台账](../15-项目状态与阶段台账.md) 一致；本索引只做导航，不复制记录细节。
+GOV-1 的阶段事实见其[独立记录](./GOV-1-治理文档与状态台账.md)，当前状态已由 Owner 于 2026-08-25 18:58:57 CEST 确认为“已通过”；G0/P1 的路径/装饰标题、统一选择器和分类目录 IA 修订已完成，当前 G0/P1 为“已通过并冻结”。G1 已于 2026-08-27 完成 G1-19/G1 Exit=GO，验收 ref=`d51f1c7cb47e2fe2932b29bd39420f5d092a8160`；merge main 与 exact-head Actions 证据见[G1 final closeout](../evidence/G1/2026-08-27-g1-final-closeout/README.md)。G2-A0 当前为 `Exit GO；远端 docs-only reconciliation 已完成`，验收 ref=`140ea15d9c3f178a326709d35ad1750a156df0d1`，merge=`fd9b712c7b07bf34399f9838eebb75846425c1d1`；G2-A1 技术阶段未开始，最小资源存在性/基础预检已完成，完整 resource/cost/secret Gate 关闭。当前状态必须与 [15 台账](../15-项目状态与阶段台账.md) 一致；本索引只做导航，不复制记录细节。
 
-## 1.1 2026-08-28 当前纠正与 G2-A1 无资源准备
+## 1.1 2026-08-28 当前纠正与 G2-A1 资源存在性预检
 
-G2-A0 远端 docs-only reconciliation 已完成：PR #7 merge=`fd9b712c7b07bf34399f9838eebb75846425c1d1`；main Actions run=`33122238997` / job=`98691703085` 全绿；merge SHA 的 GitHub deployments=`0`；来源分支保留。G2-A1 技术阶段未开始，无资源 Entry preparation 已完成/待审，resource/cost/secret Gate 关闭。详见[G2-A1 准备与资源门禁](./G2-A1-Auth-Spike准备与资源门禁.md)、[Entry preparation 证据](../evidence/G2-A1/2026-08-28-entry-preparation/README.md)、[资源成本与密钥 Gate 模板](../templates/G2-A1-资源成本与密钥Gate模板.md)和[Auth 实测矩阵模板](../templates/G2-A1-Auth实测矩阵模板.md)。
+G2-A0 远端 docs-only reconciliation 已完成：PR #7 merge=`fd9b712c7b07bf34399f9838eebb75846425c1d1`；main Actions run=`33122238997` / job=`98691703085` 全绿；merge SHA 的 GitHub deployments=`0`；来源分支保留。G2-A1 技术阶段未开始；无资源 Entry preparation 已归档；最小资源存在性/基础预检已完成；完整 resource/cost/secret Gate 关闭。详见[G2-A1 准备与资源门禁](./G2-A1-Auth-Spike准备与资源门禁.md)、[Entry preparation 证据](../evidence/G2-A1/2026-08-28-entry-preparation/README.md)、[资源成本与密钥 Gate 模板](../templates/G2-A1-资源成本与密钥Gate模板.md)和[Auth 实测矩阵模板](../templates/G2-A1-Auth实测矩阵模板.md)。
 
 ## 1.2 其他阶段计划记录（G2-A1 技术阶段及后续未打开）
 
-以下记录描述 G1/G2-A0 合同及其证据，以及 G2-A1 无资源准备；G1 已通过并关闭，G2-A0 已完成远端 docs-only reconciliation，G2-A1 技术阶段及后续阶段仍未开始：
+以下记录描述 G1/G2-A0 合同及其证据，以及 G2-A1 无资源准备和窄范围资源存在性预检；G1 已通过并关闭，G2-A0 已完成远端 docs-only reconciliation，G2-A1 技术阶段及后续阶段仍未开始：
 
 | 阶段 | 状态 | 证据级别 | 计划合同 |
 |---|---|---|---|
 | G1.2/G1.3 工程门（已归档） | G1.2a/G1.2b/G1.3 已按证据完成，G1 Exit 已于 2026-08-27 通过 | 本地静态/本地等价/archive 预检/远端只读/远端 Actions/main merge closeout/Owner Gate | [G1-工程底座与环境隔离](./G1-工程底座与环境隔离.md)；[G1 Owner 验收清单](./G1-Owner验收清单.md)；[G1 final closeout](../evidence/G1/2026-08-27-g1-final-closeout/README.md)；[G1.2b main merge closeout](../evidence/G1/2026-08-27-g1-2b-main-merge/README.md)；[G1.3-0 本地环境预检](../evidence/G1/2026-08-26-g1-3-0-local-environment-preflight/README.md) |
 | G2-A0 账号安全合同与威胁模型 | 已通过；Exit GO；远端 docs-only reconciliation 已完成 | 本地静态 + 远端 merge/Actions + 独立复审 | [G2-A0 阶段记录](./G2-A0-账号安全合同与威胁模型验收.md)；[G2-A0 Owner 验收清单](./G2-A0-Owner验收清单.md)；[G2-A0 Entry preflight 证据](../evidence/G2-A0/2026-08-26-entry-preflight/README.md)；[G2-A1 Entry preparation 证据](../evidence/G2-A1/2026-08-28-entry-preparation/README.md)；[A0 ADR 与威胁模型](../09-A0-账号架构ADR与威胁模型.md) |
-| G2-A1 独立 Auth spike | 准备中；技术阶段未开始；无资源 Entry preparation 已完成/待审；resource/cost/secret Gate 关闭 | 本地静态（docs-only） | [G2-A1 准备与资源门禁](./G2-A1-Auth-Spike准备与资源门禁.md)；[Entry preparation 证据](../evidence/G2-A1/2026-08-28-entry-preparation/README.md)；[资源成本与密钥 Gate 模板](../templates/G2-A1-资源成本与密钥Gate模板.md)；[Auth 实测矩阵模板](../templates/G2-A1-Auth实测矩阵模板.md) |
+| G2-A1 独立 Auth spike | 准备中；技术阶段未开始；最小资源存在性/基础预检已完成；完整 resource/cost/secret Gate 关闭 | 本地静态（docs-only）+ 外部资源存在性核验 | [G2-A1 准备与资源门禁](./G2-A1-Auth-Spike准备与资源门禁.md)；[Entry preparation 证据](../evidence/G2-A1/2026-08-28-entry-preparation/README.md)；[资源成本与密钥 Gate 模板](../templates/G2-A1-资源成本与密钥Gate模板.md)；[Auth 实测矩阵模板](../templates/G2-A1-Auth实测矩阵模板.md) |
 
 ## 2. 命名与追加规则
 
@@ -39,11 +39,11 @@ G2-A0 远端 docs-only reconciliation 已完成：PR #7 merge=`fd9b712c7b07bf343
 
 ## 3. 证据和状态速查
 
-状态枚举、证据枚举、Owner Gate 规则和生产边界以 [15 台账](../15-项目状态与阶段台账.md) 为准。GOV-1 已通过；G0/P1 当前为“已通过并冻结”；G1 已于 2026-08-27 以 G1-19/G1 Exit=GO 完成，ref=`d51f1c7cb47e2fe2932b29bd39420f5d092a8160`。G2-A0 已通过（Exit GO；远端 docs-only reconciliation 已完成，merge=`fd9b712c7b07bf34399f9838eebb75846425c1d1`），七项 Owner 政策已采纳；G2-A1 技术阶段未开始，无资源 Entry preparation 已完成/待审，resource/cost/secret Gate 关闭。详见[G1 final closeout](../evidence/G1/2026-08-27-g1-final-closeout/README.md)、[G2-A0 阶段记录](./G2-A0-账号安全合同与威胁模型验收.md)和[G2-A0 Owner 验收清单](./G2-A0-Owner验收清单.md)。
+状态枚举、证据枚举、Owner Gate 规则和生产边界以 [15 台账](../15-项目状态与阶段台账.md) 为准。GOV-1 已通过；G0/P1 当前为“已通过并冻结”；G1 已于 2026-08-27 以 G1-19/G1 Exit=GO 完成，ref=`d51f1c7cb47e2fe2932b29bd39420f5d092a8160`。G2-A0 已通过（Exit GO；远端 docs-only reconciliation 已完成，merge=`fd9b712c7b07bf34399f9838eebb75846425c1d1`），七项 Owner 政策已采纳；G2-A1 技术阶段未开始，最小资源存在性/基础预检已完成，完整 resource/cost/secret Gate 关闭。详见[G1 final closeout](../evidence/G1/2026-08-27-g1-final-closeout/README.md)、[G2-A0 阶段记录](./G2-A0-账号安全合同与威胁模型验收.md)和[G2-A0 Owner 验收清单](./G2-A0-Owner验收清单.md)。
 
 ## 3.1 2026-08-28 当前状态纠正
 
-以 [15 台账](../15-项目状态与阶段台账.md) 为唯一当前状态源：G2-A0 已通过且远端 docs-only reconciliation 已完成（merge=`fd9b712c7b07bf34399f9838eebb75846425c1d1`）；G2-A1 技术阶段未开始，无资源 Entry preparation 已完成/待审，resource/cost/secret Gate 关闭。后续四批合同、官方来源刷新与资源责任字段见[G2-A1 准备与资源门禁](./G2-A1-Auth-Spike准备与资源门禁.md)，静态摘要见[Entry preparation 证据](../evidence/G2-A1/2026-08-28-entry-preparation/README.md)。本索引不复制运行时或生产结论。
+以 [15 台账](../15-项目状态与阶段台账.md) 为唯一当前状态源：G2-A0 已通过且远端 docs-only reconciliation 已完成（merge=`fd9b712c7b07bf34399f9838eebb75846425c1d1`）；G2-A1 技术阶段未开始，最小资源存在性/基础预检已完成，完整 resource/cost/secret Gate 关闭。后续四批合同、官方来源刷新与资源责任字段见[G2-A1 准备与资源门禁](./G2-A1-Auth-Spike准备与资源门禁.md)，静态摘要见[Entry preparation 证据](../evidence/G2-A1/2026-08-28-entry-preparation/README.md)。本索引不复制运行时或生产结论。
 
 ## 4. 2026-08-26 当前状态去漂移维护
 
@@ -57,9 +57,13 @@ G2-A0 远端 docs-only reconciliation 已完成：PR #7 merge=`fd9b712c7b07bf343
 
 独立 merge reviewer 已对 PR #1 head 正式给出 GO；PR #1 随后通过 GitHub merge commit 合并 main，merge 后 main push 的 `Prototype quality` run/job 已成功，`integration/g1-2b` 仍保留。G1.2b main merge 不打开 G1.3、Preview、Supabase/Auth/DB 或 Production；G1 Exit 继续 NO-GO，G2-A0 不打开。完整事实见[G1.2b main merge closeout](../evidence/G1/2026-08-27-g1-2b-main-merge/README.md)。
 
-## 7. 2026-08-28 G2-A0 远端闭环与 G2-A1 无资源 Entry preparation
+## 7. 2026-08-28 G2-A0 远端闭环与 G2-A1 Entry preparation/资源预检
 
-G2-A0 远端 docs-only reconciliation 已完成：PR #7 merge=`fd9b712c7b07bf34399f9838eebb75846425c1d1`，main Actions run=`33122238997` / job=`98691703085` 全绿，merge SHA 的 GitHub deployments=`0`，来源分支保留。G2-A1 技术阶段未开始；无资源 Entry preparation 已完成/待审；resource/cost/secret Gate 关闭。当前只允许文档、模板、接口草图、测试矩阵和 `.invalid` 合成字段，禁止资源创建、Auth/DB/Storage/OAuth/SMTP、secret/env/PII、部署或 Production。详见[G2-A1 准备与资源门禁](./G2-A1-Auth-Spike准备与资源门禁.md)与[Entry preparation 证据](../evidence/G2-A1/2026-08-28-entry-preparation/README.md)。
+G2-A0 远端 docs-only reconciliation 已完成：PR #7 merge=`fd9b712c7b07bf34399f9838eebb75846425c1d1`，main Actions run=`33122238997` / job=`98691703085` 全绿，merge SHA 的 GitHub deployments=`0`，来源分支保留。G2-A1 技术阶段未开始；无资源 Entry preparation 已归档；最小资源存在性/基础预检已完成；完整 resource/cost/secret Gate 关闭。当前只允许脱敏资源事实、文档、模板、接口草图、测试矩阵和 `.invalid` 合成字段，禁止 secret/env/PII、Auth/DB/Storage/OAuth/SMTP 配置、真实数据、部署或 Production。详见[G2-A1 准备与资源门禁](./G2-A1-Auth-Spike准备与资源门禁.md)与[Entry preparation 证据](../evidence/G2-A1/2026-08-28-entry-preparation/README.md)。
+
+### 2026-08-28｜G2-A1 Free Supabase 资源存在性/基础预检
+
+独立 Supabase 组织 `Rebuy Lab` 的 `plan=Free`、项目 `rebuy-auth-spike` 的 `eu-central-1` 区域与 `ACTIVE_HEALTHY` 管理面状态已核验；provider quote 为 `amount=0`、`recurrence=monthly`（API 未返回 currency），并已完成 Owner quote 确认与 `confirm_cost`。该窄范围事实不等于 Auth/DB/运行时通过；完整 resource/cost/secret、secret/env、Auth、DB/schema/RLS、Storage、OAuth、SMTP、真实数据、部署和 Production Gate 继续关闭。详情见[G2-A1 准备与资源门禁](./G2-A1-Auth-Spike准备与资源门禁.md)。
 
 ## 8. 2026-08-27 G2-A0 docs-only 执行启动（历史快照）
 

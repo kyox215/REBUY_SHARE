@@ -1,15 +1,15 @@
-# G2-A1 无资源 Entry preparation 证据
+# G2-A1 Entry preparation 与资源存在性预检证据
 
 记录日期：2026-08-28（Europe/Rome）
-阶段状态：**G2-A1 技术阶段未开始；无资源 Entry preparation 已完成/待审；resource/cost/secret Gate 关闭**
-证据级别：本地静态（docs-only）+ 已完成的 G2-A0 远端闭环摘要
-执行范围：仅 Markdown 文档、阶段导航、资源 Gate 模板和 Auth 实测矩阵模板
+阶段状态：**G2-A1 技术阶段未开始；最小资源存在性/基础预检已完成；完整 resource/cost/secret Gate 关闭**
+证据级别：本地静态（docs-only）+ 外部资源存在性核验 + 已完成的 G2-A0 远端闭环摘要
+执行范围：Entry preparation 文档、阶段导航、资源 Gate 模板和 Auth 实测矩阵模板；另附独立资源管理面预检摘要
 
 ## 1. 本批结论
 
-本批完成 G2-A1 的无资源准备：建立四批后续执行合同、资源/成本/密钥 Gate 字段、Auth 实测矩阵字段、官方资料刷新和脱敏证据边界。**没有开始 G2-A1 Auth 技术验证**，没有创建或连接 Supabase/Auth/DB/Storage/OAuth/SMTP，没有读取 secret/env/PII，没有创建真实账号或 fixture，没有部署、promote、alias、Production 写入或 UI/代码变更。
+本批完成 G2-A1 的无资源准备：建立四批后续执行合同、资源/成本/密钥 Gate 字段、Auth 实测矩阵字段、官方资料刷新和脱敏证据边界。该无资源准备本身**没有开始 G2-A1 Auth 技术验证**；随后追加的资源事件仅完成独立 Free Supabase 资源的管理面存在性/基础健康预检，没有连接应用或配置 Auth/DB/Storage/OAuth/SMTP，没有读取 secret/env/PII，没有创建真实账号或 fixture，没有部署、promote、alias、Production 写入或 UI/代码变更。
 
-resource/cost/secret Gate 继续关闭。下一步只能在新的独立 non-production 授权明确 provider、组织、项目、计划、区域、环境、成本责任、密钥责任和停止联系人后，重新打开资源 Gate；用户必须先选择 organization + resource scope，由 provider `get_cost` 返回并确认其实际提供的 amount/recurrence，tax/VAT/billing-address effect 另行由 billing page/专业顾问核对，organization-level Spend Cap 状态与覆盖范围另行只读核验，三项均完成且 Owner 明确确认后才可创建。本批不从通用价格推断 exact cost，也不复用与 Rebuy 无关的项目。
+完整 resource/cost/secret Gate 继续关闭；仅打开到“最小资源存在性/基础预检”这一窄范围。下一步必须形成新的最小 Auth spike 设计与风险 Gate，不能把资源健康状态外推为 Auth/DB 验证；secret/env、Auth、DB/schema/RLS、Storage、OAuth、SMTP、真实数据和 Production 继续关闭。
 
 关联入口：
 
@@ -46,7 +46,7 @@ resource/cost/secret Gate 继续关闭。下一步只能在新的独立 non-prod
 
 以上只读摘要不包含 URL、cookie、token、环境值或 secret 原值；Vercel 复核仅用于保护既有 Production 不变量，不打开 Preview 或 Production Gate。
 
-## 4. 公开 Supabase inventory 摘要
+## 4. 公开 Supabase inventory 摘要（无资源阶段历史快照）
 
 允许公开的最小摘要仅为：**只读 inventory 没有发现已获批准、可用于 Rebuy 的独立 non-production project；任何无关项目禁止复用。** 本批不公开任何 Supabase inventory 的组织/项目名称、ID、数量、套餐、host 或现有 region，也不记录 key、token 或环境值。
 
@@ -80,7 +80,7 @@ resource/cost/secret Gate 继续关闭。下一步只能在新的独立 non-prod
 - 当前差异扫描未发现 secret、token、JWT、OTP、TOTP seed、真实 email、phone、address、host 或未授权外部资源值；官方文档链接、公开 Git SHA 和必要 deployment ID 属于可追溯引用，不是凭据。
 - 不运行 typecheck/lint/build：源码、依赖、workflow、lockfile、配置和生成物均未变化；复用精确 `main` Actions run `33122238997` / job `98691703085` 的 install/typecheck/lint/build 全绿证据。
 - 未做 hash：本批不是确定性生成或文件传输校验，且没有异常覆盖迹象。
-- 未启动独立运行时审查：本批只形成文档与模板；资源 Gate 关闭，尚无 Auth/DB/Storage/Provider 实施。文档级复核仍需由主代理/Owner 按 Gate 处理。
+- 未启动独立运行时审查：本记录覆盖无资源 Entry preparation 及其后的管理面资源存在性/基础预检，未进行 provider 技术实施或候选比较；应用未连接 Auth/DB/Storage/OAuth/SMTP；完整 resource/cost/secret Gate 仍关闭。文档级复核不等于运行时证据，后续仍需由主代理/Owner 按新的 Auth spike 风险 Gate 处理。
 
 ## 6.1 2026-08-28 独立文档审查修复记录
 
@@ -94,8 +94,34 @@ resource/cost/secret Gate 继续关闭。下一步只能在新的独立 non-prod
 
 ## 7. 停止、回退与遗留风险
 
-资源、费用、密钥、Auth、DB、Storage、OAuth、SMTP、部署和 Production Gate 继续关闭。若未来准备进入技术阶段，发现项目/组织/区域隔离不清、费用未确认、真实 PII/secret 进入证据、callback 可重放或 open redirect、MFA 恢复缺少双人审计、SSR 串线或 token 窗口被误报为即时失效，应立即停止并保留脱敏失败记录。
+完整资源、费用、密钥、Auth、DB、Storage、OAuth、SMTP、部署和 Production Gate 继续关闭；仅允许本文件第 8 节记录的最小资源存在性/基础预检。若后续发现项目/组织/区域隔离不清、费用边界未确认、真实 PII/secret 进入证据、callback 可重放或 open redirect、MFA 恢复缺少双人审计、SSR 串线或 token 窗口被误报为即时失效，应立即停止并保留脱敏失败记录。
 
 本批回退只针对本地 docs-only 提交：可回退该提交或追加带日期的纠正，不使用 force/reset，不修改 G0/P1、代码、依赖、workflow、外部资源或 Production。将来资源的 expiry/cleanup 必须以[资源成本与密钥 Gate 模板](../../../templates/G2-A1-资源成本与密钥Gate模板.md)记录，并在不保留原值的前提下完成审计。
 
-已知风险：Supabase 官方文档、套餐、区域、Auth/SSR API、默认权限和 SMTP 限制可能继续变化；Node 24 项目设置与 Node 22 Production 构建元数据的历史差异仍未解决；exact cost、组织确认、provider 选择、session 方案和 GDPR/税务结论均未发生。任何一项都不能从本批准备证据推导为技术或生产通过。
+已知风险：Supabase 官方文档、套餐、区域、Auth/SSR API、默认权限和 SMTP 限制可能继续变化；Node 24 项目设置与 Node 22 Production 构建元数据的历史差异仍未解决；provider 技术实施与候选选择比较、session 方案和 GDPR/税务结论尚未开始。组织、项目、计划、区域和 quote 事实仅来自第 8 节管理面预检，不能从本批证据推导为技术或生产通过。
+
+## 8. 2026-08-28｜Free Supabase 资源存在性与基础预检（当前纠正）
+
+本节取代第 4 节中“尚无独立项目”的无资源阶段快照；不删除历史记录，也不把资源管理面状态写成 Auth 运行证据。
+
+- 独立 Supabase 组织 `Rebuy Lab` 已创建，Supabase connector 已核验 `plan=Free`。
+- 独立项目 `rebuy-auth-spike` 已创建于 `eu-central-1`（Frankfurt），用途仅为 EU non-production Auth spike，数据模式为 synthetic-only。
+- provider project quote 实际返回 `amount=0`、`recurrence=monthly`；API 未返回 currency。Owner 已确认该实际 quote，随后已完成 `confirm_cost`。此 quote 不等于税费、Spend Cap 或完整成本责任结论。
+- provider 管理面报告项目状态 `ACTIVE_HEALTHY`。该状态只证明资源存在且健康，不证明 Auth、MFA、session、DB、RLS、Storage、OAuth、SMTP 或 SSR 技术通过。
+- 没有读取、记录或传播 secrets、keys、passwords、环境变量值、host、URL、project ref、组织/项目 ID 或其他账号资源标识；没有配置 Auth/DB/Storage/OAuth/SMTP，没有建表、写数据、创建真实账号、部署、promote、alias 或 Production 操作。
+
+### 脱敏操作追溯
+
+- 日期：2026-08-28（Europe/Rome）。
+- 操作类别：Chrome 创建 Free organization；Supabase connector `get_organization`、`get_cost`、`confirm_cost`、`create_project`、`get_project`。
+- 精确操作分钟未保留；没有记录或保留 organization/project ID、ref、host、URL、key、secret、password 或其他凭据。
+
+### Gate 结果
+
+| Gate | 当前状态 | 证据/允许范围 | 继续关闭 |
+|---|---|---|---|
+| 最小资源存在性/基础预检 | **已打开并完成（窄范围）** | 组织/Free 计划、项目名称、区域、quote 确认、管理面健康状态 | Auth、DB、RLS、Storage、OAuth、SMTP、SSR |
+| 完整 resource/cost/secret | **关闭** | 仅保留脱敏事实并设计后续风险 Gate | secret/env、密钥责任、税费/Spend Cap 完整确认、任何技术连接 |
+| 真实数据与 Production | **关闭** | 无 | 真实客户/商户/PII、真实账号、部署、Production/promote/写入 |
+
+下一步是新的最小 Auth spike 设计与风险 Gate。Free 计划与 Pro 专属 session 配置之间的差异必须在设计中单独处理；在新 Gate 明确前不读取 key、不配置 Auth/SMTP/OAuth、不建表/写数据，不把 `ACTIVE_HEALTHY` 外推为技术通过。
