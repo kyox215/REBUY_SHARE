@@ -1,8 +1,8 @@
 # G2-A1 Auth Spike 准备与资源门禁
 
-文档状态：**G2-A1 执行中（B1 最小连接与配置/能力只读预检、B2 本地安全基础及远端闭环已完成；当前 B2 external entry Gate design/preflight 已完成）**；PR #13 docs-only closeout merge=`b3e53a71ca40729b139724a492e8d20afd02f341`，main Actions run=`33212054195`/job=`98987321203` success，`test:auth` 12 项且仅运行一次，exact merge 的 GitHub deployments=`0`，Vercel 无新增部署；该闭环仅关闭文档 Gate 设计与本地基础交付，不等于完整 B2/Auth/G2-A1 整体通过；真实 Auth/OAuth/SMTP/DB/Storage/user/session/MFA 未开始；E1 local bootstrap 仍待独立审查后按本 Gate 打开，E2–E5、hosted Auth/SMTP/DB/Storage/Production/deploy 全部继续 CLOSED；完整 resource/cost/secret/Auth/DB/Storage/OAuth/SMTP/真实 PII/部署/Production Gate 关闭**
+文档状态：**G2-A1 执行中（B1 最小连接与配置/能力只读预检、B2 本地安全基础及远端闭环已完成；当前 B2 external entry Gate design/preflight 已完成）**；PR #13 docs-only closeout merge=`b3e53a71ca40729b139724a492e8d20afd02f341`，main Actions run=`33212054195`/job=`98987321203` success，`test:auth` 12 项且仅运行一次，exact merge 的 GitHub deployments=`0`，Vercel 无新增部署；该闭环仅关闭文档 Gate 设计与本地基础交付，不等于完整 B2/Auth/G2-A1 整体通过；真实 Auth/OAuth/SMTP/DB/Storage/user/session/MFA 未开始；E1 local bootstrap 已形成两轮本地完成候选并待独立审查，E2–E5、hosted Auth/SMTP/DB/Storage/Production/deploy 全部继续 CLOSED；完整 resource/cost/secret/Auth/DB/Storage/OAuth/SMTP/真实 PII/部署/Production Gate 关闭**
 记录日期：2026-08-29（Europe/Rome）
-当前批次状态纠正（2026-08-29）：E1 local bootstrap 已形成本地候选；获批 image-download Gate 后 `supabase start` 因 Docker/Colima socket mount 失败，随后项目限定 stop 成功，未形成健康运行证据；本条覆盖上方历史性“待独立审查后打开”表述。E2–E5、hosted Auth/DB/Storage/OAuth/SMTP、真实 Auth/OTP/invite、业务 schema、deploy、Production 继续 CLOSED。
+当前批次状态纠正（2026-08-29）：E1 local bootstrap 已形成**本地完成候选/待独立审查**；两轮 `supabase start` 均为 6/6 本地缓存命中，目标服务 health/API/DB/Studio/Mailpit 探针通过，随后项目限定 stop/cleanup 成功；本条覆盖上方历史性“待独立审查后打开”表述。E2–E5、hosted Auth/DB/Storage/OAuth/SMTP、真实 Auth/OTP/invite、业务 schema、deploy、Production 继续 CLOSED。
 证据级别：规划 + 外部资源只读核验 + 本地静态/运行 + agent-browser；不代表 Auth、Staging、数据库或生产能力
 前置阶段：G2-A0 Exit GO，远端 docs-only reconciliation 已完成，事实见[本批 Entry preparation 证据](../evidence/G2-A1/2026-08-28-entry-preparation/README.md)
 
@@ -304,7 +304,7 @@ G2-A0 的远端闭环已经在 `main` 完成：PR #7 的 merge commit 为 `fd9b7
 - 本批仅需执行 docs link/fragment、fence/backtick、sensitive scan、stale-current、diff-check；不重复源码 build/lint/typecheck/browser/Auth runtime，因代码与 workflow 未改变且本批为 docs-only。
 - 详细脱敏记录与官方链接见[B2 外部入口 Gate 证据](../evidence/G2-A1/2026-08-28-b2-external-entry-gate/README.md)。本节完成后仍不得把 Gate 设计或资源观察写成 B2/Auth/G2-A1 技术通过。
 
-## 16. 2026-08-29｜G2-A1 E1 local bootstrap start 失败与 Docker/Colima mount STOP
+## 16. 2026-08-29｜G2-A1 E1 local bootstrap 首轮失败诊断（历史；当前纠正见第 17 节）
 
 ### 16.1 执行范围与生成结果
 
@@ -323,3 +323,11 @@ G2-A0 的远端闭环已经在 `main` 完成：PR #7 的 merge commit 为 `fd9b7
 
 - 当前只记录 **E1 local bootstrap 本地候选/启动失败后已清理**。E2–E5、hosted Auth/DB/Storage/OAuth/SMTP、真实 Auth/OTP/invite、业务 schema、deploy、Production 继续 **CLOSED**；不预写 PR、CI、merge 或外部结果。残余风险是 Docker/Colima socket mount 前提、status 在无 DB 容器时失败、本地栈健康尚未验证。
 - 详细脱敏命令结果、官方当日资料和回退边界见[E1 local bootstrap evidence](../evidence/G2-A1/2026-08-29-e1-local-bootstrap/README.md)。官方入口：[Supabase CLI getting started](https://supabase.com/docs/guides/local-development/cli/getting-started)、[config.toml reference](https://supabase.com/docs/guides/local-development/cli/config)、[CLI reference](https://supabase.com/docs/reference/cli)、[Supabase changelog](https://supabase.com/changelog)。
+
+## 17. 2026-08-29｜G2-A1 E1 local bootstrap 复验通过候选与 cleanup 纠正
+
+- 第 16 节仅保留首次未排除 Vector 的 Docker/Colima socket mount 失败诊断；binary-derived image refs 仅作首次 cache 诊断，非权威运行时事实。本批未修改全局 Colima、Docker socket、symlink 或 host runtime。
+- 两轮差异：首轮使用 `start --help` 逻辑排除名，CLI 警告 `analytics/storage/functions` 无效；Pull=`6/6` 全部 local/skipped，目标容器 health、健康探针和 cleanup 通过。第二轮使用实际有效排除名 `logflare/vector/realtime/storage-api/imgproxy/edge-runtime/gotrue/supavisor`；无 warning，Pull=`6/6` 全部 local/skipped，得到相同服务集合并复验通过。两轮均无 image pull/download/tag 或版本漂移。
+- 六个实际服务容器为 `supabase_db_*`、`supabase_kong_*`、`supabase_rest_*`、`supabase_pg_meta_*`、`supabase_studio_*`、`supabase_inbucket_*`，对应 DB、API gateway/API、REST/API、Meta、Studio、Inbucket/Mailpit。published HostIP 全部为 `127.0.0.1`；API REST=`200`、DB `pg_isready` accepting、Studio=`307`、Mailpit=`200`；未出现 Auth、Realtime、Storage、Vector、Analytics、Imgproxy、Edge Runtime、Functions 或 Supavisor。
+- 通过 `require_escalated` 获批创建唯一 `supabase_network_rebuy-g2-a1-e1-local-bootstrap-exec` loopback bridge，option=`com.docker.network.bridge.host_binding_ipv4=127.0.0.1`；两轮均使用 help 确认的 `stop --project-id ... --no-backup`，随后仅删除该精确 network。最终项目 containers、volumes、network 与 `55320–55329` listeners 均为空；`54321–54324` 仅核对端口存在性仍为 `LISTENING`，未读取其所属进程/容器/network 详情。
+- 当前状态：**E1 local bootstrap 本地完成候选/待独立审查**。E2–E5、hosted Auth/DB/Storage/OAuth/SMTP、真实 Auth/OTP/invite、业务 schema、deploy、Production 继续 **CLOSED**；未执行真实 Auth/DB/Storage 写入、hosted 登录/link、费用、push、PR、merge 或 deploy。
