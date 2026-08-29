@@ -120,7 +120,7 @@
 
 ## 8. 2026-08-29 远端交付闭环（当前）
 
-- E1 local bootstrap 已以 PR #15 用 merge commit 合并 `main`，完成远端 docs-only 交付闭环；该结果仅代表 E1 本地隔离骨架，不代表 E2 或 hosted/Production 能力已打开。
+- 当前 closeout 分支/提交为 docs-only；E1 local bootstrap 已以 PR #15 用 merge commit 合并 `main`，完成 E1 config + evidence delivery 远端交付闭环（包含 `supabase/.gitignore`、`supabase/config.toml`、`supabase/seed.sql` 与文档）；该结果仅代表 E1 本地隔离骨架，不代表 E2 或 hosted/Production 能力已打开。
 - PR head=`fc6153b60872328b55b525730f3c653579ac2ea2`，merge=`a5e7fd1ae2ca7468610c0aab936121a27d124c02`，parents=`b3240577026a0f390ae634f2119426842827805e` + `fc6153b60872328b55b525730f3c653579ac2ea2`；PR head CI run=`33256006999`/job=`99109715930` success；main exact merge CI run=`33256185497`/job=`99110205068` success；精确 merge的 GitHub deployments=`0`；来源分支保留。
 - 刚刚只读核对的 Vercel 事实为 3 个既有 READY deployments，其中 2 个 Preview、1 个 Production；本批没有新增 deployment。不记录 creator email 或其他 PII。
 - 独立安全审查 GO，P0=0、P1=0，唯一 P2 已修。E2–E5、hosted Supabase/Auth/DB/Storage/OAuth/SMTP、真实账号/邮件、业务 schema、新 Vercel deployment、promote/alias/rollback、Production 操作继续 CLOSED；下一步仅可进入 E2 action-time Gate 评估，不代表 E2 已打开或可执行。
