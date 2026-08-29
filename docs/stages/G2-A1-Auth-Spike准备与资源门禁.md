@@ -1,8 +1,8 @@
 # G2-A1 Auth Spike 准备与资源门禁
 
-文档状态：**G2-A1 执行中（B1 最小连接与配置/能力只读预检、B2 本地安全基础及远端闭环已完成；当前 B2 external entry Gate design/preflight 已完成）**；PR #13 docs-only closeout merge=`b3e53a71ca40729b139724a492e8d20afd02f341`，main Actions run=`33212054195`/job=`98987321203` success，`test:auth` 12 项且仅运行一次，exact merge 的 GitHub deployments=`0`，Vercel 无新增部署；该闭环仅关闭文档 Gate 设计与本地基础交付，不等于完整 B2/Auth/G2-A1 整体通过；真实 Auth/OAuth/SMTP/DB/Storage/user/session/MFA 未开始；E1 local bootstrap 已形成两轮本地完成候选并待独立审查，E2–E5、hosted Auth/SMTP/DB/Storage/Production/deploy 全部继续 CLOSED；完整 resource/cost/secret/Auth/DB/Storage/OAuth/SMTP/真实 PII/部署/Production Gate 关闭**
+文档状态：**G2-A1 执行中（B1 最小连接与配置/能力只读预检、B2 本地安全基础及远端闭环已完成；当前 B2 external entry Gate design/preflight 已完成）**；PR #13 docs-only closeout merge=`b3e53a71ca40729b139724a492e8d20afd02f341`，main Actions run=`33212054195`/job=`98987321203` success，`test:auth` 12 项且仅运行一次，exact merge 的 GitHub deployments=`0`，Vercel 无新增部署；该闭环仅关闭文档 Gate 设计与本地基础交付，不等于完整 B2/Auth/G2-A1 整体通过；真实 Auth/OAuth/SMTP/DB/Storage/user/session/MFA 未开始；E1 local bootstrap 已以 PR #15 merge commit 完成 main/远端交付闭环，仅代表 E1 本地隔离骨架；独立安全审查 GO（P0=0/P1=0，唯一 P2 已修），E2–E5、hosted Auth/SMTP/DB/Storage/Production/deploy 全部继续 CLOSED；完整 resource/cost/secret/Auth/DB/Storage/OAuth/SMTP/真实 PII/部署/Production Gate 关闭**
 记录日期：2026-08-29（Europe/Rome）
-当前批次状态纠正（2026-08-29）：E1 local bootstrap 已形成**本地完成候选/待独立审查**；两轮 `supabase start` 均为 6/6 本地缓存命中，目标服务 health/API/DB/Studio/Mailpit 探针通过，随后项目限定 stop/cleanup 成功；本条覆盖上方历史性“待独立审查后打开”表述。E2–E5、hosted Auth/DB/Storage/OAuth/SMTP、真实 Auth/OTP/invite、业务 schema、deploy、Production 继续 CLOSED。
+当前批次状态纠正（2026-08-29）：E1 local bootstrap 已以 PR #15 merge commit 完成 main/远端交付闭环，仅代表 E1 本地隔离骨架；独立安全审查 GO（P0=0/P1=0，唯一 P2 已修）；两轮 `supabase start` 均为 6/6 本地缓存命中，目标服务 health/API/DB/Studio/Mailpit 探针通过，随后项目限定 stop/cleanup 成功；本条覆盖上方历史性“待独立审查后打开”表述。E2–E5、hosted Auth/DB/Storage/OAuth/SMTP、真实 Auth/OTP/invite、业务 schema、deploy、Production 继续 CLOSED。
 证据级别：规划 + 外部资源只读核验 + 本地静态/运行 + agent-browser；不代表 Auth、Staging、数据库或生产能力
 前置阶段：G2-A0 Exit GO，远端 docs-only reconciliation 已完成，事实见[本批 Entry preparation 证据](../evidence/G2-A1/2026-08-28-entry-preparation/README.md)
 
@@ -21,11 +21,11 @@ G2-A0 的远端闭环已经在 `main` 完成：PR #7 的 merge commit 为 `fd9b7
 | G2-A0 Exit | 已通过；远端 reconciliation 已完成 | 进入 A1 无资源准备 | Supabase/Auth/DB/Storage 已连接 |
 | G2-A1 无资源 Entry preparation | 已完成/已归档 | 文档、接口草图、测试矩阵、合成字段定义 | A1 技术验证开始或通过 |
 | G2-A1 最小资源存在性/基础预检 | **已完成（窄范围）** | 核对独立组织、Free 项目、区域、报价确认和健康状态 | Auth、secret/env、DB/RLS、Storage、OAuth、SMTP 或生产能力 |
-| G2-A1 最小 Auth spike 风险 Gate | **B1 最小连接及配置/能力只读预检已完成；B2 本地安全基础及远端闭环已完成；B2 external entry Gate design/preflight 已完成**；PR #13 docs-only closeout merge=`b3e53a71ca40729b139724a492e8d20afd02f341`，main Actions run=`33212054195`/job=`98987321203` success，`test:auth` 12 项且仅运行一次，exact merge 的 GitHub deployments=`0`，Vercel 无新增部署；不等于 B2/Auth/G2-A1 整体通过 | 本批已完成 B2 external entry Gate design/preflight，可进入独立安全审查；审查通过并合并 `main` 后，仅可打开 E1 local bootstrap，不预写 external Auth success、不自动打开真实 Auth 运行 | 完整 B2、E2–E5、真实 Auth/OAuth/SMTP/session/DB/Storage、Production 与外部 action-time Owner Gate 仍 CLOSED；不使用 service_role/secret key/db password |
+| G2-A1 最小 Auth spike 风险 Gate | **B1 最小连接及配置/能力只读预检已完成；B2 本地安全基础及远端闭环已完成；B2 external entry Gate design/preflight 已完成**；PR #13 docs-only closeout merge=`b3e53a71ca40729b139724a492e8d20afd02f341`，main Actions run=`33212054195`/job=`98987321203` success，`test:auth` 12 项且仅运行一次，exact merge 的 GitHub deployments=`0`，Vercel 无新增部署；不等于 B2/Auth/G2-A1 整体通过 | E1 local bootstrap 已以 PR #15 merge commit 完成 main/远端交付闭环，仅代表 E1 本地隔离骨架；独立安全审查 GO（P0=0/P1=0，唯一 P2 已修）；下一步仅可进入 E2 action-time Gate 评估，不代表 E2 已打开或可执行 | 完整 B2、E2–E5、真实 Auth/OAuth/SMTP/session/DB/Storage、Production 与外部 action-time Owner Gate 仍 CLOSED；不使用 service_role/secret key/db password |
 | 完整 resource/cost/secret Gate | **关闭** | 仅允许维护[资源成本与密钥 Gate 模板](../templates/G2-A1-资源成本与密钥Gate模板.md)及窄范围资源预检 | secret、环境变量、Auth/DB/Storage/OAuth/SMTP 或任何付费/生产能力已批准 |
-| G2-A1 技术阶段 | **执行中（B1 完成；B2 本地安全基础及远端闭环完成；B2 external entry Gate design/preflight 完成）** | PR #13/main exact-head 与 Actions closeout 已记录；当前待独立安全审查；审查通过并合并后仅可进入 E1 local bootstrap；不预写 external Auth success，不自动打开 E2–E5 或真实 Auth 运行 | Staging、真实登录、Auth/MFA、session、DB/RLS、Storage、OAuth、SMTP、Production 或完整 B2 验收 |
+| G2-A1 技术阶段 | **执行中（B1 完成；B2 本地安全基础及远端闭环完成；B2 external entry Gate design/preflight 完成）** | PR #15/main exact-head 与 Actions closeout 已记录；E1 local bootstrap 已完成 main/远端交付闭环，仅代表 E1 本地隔离骨架；下一步仅可进入 E2 action-time Gate 评估，不代表 E2 已打开或可执行；不预写 external Auth success，不自动打开 E2–E5 或真实 Auth 运行 | Staging、真实登录、Auth/MFA、session、DB/RLS、Storage、OAuth、SMTP、Production 或完整 B2 验收 |
 
-截至本次文档收口（2026-08-29），资源存在性/基础预检与 B1 最小本地连接验证已完成；B2 本地安全基础及其远端闭环已完成，随后完成 B2 external entry Gate design/preflight。当前 `main` 为 PR #13 docs-only closeout merge=`b3e53a71ca40729b139724a492e8d20afd02f341`；main Actions run=`33212054195`/job=`98987321203` success，`test:auth` 12 项且仅运行一次；exact merge 的 GitHub deployments=`0`，Vercel 无新增部署。该闭环仅关闭 Gate 设计与文档/本地基础交付，不等于完整 B2/Auth/G2-A1 整体通过；下一步须先独立安全审查，审查通过并合并后仅可进入 E1 local bootstrap，不预写 external Auth success。该结论不是 broad waiver（全局豁免）。Free 计划的能力不能被推断为已满足 Pro 专属的 session 配置要求。真实 Auth callback/session refresh/replay/rate-limit/OAuth/SMTP/DB/Storage/Production 仍 CLOSED，service_role、secret key、db password 继续禁止，B2 结果不能自动打开 B3/P2/P3+，A0–A6 与 P0–P8 的映射仍需在 P2 之前由 Owner/主计划明确。
+截至本次文档收口（2026-08-29），资源存在性/基础预检与 B1 最小本地连接验证已完成；B2 本地安全基础及其远端闭环已完成，随后完成 B2 external entry Gate design/preflight。当前 closeout 分支/提交为 docs-only；当前 `main` 为 PR #15 merge commit=`a5e7fd1ae2ca7468610c0aab936121a27d124c02`；PR head=`fc6153b60872328b55b525730f3c653579ac2ea2`，parents=`b3240577026a0f390ae634f2119426842827805e` + `fc6153b60872328b55b525730f3c653579ac2ea2`；PR head CI run=`33256006999`/job=`99109715930` success；main exact merge CI run=`33256185497`/job=`99110205068` success；精确 merge 的 GitHub deployments=`0`；来源分支保留；Vercel 仍为 3 个既有 READY deployments（2 个 Preview、1 个 Production），本批无新增 deployment。该闭环仅关闭 Gate 设计与文档/本地基础交付，不等于完整 B2/Auth/G2-A1 整体通过；PR #15 是 E1 config + evidence delivery，包含 `supabase/.gitignore`、`supabase/config.toml`、`supabase/seed.sql` 与文档；E1 仅代表本地隔离骨架；独立安全审查 GO（P0=0/P1=0，唯一 P2 已修）；下一步仅可进入 E2 action-time Gate 评估，不代表 E2 已打开或可执行。该结论不是 broad waiver（全局豁免）。Free 计划的能力不能被推断为已满足 Pro 专属的 session 配置要求。真实 Auth callback/session refresh/replay/rate-limit/OAuth/SMTP/DB/Storage/Production 仍 CLOSED，service_role、secret key、db password 继续禁止，B2 结果不能自动打开 B3/P2/P3+，A0–A6 与 P0–P8 的映射仍需在 P2 之前由 Owner/主计划明确。
 
 ## 3. 四批后续执行合同
 
@@ -153,7 +153,7 @@ G2-A0 的远端闭环已经在 `main` 完成：PR #7 的 merge commit 为 `fd9b7
 - [G2-A0 阶段记录](./G2-A0-账号安全合同与威胁模型验收.md)
 - [项目状态与阶段台账](../15-项目状态与阶段台账.md)
 
-当前 15 台账已记录为“执行中（B1 完成；B2 本地安全基础及远端闭环完成；B2 external entry Gate design/preflight 完成）”；文档收口日期为 2026-08-29，资源核对始于 2026-08-28；PR #13/main exact-head、Actions、GitHub deployments=0 与 Vercel 无新增部署事实见第 15 节；该闭环仅关闭 Gate 设计与文档/本地基础远端交付记录，不等于完整 B2/Auth/G2-A1 整体通过。下一步须先独立安全审查，审查通过并合并后仅可进入 E1 local bootstrap，不预写 external Auth success。完整 resource/cost/secret Gate 仍关闭；真实 Auth/OAuth/SMTP/session/DB/Storage/Production 与外部 action-time Owner Gate 继续关闭。
+当前 15 台账已记录为“执行中（B1 完成；B2 本地安全基础及远端闭环完成；B2 external entry Gate design/preflight 完成）”；文档收口日期为 2026-08-29，资源核对始于 2026-08-28；当前 closeout 分支/提交为 docs-only；PR #15 head=`fc6153b60872328b55b525730f3c653579ac2ea2`、merge=`a5e7fd1ae2ca7468610c0aab936121a27d124c02`、双 CI success、精确 merge 的 GitHub deployments=0、来源分支保留、Vercel 3 个既有 READY deployments（2 个 Preview、1 个 Production）且本批无新增 deployment 事实见第 18 节；PR #15 是 E1 config + evidence delivery，包含 `supabase/.gitignore`、`supabase/config.toml`、`supabase/seed.sql` 与文档；该 E1 闭环仅代表本地隔离骨架，不等于完整 B2/Auth/G2-A1 整体通过。下一步仅可进入 E2 action-time Gate 评估，不代表 E2 已打开或可执行。完整 resource/cost/secret Gate 仍关闭；真实 Auth/OAuth/SMTP/session/DB/Storage/Production 与外部 action-time Owner Gate 继续关闭。
 
 ## 9. 2026-08-28｜Free Supabase 资源存在性与基础预检（历史资源快照；当前 B2 外部入口 Gate 见第 15 节）
 
@@ -271,7 +271,7 @@ G2-A0 的远端闭环已经在 `main` 完成：PR #7 的 merge commit 为 `fd9b7
 - 该 closeout 仅关闭本地安全基础的远端 source/CI 交付记录；完整 B2、real Auth/OAuth/SMTP/session/DB/Storage/Production 与外部 action-time Owner Gate 继续 CLOSED。下一步仅可进入 B2 外部入口 Gate 设计/资源检查，不预写 external Auth success；不自动打开 B3、P2 或 Production。
 - 本次仅更新文档记录，不运行本地 build/tests/browser，不执行 Supabase/Auth/DB/Storage/SMTP、secret、部署或 Production 操作。
 
-## 15. 2026-08-28｜G2-A1-B2 外部入口 Gate 设计与资源 preflight（当前）
+## 15. 2026-08-28｜G2-A1-B2 外部入口 Gate 设计与资源 preflight（历史快照；当前 E1 远端闭环见第 18 节）
 
 ### 15.1 Gate 结论与阶段分层
 
@@ -324,10 +324,17 @@ G2-A0 的远端闭环已经在 `main` 完成：PR #7 的 merge commit 为 `fd9b7
 - 当前只记录 **E1 local bootstrap 本地候选/启动失败后已清理**。E2–E5、hosted Auth/DB/Storage/OAuth/SMTP、真实 Auth/OTP/invite、业务 schema、deploy、Production 继续 **CLOSED**；不预写 PR、CI、merge 或外部结果。残余风险是 Docker/Colima socket mount 前提、status 在无 DB 容器时失败、本地栈健康尚未验证。
 - 详细脱敏命令结果、官方当日资料和回退边界见[E1 local bootstrap evidence](../evidence/G2-A1/2026-08-29-e1-local-bootstrap/README.md)。官方入口：[Supabase CLI getting started](https://supabase.com/docs/guides/local-development/cli/getting-started)、[config.toml reference](https://supabase.com/docs/guides/local-development/cli/config)、[CLI reference](https://supabase.com/docs/reference/cli)、[Supabase changelog](https://supabase.com/changelog)。
 
-## 17. 2026-08-29｜G2-A1 E1 local bootstrap 复验通过候选与 cleanup 纠正
+## 17. 2026-08-29｜G2-A1 E1 local bootstrap 复验通过候选与 cleanup 纠正（历史候选；当前远端闭环见第 18 节）
 
 - 第 16 节仅保留首次未排除 Vector 的 Docker/Colima socket mount 失败诊断；binary-derived image refs 仅作首次 cache 诊断，非权威运行时事实。本批未修改全局 Colima、Docker socket、symlink 或 host runtime。
 - 两轮差异：首轮使用 `start --help` 逻辑排除名，CLI 警告 `analytics/storage/functions` 无效；Pull=`6/6` 全部 local/skipped，目标容器 health、健康探针和 cleanup 通过。第二轮使用实际有效排除名 `logflare/vector/realtime/storage-api/imgproxy/edge-runtime/gotrue/supavisor`；无 warning，Pull=`6/6` 全部 local/skipped，得到相同服务集合并复验通过。两轮均无 image pull/download/tag 或版本漂移。
 - 六个实际服务容器为 `supabase_db_*`、`supabase_kong_*`、`supabase_rest_*`、`supabase_pg_meta_*`、`supabase_studio_*`、`supabase_inbucket_*`，对应 DB、API gateway/API、REST/API、Meta、Studio、Inbucket/Mailpit。published HostIP 全部为 `127.0.0.1`；API REST=`200`、DB `pg_isready` accepting、Studio=`307`、Mailpit=`200`；未出现 Auth、Realtime、Storage、Vector、Analytics、Imgproxy、Edge Runtime、Functions 或 Supavisor。
 - 通过 `require_escalated` 获批创建唯一 `supabase_network_rebuy-g2-a1-e1-local-bootstrap-exec` loopback bridge，option=`com.docker.network.bridge.host_binding_ipv4=127.0.0.1`；两轮均使用 help 确认的 `stop --project-id ... --no-backup`，随后仅删除该精确 network。最终项目 containers、volumes、network 与 `55320–55329` listeners 均为空；`54321–54324` 仅核对端口存在性仍为 `LISTENING`，未读取其所属进程/容器/network 详情。
 - 当前状态：**E1 local bootstrap 本地完成候选/待独立审查**。E2–E5、hosted Auth/DB/Storage/OAuth/SMTP、真实 Auth/OTP/invite、业务 schema、deploy、Production 继续 **CLOSED**；未执行真实 Auth/DB/Storage 写入、hosted 登录/link、费用、push、PR、merge 或 deploy。
+
+## 18. 2026-08-29｜G2-A1 E1 local bootstrap 远端交付闭环（当前）
+
+- 当前 closeout 分支/提交为 docs-only；E1 local bootstrap 已以 PR #15 用 merge commit 合并 `main`，完成 E1 config + evidence delivery 远端交付闭环（包含 `supabase/.gitignore`、`supabase/config.toml`、`supabase/seed.sql` 与文档）；该结果仅代表 E1 本地隔离骨架，不代表 E2 或 hosted/Production 能力已打开。
+- PR head=`fc6153b60872328b55b525730f3c653579ac2ea2`，merge=`a5e7fd1ae2ca7468610c0aab936121a27d124c02`，parents=`b3240577026a0f390ae634f2119426842827805e` + `fc6153b60872328b55b525730f3c653579ac2ea2`；PR head CI run=`33256006999`/job=`99109715930` success；main exact merge CI run=`33256185497`/job=`99110205068` success；精确 merge 的 GitHub deployments=`0`；来源分支保留。
+- 刚刚只读核对的 Vercel 事实为 3 个既有 READY deployments，其中 2 个 Preview、1 个 Production；本批没有新增 deployment。不记录 creator email 或其他 PII。
+- 独立安全审查 GO，P0=0、P1=0，唯一 P2 已修。E2–E5、hosted Supabase/Auth/DB/Storage/OAuth/SMTP、真实账号/邮件、业务 schema、新 Vercel deployment、promote/alias/rollback、Production 操作继续 CLOSED；下一步仅可进入 E2 action-time Gate 评估，不代表 E2 已打开或可执行。

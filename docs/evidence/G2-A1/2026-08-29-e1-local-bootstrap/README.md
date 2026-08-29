@@ -3,8 +3,8 @@
 ## 1. 结论
 
 - 日期：2026-08-29（Europe/Rome）。
-- 当前状态：**E1 local bootstrap 本地完成候选/待独立审查；本地 start/status/health 已通过，并已完成项目限定 stop/cleanup**。
-- 本批完成 Supabase CLI 生成、E1 窄范围本地配置、comments-only seed scaffold、image-download Gate、loopback network Gate、两次项目限定 start/status/health 复验和 cleanup；不代表 E1 最终 Owner/独立审查通过。
+- 当前状态：**E1 local bootstrap 已以 PR #15 merge commit 完成 main/远端交付闭环；仅代表 E1 本地隔离骨架；独立安全审查 GO（P0=0/P1=0，唯一 P2 已修）；本地 start/status/health 已通过，并已完成项目限定 stop/cleanup**。
+- 本批完成 Supabase CLI 生成、E1 窄范围本地配置、comments-only seed scaffold、image-download Gate、loopback network Gate、两次项目限定 start/status/health 复验和 cleanup；独立安全审查 GO（P0=0/P1=0，唯一 P2 已修）；不代表 E2 或 hosted/Production 能力已打开。
 - E1 仅验证 API、DB、Meta、Studio、Inbucket/Mailpit 的本地运行骨架；`auth.enabled=false`，不执行任何 Auth 流程。
 - E2–E5、hosted Auth/DB/Storage/OAuth/SMTP、真实 Auth/OTP/invite、业务 schema、deploy、Production 继续 **CLOSED**。
 
@@ -105,9 +105,9 @@
 
 - 本批未创建用户、发送邮件、执行 OTP/invite、登录或 link hosted project，未写 Auth/DB/Storage 数据，未建业务 schema，未读取 secret/PII。文档和 config 中没有 secret 值。
 - 未执行未限定的 `docker ps`；没有读取其他项目容器详情。两轮获批 start 的 Pull 阶段均为 `6/6` skipped/local present，没有 image pull 或新下载；两轮项目限定 stop 与精确 network 删除均成功，最终项目容器/volume/network 已无输出，55320–55329 TCP 无监听；54321–54324 仅保持端口存在性核对为 `LISTENING`。
-- 本批实际 E1 stack health 已通过并完成清理；残余风险为 CLI `2.101.0` 已知 Vector/Colima socket-mount 风险、binary candidate refs 可能随 CLI 漂移，以及最终仍待独立审查/Owner Gate。任何端口冲突、实际 pull/版本漂移、额外服务、0.0.0.0 published binding、现有资源变化、费用、secret/PII 或无法清理都必须 STOP。
+- 本批实际 E1 stack health 已通过并完成清理；残余风险为 CLI `2.101.0` 已知 Vector/Colima socket-mount 风险、binary candidate refs 可能随 CLI 漂移；独立安全审查 GO（P0=0/P1=0，唯一 P2 已修），PR #15 已用 merge commit 完成 main/远端交付闭环；E2 action-time Gate 尚未打开。任何端口冲突、实际 pull/版本漂移、额外服务、0.0.0.0 published binding、现有资源变化、费用、secret/PII 或无法清理都必须 STOP。
 - 未运行 prototype 全量 build/test/lint/E2E：本批未改 prototype、package、lockfile 或 workflow；本批风险由 config/TOML、secret/PII、diff 和 Gate 证据覆盖。
-- 未做独立审查；本 README 仅为执行证据，不是 Owner Gate。未做哈希检查；本批没有确定性构建物、传输物或异常输出需要 hash。
+- （本地执行证据时点）未做独立审查；本 README 仅为执行证据，不是 Owner Gate。未做哈希检查；本批没有确定性构建物、传输物或异常输出需要 hash。
 
 ## 7. 官方当日资料
 
@@ -117,3 +117,10 @@
 - [Supabase CLI reference](https://supabase.com/docs/reference/cli)
 - [Supabase local config.toml reference](https://supabase.com/docs/guides/local-development/cli/config)
 - [Supabase changelog](https://supabase.com/changelog)
+
+## 8. 2026-08-29 远端交付闭环（当前）
+
+- 当前 closeout 分支/提交为 docs-only；E1 local bootstrap 已以 PR #15 用 merge commit 合并 `main`，完成 E1 config + evidence delivery 远端交付闭环（包含 `supabase/.gitignore`、`supabase/config.toml`、`supabase/seed.sql` 与文档）；该结果仅代表 E1 本地隔离骨架，不代表 E2 或 hosted/Production 能力已打开。
+- PR head=`fc6153b60872328b55b525730f3c653579ac2ea2`，merge=`a5e7fd1ae2ca7468610c0aab936121a27d124c02`，parents=`b3240577026a0f390ae634f2119426842827805e` + `fc6153b60872328b55b525730f3c653579ac2ea2`；PR head CI run=`33256006999`/job=`99109715930` success；main exact merge CI run=`33256185497`/job=`99110205068` success；精确 merge的 GitHub deployments=`0`；来源分支保留。
+- 刚刚只读核对的 Vercel 事实为 3 个既有 READY deployments，其中 2 个 Preview、1 个 Production；本批没有新增 deployment。不记录 creator email 或其他 PII。
+- 独立安全审查 GO，P0=0、P1=0，唯一 P2 已修。E2–E5、hosted Supabase/Auth/DB/Storage/OAuth/SMTP、真实账号/邮件、业务 schema、新 Vercel deployment、promote/alias/rollback、Production 操作继续 CLOSED；下一步仅可进入 E2 action-time Gate 评估，不代表 E2 已打开或可执行。
