@@ -1,0 +1,3 @@
+-- E1 synthetic-only seed scaffold.
+-- Intentionally contains no SQL statements or data rows.
+-- E2+ Auth/user fixtures and all Rebuy business schema remain closed.
