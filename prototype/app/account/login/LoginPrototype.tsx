@@ -134,6 +134,8 @@ export default function LoginPrototype({ authStatus }: LoginPrototypeProps) {
     const normalizedEmail = normalizeSyntheticEmail(email);
 
     if (!normalizedEmail) {
+      setErrorMessage("");
+      setNotice("");
       setEmailError("请输入 @rebuy.test 本地测试邮箱。");
       return;
     }
@@ -203,6 +205,7 @@ export default function LoginPrototype({ authStatus }: LoginPrototypeProps) {
 
     setStep("email");
     setOtp("");
+    setEmailError("");
     setErrorMessage("");
     setNotice("");
   };
@@ -293,13 +296,13 @@ export default function LoginPrototype({ authStatus }: LoginPrototypeProps) {
                       type="email"
                       inputMode="email"
                       autoComplete="email"
-                      placeholder="name@example.com"
+                      placeholder="name@rebuy.test"
                       value={email}
                       onChange={(event) => {
                         setEmail(event.target.value);
-                        if (emailError) {
-                          setEmailError("");
-                        }
+                        setEmailError("");
+                        setErrorMessage("");
+                        setNotice("");
                       }}
                       aria-invalid={emailError ? "true" : "false"}
                       aria-describedby={emailError ? "email-error" : undefined}
