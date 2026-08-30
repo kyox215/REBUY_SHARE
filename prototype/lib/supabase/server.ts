@@ -1,27 +1,27 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-import { getSupabaseConfig } from "./config";
+import {
+  getSupabaseConfig,
+  REBUY_AUTH_COOKIE_OPTIONS,
+} from "./config";
+import { createServerCookieMethods } from "./cookies";
 
 export async function createClient() {
+  return createConfiguredServerClient("readonly");
+}
+
+export async function createAuthRouteClient() {
+  return createConfiguredServerClient("strict");
+}
+
+async function createConfiguredServerClient(mode: "readonly" | "strict") {
   const { url, publishableKey } = getSupabaseConfig();
   const cookieStore = await cookies();
 
   return createServerClient(url, publishableKey, {
-    cookies: {
-      getAll() {
-        return cookieStore.getAll();
-      },
-      setAll(cookiesToSet) {
-        try {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            cookieStore.set(name, value, options);
-          });
-        } catch {
-          // Server Components cannot write cookies; the future Proxy owns refresh writes.
-        }
-      },
-    },
+    cookieOptions: REBUY_AUTH_COOKIE_OPTIONS,
+    cookies: createServerCookieMethods(cookieStore, mode),
   });
 }
 

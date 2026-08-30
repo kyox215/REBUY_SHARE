@@ -16,8 +16,23 @@ import {
 } from "../../lib/auth/email-otp";
 import {
   EMAIL_OTP_MAX_BODY_BYTES,
+  EMAIL_OTP_APP_HOST,
+  EMAIL_OTP_APP_ORIGIN,
   handleEmailOtpRequest,
 } from "../../lib/auth/email-otp-route";
+import {
+  EMAIL_OTP_RESEND_COOLDOWN_MS,
+  isRateLimitedAuthError,
+} from "../../lib/auth/email-otp";
+import { resolveSessionStatus } from "../../lib/auth/session";
+import {
+  getSupabaseConfig,
+  isAllowedSupabasePublicKey,
+  LOCAL_SUPABASE_URL,
+  REBUY_AUTH_COOKIE_NAME,
+  REBUY_AUTH_COOKIE_OPTIONS,
+} from "../../lib/supabase/config";
+import { createServerCookieMethods } from "../../lib/supabase/cookies";
 import { normalizeSafeNext } from "../../lib/auth/redirect";
 
 test("normalizes safe same-origin destinations", () => {
@@ -370,6 +385,7 @@ function makeJsonRequest(value: unknown, headers: Record<string, string> = {}) {
     method: "POST",
     headers: {
       Origin: "http://127.0.0.1:3000",
+      Host: "127.0.0.1:3000",
       "Content-Type": "application/json",
       ...headers,
     },
@@ -517,7 +533,11 @@ test("enforces same-origin JSON and body gates before creating an adapter", asyn
     {
       request: new Request("http://127.0.0.1:3000/api/auth/email-otp", {
         method: "POST",
-        headers: { Origin: "http://127.0.0.1:3000", "Content-Type": "text/plain" },
+        headers: {
+          Origin: "http://127.0.0.1:3000",
+          Host: "127.0.0.1:3000",
+          "Content-Type": "text/plain",
+        },
         body: "{}",
       }),
       status: 415,
@@ -538,7 +558,11 @@ test("enforces same-origin JSON and body gates before creating an adapter", asyn
     {
       request: new Request("http://127.0.0.1:3000/api/auth/email-otp", {
         method: "POST",
-        headers: { Origin: "http://127.0.0.1:3000", "Content-Type": "application/json" },
+        headers: {
+          Origin: "http://127.0.0.1:3000",
+          Host: "127.0.0.1:3000",
+          "Content-Type": "application/json",
+        },
         body: "{",
       }),
       status: 400,
@@ -621,4 +645,266 @@ test("does not expose provider errors or factory failures through the route", as
   assert.deepEqual(factoryBody, { status: "error", code: "server_error" });
   assert.equal(JSON.stringify(providerBody).includes("raw-provider-message"), false);
   assert.equal(JSON.stringify(factoryBody).includes("raw-factory-message"), false);
+});
+
+function encodeJwtPart(value: unknown) {
+  return Buffer.from(JSON.stringify(value)).toString("base64url");
+}
+
+const legacyAnonFixture = [
+  encodeJwtPart({ alg: "HS256", typ: "JWT" }),
+  encodeJwtPart({ role: "anon", iss: "http://127.0.0.1:55321/auth/v1" }),
+  "fixture-signature",
+].join(".");
+const legacyPrivilegedRole = ["service", "role"].join("_");
+const legacyPrivilegedFixture = [
+  encodeJwtPart({ alg: "HS256", typ: "JWT" }),
+  encodeJwtPart({ role: legacyPrivilegedRole }),
+  "fixture-signature",
+].join(".");
+
+function withSupabaseEnv<T>(url: string | undefined, key: string | undefined, callback: () => T) {
+  const previousUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const previousKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+
+  if (url === undefined) {
+    delete process.env.NEXT_PUBLIC_SUPABASE_URL;
+  } else {
+    process.env.NEXT_PUBLIC_SUPABASE_URL = url;
+  }
+  if (key === undefined) {
+    delete process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  } else {
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = key;
+  }
+
+  try {
+    return callback();
+  } finally {
+    if (previousUrl === undefined) {
+      delete process.env.NEXT_PUBLIC_SUPABASE_URL;
+    } else {
+      process.env.NEXT_PUBLIC_SUPABASE_URL = previousUrl;
+    }
+    if (previousKey === undefined) {
+      delete process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+    } else {
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = previousKey;
+    }
+  }
+}
+
+test("accepts only the canonical local URL and anonymous public key forms", () => {
+  assert.equal(isAllowedSupabasePublicKey("sb_publishable_test_fixture"), true);
+  assert.equal(isAllowedSupabasePublicKey(legacyAnonFixture), true);
+  assert.deepEqual(
+    withSupabaseEnv(LOCAL_SUPABASE_URL, "sb_publishable_test_fixture", () => getSupabaseConfig()),
+    {
+      url: LOCAL_SUPABASE_URL,
+      publishableKey: "sb_publishable_test_fixture",
+    },
+  );
+  assert.deepEqual(
+    withSupabaseEnv(LOCAL_SUPABASE_URL, legacyAnonFixture, () => getSupabaseConfig()),
+    {
+      url: LOCAL_SUPABASE_URL,
+      publishableKey: legacyAnonFixture,
+    },
+  );
+});
+
+test("rejects URL variants, privileged keys, unknown keys, and malformed JWTs", () => {
+  const rejectedUrls = [
+    "http://localhost:55321/",
+    "http://127.0.0.1:55321",
+    "http://127.0.0.1:55321/rest/v1/",
+    "http://127.0.0.1:55321/?query=1",
+    "http://127.0.0.1:55321/#fragment",
+    "http://user:pass@127.0.0.1:55321/",
+    "https://127.0.0.1:55321/",
+    "http://127.0.0.1:55322/",
+  ];
+
+  for (const url of rejectedUrls) {
+    assert.throws(
+      () => withSupabaseEnv(url, "sb_publishable_test_fixture", () => getSupabaseConfig()),
+      /Local Supabase is not configured/,
+      url,
+    );
+  }
+
+  const rejectedKeys = [
+    ["sb", "secret", "test_fixture"].join("_"),
+    legacyPrivilegedFixture,
+    "not-a-public-key",
+    "eyJhbGciOiJIUzI1NiJ9.invalid.signature",
+    " sb_publishable_test_fixture",
+  ];
+
+  for (const key of rejectedKeys) {
+    assert.equal(isAllowedSupabasePublicKey(key), false, key);
+    assert.throws(
+      () => withSupabaseEnv(LOCAL_SUPABASE_URL, key, () => getSupabaseConfig()),
+      /Local Supabase is not configured/,
+      key,
+    );
+  }
+});
+
+test("keeps the Rebuy cookie name fixed and makes route writes strict", () => {
+  assert.equal(REBUY_AUTH_COOKIE_NAME, "rebuy-g2-a1-e2a-auth-token");
+  assert.equal(REBUY_AUTH_COOKIE_OPTIONS.name, REBUY_AUTH_COOKIE_NAME);
+
+  const writes: string[] = [];
+  const store = {
+    getAll: () => [{ name: REBUY_AUTH_COOKIE_NAME, value: "opaque" }],
+    set: (name: string) => writes.push(name),
+  };
+  const readonly = createServerCookieMethods(store, "readonly");
+  const strict = createServerCookieMethods(
+    {
+      getAll: store.getAll,
+      set: () => {
+        throw new Error("cookie write failure");
+      },
+    },
+    "strict",
+  );
+
+  assert.deepEqual(readonly.getAll(), [{ name: REBUY_AUTH_COOKIE_NAME, value: "opaque" }]);
+  assert.doesNotThrow(() =>
+    readonly.setAll!([{ name: REBUY_AUTH_COOKIE_NAME, value: "opaque", options: {} }], {}),
+  );
+  assert.deepEqual(writes, [REBUY_AUTH_COOKIE_NAME]);
+  assert.throws(
+    () => strict.setAll!([{ name: REBUY_AUTH_COOKIE_NAME, value: "opaque", options: {} }], {}),
+    /cookie write failure/,
+  );
+});
+
+test("resolves authenticated, anonymous, and error session states without leaking claims", async () => {
+  assert.deepEqual(
+    await resolveSessionStatus({ getClaims: async () => ({ data: { claims: { sub: "user" } } }) }),
+    { status: "authenticated" },
+  );
+  assert.deepEqual(
+    await resolveSessionStatus({ getClaims: async () => ({ data: { claims: null }, error: null }) }),
+    { status: "anonymous" },
+  );
+  const rawError = "raw session provider error";
+  const failed = await resolveSessionStatus({
+    getClaims: async () => ({ data: null, error: new Error(rawError) }),
+  });
+  const thrown = await resolveSessionStatus({
+    getClaims: async () => {
+      throw new Error(rawError);
+    },
+  });
+  assert.deepEqual(failed, { status: "error" });
+  assert.deepEqual(thrown, { status: "error" });
+  assert.equal(JSON.stringify(failed).includes(rawError), false);
+});
+
+test("maps rate limits to a finite error and keeps the resend cooldown aligned to local config", async () => {
+  assert.equal(EMAIL_OTP_RESEND_COOLDOWN_MS, 1000);
+  assert.equal(isRateLimitedAuthError({ status: 429, message: "raw provider text" }), true);
+  assert.equal(isRateLimitedAuthError({ code: "over_email_send_rate_limit" }), true);
+
+  const outcome = await runEmailOtp(
+    { action: "resend", email: syntheticEmail },
+    makeAdapter({
+      signInWithOtp: async () => ({
+        error: { status: 429, message: "raw provider text that must not leak" },
+      }),
+    }),
+  );
+  assert.deepEqual(outcome, { kind: "error", action: "resend", code: "rate_limited" });
+  assert.equal(JSON.stringify(outcome).includes("raw provider text"), false);
+});
+
+test("cancels an over-limit streaming body before creating an adapter", async () => {
+  let cancelled = false;
+  let factoryCalls = 0;
+  const body = new ReadableStream<Uint8Array>({
+    start(controller) {
+      controller.enqueue(new Uint8Array(EMAIL_OTP_MAX_BODY_BYTES + 1));
+    },
+    cancel() {
+      cancelled = true;
+    },
+  });
+  const request = new Request("http://127.0.0.1:3000/api/auth/email-otp", {
+    method: "POST",
+    headers: {
+      Origin: EMAIL_OTP_APP_ORIGIN,
+      Host: EMAIL_OTP_APP_HOST,
+      "Content-Type": "application/json",
+    },
+    body,
+    duplex: "half",
+  } as RequestInit);
+
+  const response = await handleEmailOtpRequest(request, async () => {
+    factoryCalls += 1;
+    return makeAdapter();
+  });
+
+  assert.equal(response.status, 413);
+  assert.deepEqual(await responseJson(response), { status: "error", code: "body_too_large" });
+  assert.equal(cancelled, true);
+  assert.equal(factoryCalls, 0);
+});
+
+test("rejects invalid UTF-8 before creating an adapter", async () => {
+  let factoryCalls = 0;
+  const request = new Request("http://127.0.0.1:3000/api/auth/email-otp", {
+    method: "POST",
+    headers: {
+      Origin: EMAIL_OTP_APP_ORIGIN,
+      Host: EMAIL_OTP_APP_HOST,
+      "Content-Type": "application/json",
+    },
+    body: new Uint8Array([0xc3, 0x28]),
+  });
+  const response = await handleEmailOtpRequest(request, async () => {
+    factoryCalls += 1;
+    return makeAdapter();
+  });
+
+  assert.equal(response.status, 400);
+  assert.deepEqual(await responseJson(response), { status: "error", code: "invalid_request" });
+  assert.equal(factoryCalls, 0);
+});
+
+test("requires the exact fixed app origin and host", async () => {
+  const rejectedRequests = [
+    makeJsonRequest({ action: "request", email: syntheticEmail }, { Host: "localhost:3000" }),
+    makeJsonRequest({ action: "request", email: syntheticEmail }, { Host: "127.0.0.1:3000.evil" }),
+    makeJsonRequest({ action: "request", email: syntheticEmail }, { Origin: "http://localhost:3000" }),
+    makeJsonRequest({ action: "request", email: syntheticEmail }, { Origin: "http://127.0.0.1:3000/" }),
+    new Request("http://localhost:3000/api/auth/email-otp", {
+      method: "POST",
+      headers: {
+        Origin: EMAIL_OTP_APP_ORIGIN,
+        Host: EMAIL_OTP_APP_HOST,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ action: "request", email: syntheticEmail }),
+    }),
+  ];
+  let factoryCalls = 0;
+
+  for (const request of rejectedRequests) {
+    const response = await handleEmailOtpRequest(request, async () => {
+      factoryCalls += 1;
+      return makeAdapter();
+    });
+    assert.equal(response.status, 403);
+    assert.deepEqual(await responseJson(response), {
+      status: "error",
+      code: "origin_not_allowed",
+    });
+  }
+
+  assert.equal(factoryCalls, 0);
 });

@@ -28,6 +28,9 @@ const tscArgs = [
   "lib/auth/callback-route.ts",
   "lib/auth/email-otp.ts",
   "lib/auth/email-otp-route.ts",
+  "lib/auth/session.ts",
+  "lib/supabase/config.ts",
+  "lib/supabase/cookies.ts",
   "tests/auth/contract.test.ts",
 ];
 

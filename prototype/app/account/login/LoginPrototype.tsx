@@ -1,11 +1,12 @@
 "use client";
 
-import { ArrowLeft, Moon, Sun } from "lucide-react";
+import { ArrowLeft, Moon, Sun, X } from "lucide-react";
 import Link from "next/link";
 import type { FormEvent } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import BrandMark from "@/components/BrandMark";
 import {
+  EMAIL_OTP_RESEND_COOLDOWN_MS,
   normalizeSyntheticEmail,
   type EmailOtpAction,
 } from "@/lib/auth/email-otp";
@@ -33,6 +34,7 @@ const errorMessages: Record<string, string> = {
   request_failed: "验证码暂时无法发送，请稍后再试。",
   verify_failed: "验证码无效或已过期，请重新获取。",
   resend_failed: "验证码暂时无法重发，请稍后再试。",
+  rate_limited: "操作过于频繁，请稍后再试。",
   origin_not_allowed: "暂时无法完成本地登录，请稍后再试。",
   unsupported_media_type: "暂时无法完成本地登录，请稍后再试。",
   body_too_large: "暂时无法完成本地登录，请稍后再试。",
@@ -121,9 +123,24 @@ export default function LoginPrototype({ authStatus }: LoginPrototypeProps) {
   const [step, setStep] = useState<LoginStep>("email");
   const [otp, setOtp] = useState("");
   const [emailError, setEmailError] = useState("");
+  const [otpError, setOtpError] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [notice, setNotice] = useState("");
   const [busyAction, setBusyAction] = useState<BusyAction>(null);
+  const [callbackMessage, setCallbackMessage] = useState(authStatus ?? "");
+  const [resendCooldownMs, setResendCooldownMs] = useState(0);
+
+  useEffect(() => {
+    if (resendCooldownMs <= 0) {
+      return;
+    }
+
+    const timeout = window.setTimeout(
+      () => setResendCooldownMs(0),
+      resendCooldownMs,
+    );
+    return () => window.clearTimeout(timeout);
+  }, [resendCooldownMs]);
 
   const handleEmailSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -131,11 +148,13 @@ export default function LoginPrototype({ authStatus }: LoginPrototypeProps) {
       return;
     }
 
+    setCallbackMessage("");
+    setOtpError("");
+    setErrorMessage("");
+    setNotice("");
     const normalizedEmail = normalizeSyntheticEmail(email);
 
     if (!normalizedEmail) {
-      setErrorMessage("");
-      setNotice("");
       setEmailError("请输入 @rebuy.test 本地测试邮箱。");
       return;
     }
@@ -143,8 +162,6 @@ export default function LoginPrototype({ authStatus }: LoginPrototypeProps) {
     setEmail(normalizedEmail);
     setEmailError("");
     setOtp("");
-    setErrorMessage("");
-    setNotice("");
     setBusyAction("request");
 
     const result = await postEmailOtp({ action: "request", email: normalizedEmail });
@@ -155,14 +172,17 @@ export default function LoginPrototype({ authStatus }: LoginPrototypeProps) {
       return;
     }
 
+    setResendCooldownMs(EMAIL_OTP_RESEND_COOLDOWN_MS);
     setNotice("验证码已发送。");
     setStep("otp");
   };
 
   const handleOtpChange = (value: string) => {
     setOtp(value.replace(/\D/g, "").slice(0, 6));
+    setOtpError("");
     setErrorMessage("");
     setNotice("");
+    setCallbackMessage("");
   };
 
   const handleOtpSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -171,19 +191,25 @@ export default function LoginPrototype({ authStatus }: LoginPrototypeProps) {
       return;
     }
 
+    setCallbackMessage("");
+    setErrorMessage("");
+    setNotice("");
     if (otp.length !== 6) {
-      setErrorMessage("请输入 6 位验证码。");
+      setOtpError("请输入 6 位验证码。");
       return;
     }
 
-    setErrorMessage("");
-    setNotice("");
+    setOtpError("");
     setBusyAction("verify");
 
     const result = await postEmailOtp({ action: "verify", email, token: otp });
     if (!result.ok) {
       setBusyAction(null);
-      setErrorMessage(messageForError(result.code));
+      if (result.code === "verify_failed") {
+        setOtpError(messageForError(result.code));
+      } else {
+        setErrorMessage(messageForError(result.code));
+      }
       return;
     }
 
@@ -194,6 +220,7 @@ export default function LoginPrototype({ authStatus }: LoginPrototypeProps) {
     }
 
     setBusyAction(null);
+    setOtpError("");
     setNotice("本地会话已建立。");
     setStep("email");
   };
@@ -206,15 +233,20 @@ export default function LoginPrototype({ authStatus }: LoginPrototypeProps) {
     setStep("email");
     setOtp("");
     setEmailError("");
+    setOtpError("");
     setErrorMessage("");
     setNotice("");
+    setCallbackMessage("");
+    setResendCooldownMs(0);
   };
 
   const handleResend = async () => {
-    if (busyAction || !email) {
+    if (busyAction || !email || resendCooldownMs > 0) {
       return;
     }
 
+    setCallbackMessage("");
+    setOtpError("");
     setErrorMessage("");
     setNotice("");
     setBusyAction("resend");
@@ -223,11 +255,15 @@ export default function LoginPrototype({ authStatus }: LoginPrototypeProps) {
     setBusyAction(null);
 
     if (!result.ok) {
+      if (result.code === "rate_limited") {
+        setResendCooldownMs(EMAIL_OTP_RESEND_COOLDOWN_MS);
+      }
       setErrorMessage(messageForError(result.code));
       return;
     }
 
     setOtp("");
+    setResendCooldownMs(EMAIL_OTP_RESEND_COOLDOWN_MS);
     setNotice("验证码已重发。");
   };
 
@@ -265,10 +301,19 @@ export default function LoginPrototype({ authStatus }: LoginPrototypeProps) {
           </div>
 
           <div className={styles.loginPanel}>
-            {authStatus ? (
-              <p className={styles.authStatus} role="alert">
-                {authStatus}
-              </p>
+            {callbackMessage ? (
+              <div className={styles.authStatus} role="alert">
+                <span className={styles.authStatusText}>{callbackMessage}</span>
+                <button
+                  className={styles.dismissButton}
+                  type="button"
+                  onClick={() => setCallbackMessage("")}
+                  aria-label="关闭提示"
+                  title="关闭提示"
+                >
+                  <X aria-hidden="true" size={16} />
+                </button>
+              </div>
             ) : null}
 
             {step === "email" ? (
@@ -301,8 +346,10 @@ export default function LoginPrototype({ authStatus }: LoginPrototypeProps) {
                       onChange={(event) => {
                         setEmail(event.target.value);
                         setEmailError("");
+                        setOtpError("");
                         setErrorMessage("");
                         setNotice("");
+                        setCallbackMessage("");
                       }}
                       aria-invalid={emailError ? "true" : "false"}
                       aria-describedby={emailError ? "email-error" : undefined}
@@ -342,18 +389,24 @@ export default function LoginPrototype({ authStatus }: LoginPrototypeProps) {
                     maxLength={6}
                     value={otp}
                     onChange={(event) => handleOtpChange(event.target.value)}
-                    aria-invalid={errorMessage ? "true" : "false"}
-                    aria-describedby="otp-help"
+                    aria-invalid={otpError ? "true" : "false"}
+                    aria-describedby={otpError ? "otp-error" : "otp-help"}
                   />
                   <p className={styles.fieldHelp} id="otp-help">
                     输入邮件中的 6 位数字。
                   </p>
-                  {errorMessage ? (
-                    <p className={styles.error} role="alert">
-                      {errorMessage}
+                  {otpError ? (
+                    <p className={styles.error} id="otp-error" role="alert">
+                      {otpError}
                     </p>
                   ) : null}
                 </div>
+
+                {errorMessage ? (
+                  <p className={styles.error} role="alert">
+                    {errorMessage}
+                  </p>
+                ) : null}
 
                 <button className={styles.primaryButton} type="submit" disabled={otp.length !== 6 || busyAction !== null} aria-busy={busyAction === "verify"}>
                   {busyAction === "verify" ? "验证中..." : "验证并登录"}
@@ -363,8 +416,17 @@ export default function LoginPrototype({ authStatus }: LoginPrototypeProps) {
                   <button className={styles.editButton} type="button" onClick={handleEditEmail} disabled={busyAction !== null}>
                     修改邮箱
                   </button>
-                  <button className={styles.resendButton} type="button" onClick={handleResend} disabled={busyAction !== null}>
-                    {busyAction === "resend" ? "重发中..." : "重新发送"}
+                  <button
+                    className={styles.resendButton}
+                    type="button"
+                    onClick={handleResend}
+                    disabled={busyAction !== null || resendCooldownMs > 0}
+                  >
+                    {busyAction === "resend"
+                      ? "重发中..."
+                      : resendCooldownMs > 0
+                        ? "请稍候..."
+                        : "重新发送"}
                   </button>
                 </div>
               </form>

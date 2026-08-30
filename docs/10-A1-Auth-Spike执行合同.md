@@ -469,3 +469,9 @@ resource/cost/secret Gate 通过前，仅可继续维护无资源后端原型、
 - local config 只启用 Auth email signup/confirmation 所需最小项，保持 Google、Apple、manual linking、anonymous、phone、MFA、业务 DB/schema/RLS、Storage、Realtime 和 custom SMTP CLOSED。`[auth.email.smtp]` 必须省略，成功邮件使用 CLI 默认本地 Inbucket/Mailpit 捕获；magic-link 模板只渲染 `{{ .Token }}`。
 - E2a 与 E2b invite 明确拆分：E2b 当前 NO-GO；Supabase/provider invite 不等于 Rebuy membership invite，admin invite/inviteUserByEmail 需要的 secret/service_role 永不在本批使用。用户当前只授权本地计划执行，不授权特权密钥、外部动作、真实邮件/账号/PII。
 - E2a 通过标准为本地正向闭环、有限负向和清理证据；它不代表生产、hosted Supabase/Auth/SMTP、OAuth 或 G2-A1 整体验收。具体执行证据见[E2a local email OTP evidence](./evidence/G2-A1/2026-08-30-e2a-local-email-otp/README.md)。
+
+## 32. 2026-08-30｜E2a 精确提交安全审查纠正（当前）
+
+- 独立安全审查针对精确 head=`98a3f0d4739eb835fa068b4736347285b7d23193` 给出 **NO-GO**；其 findings 覆盖 local Auth URL/key allowlist、Rebuy 专属 cookie、固定 origin/Host、streaming body 上限、strict route-cookie、可重复测试与当前证据状态。
+- 当前 E2a 代码与证据是修复候选，待最终精确提交复审；历史 E2a 条件 GO 不得外推为本批修复已 GO，也不等于 G2-A1 整体通过。E2b invite 继续 NO-GO，provider invite 不等于 Rebuy membership invite。
+- 本阶段只接受本地 Supabase/GoTrue、Mailpit 和 `@rebuy.test` 合成数据；`.invalid` 只用于 no-send/负向/反枚举。用户当前仅授权本地计划执行，不授权 service_role/secret/admin key、DB password、custom SMTP、hosted/Production、真实邮件/账号/PII 或外部写入。

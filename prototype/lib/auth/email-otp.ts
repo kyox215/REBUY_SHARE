@@ -3,6 +3,7 @@ export type EmailOtpAction = (typeof EMAIL_OTP_ACTIONS)[number];
 
 export const EMAIL_OTP_LENGTH = 6;
 export const EMAIL_OTP_MAX_EMAIL_LENGTH = 254;
+export const EMAIL_OTP_RESEND_COOLDOWN_MS = 1000;
 export const SYNTHETIC_EMAIL_DOMAIN = "rebuy.test";
 
 const emailPattern = new RegExp(`^[^\\s@]+@${SYNTHETIC_EMAIL_DOMAIN.replace(".", "\\.")}$`, "i");
@@ -31,6 +32,7 @@ export const EMAIL_OTP_ERROR_CODES = [
   "request_failed",
   "verify_failed",
   "resend_failed",
+  "rate_limited",
 ] as const;
 export type EmailOtpErrorCode = (typeof EMAIL_OTP_ERROR_CODES)[number];
 
@@ -45,6 +47,46 @@ export type EmailOtpOutcome =
 export type ParsedEmailOtpInput =
   | { ok: true; input: EmailOtpInput }
   | { ok: false };
+
+function isRateLimitMessage(value: string) {
+  return /rate|too many|frequency|after\s+\d+\s*second|limit/i.test(value);
+}
+
+export function isRateLimitedAuthError(value: unknown) {
+  if (typeof value === "string") {
+    return isRateLimitMessage(value);
+  }
+
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return false;
+  }
+
+  const record = value as Record<string, unknown>;
+  if (record.status === 429 || record.statusCode === 429) {
+    return true;
+  }
+
+  for (const key of ["code", "errorCode"]) {
+    const code = record[key];
+    if (typeof code === "string" && isRateLimitMessage(code)) {
+      return true;
+    }
+  }
+
+  return typeof record.message === "string" && isRateLimitMessage(record.message);
+}
+
+function failedCode(action: EmailOtpAction, error?: unknown): EmailOtpErrorCode {
+  if (isRateLimitedAuthError(error)) {
+    return "rate_limited";
+  }
+
+  if (action === "verify") {
+    return "verify_failed";
+  }
+
+  return action === "resend" ? "resend_failed" : "request_failed";
+}
 
 function hasExactKeys(value: Record<string, unknown>, keys: string[]) {
   const actualKeys = Object.keys(value).sort();
@@ -133,7 +175,11 @@ export async function executeEmailOtp(
       });
 
       if (!result || result.error) {
-        return { kind: "error", action: input.action, code: "verify_failed" };
+        return {
+          kind: "error",
+          action: input.action,
+          code: failedCode(input.action, result?.error),
+        };
       }
 
       return { kind: "success", action: input.action, status: "verified" };
@@ -148,21 +194,13 @@ export async function executeEmailOtp(
       return {
         kind: "error",
         action: input.action,
-        code: input.action === "resend" ? "resend_failed" : "request_failed",
+        code: failedCode(input.action, result?.error),
       };
     }
 
     return { kind: "success", action: input.action, status: "otp_sent" };
-  } catch {
-    return {
-      kind: "error",
-      action: input.action,
-      code: input.action === "verify"
-        ? "verify_failed"
-        : input.action === "resend"
-          ? "resend_failed"
-          : "request_failed",
-    };
+  } catch (error) {
+    return { kind: "error", action: input.action, code: failedCode(input.action, error) };
   }
 }
 

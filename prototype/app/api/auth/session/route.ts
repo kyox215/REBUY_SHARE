@@ -1,4 +1,5 @@
-import { createClient } from "@/lib/supabase/server";
+import { resolveSessionStatus } from "@/lib/auth/session";
+import { createAuthRouteClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -10,25 +11,29 @@ const noStoreHeaders = {
 };
 
 export async function GET() {
-  try {
-    const supabase = await createClient();
-    const { data, error } = await supabase.auth.getClaims();
+  const session = await resolveSessionStatus({
+    getClaims: async () => {
+      const supabase = await createAuthRouteClient();
+      return supabase.auth.getClaims();
+    },
+  });
 
-    if (error || !data?.claims) {
-      return Response.json(
-        { status: "anonymous" },
-        { status: 401, headers: noStoreHeaders },
-      );
-    }
-
+  if (session.status === "authenticated") {
     return Response.json(
       { status: "authenticated" },
       { status: 200, headers: noStoreHeaders },
     );
-  } catch {
+  }
+
+  if (session.status === "anonymous") {
     return Response.json(
       { status: "anonymous" },
       { status: 401, headers: noStoreHeaders },
     );
   }
+
+  return Response.json(
+    { status: "error", code: "session_error" },
+    { status: 500, headers: noStoreHeaders },
+  );
 }

@@ -4,7 +4,7 @@
 
 - 日期：2026-08-30，Europe/Rome。
 - 执行范围是 G2-A1 E2a local email OTP only：本地 Supabase Auth/GoTrue、合成邮箱 OTP request/verify/resend、Mailpit 捕获、同源服务端协调和 session cookie。
-- 独立 Sol 审查结论为 E2a 条件 GO；E2b invite 当前 NO-GO。provider invite 不等于 Rebuy membership invite；本证据不代表 G2-A1 整体通过。
+- 历史执行记录曾记为 E2a 条件 GO；但对精确 head=`98a3f0d4739eb835fa068b4736347285b7d23193` 的独立安全审查结论为 **NO-GO**。当前本批仅是修复候选，待最终精确提交复审；E2b invite 当前仍 NO-GO。provider invite 不等于 Rebuy membership invite；本证据不代表 G2-A1 整体通过。
 - 成功路径只使用专用 `@rebuy.test` 合成域名；`.invalid` 只用于 no-send、负向和反枚举。具体邮箱原值、验证码、token、cookie、key 和 PII 不写入本记录。
 
 ## 隔离与配置
@@ -59,7 +59,7 @@
 ## 仍关闭的 Gate 与风险
 
 - E2b provider/admin invite、`inviteUserByEmail`、service_role/secret/db password、Rebuy membership invite、Google、Apple、custom SMTP、hosted Supabase/Auth、真实邮件/账号/PII、业务 DB/schema/RLS、Storage、Realtime、MFA、linking、push/PR/merge、Vercel deployment、Staging/Production 均 CLOSED。
-- 已知风险：active Supabase 下 OTP 输入态仍未用浏览器截图（真实 OTP 链路已有 harness 证据）；桌面/移动初始与错误态缺口已由主代理 In-app Browser 关闭，且未存档截图文件；本地条件 GO 不等于生产或 hosted 验收；OTP 限速、邮件投递和 cookie 行为仍需在后续授权 Gate 下复核。
+- 已知风险：精确 head=`98a3f0d4739eb835fa068b4736347285b7d23193` 的审查 NO-GO 尚待本批最终精确提交复审；active Supabase 下 OTP 输入态仍未用浏览器截图（真实 OTP 链路已有 harness 证据）；桌面/移动初始与错误态缺口已由主代理 In-app Browser 关闭，且未存档截图文件；本地修复候选不等于生产或 hosted 验收；刷新/撤销语义未在本批稳定证明，OTP 限速、邮件投递和 cookie 行为仍需后续授权 Gate 持续复核。
 
 ## 官方语义依据
 
@@ -74,3 +74,17 @@
 - 初始 DOM/截图确认 Apple/Google disabled、合成邮箱状态和无布局重叠；Supabase 已 cleanup 时提交 `@rebuy.test` 合成邮箱只显示有限发送失败；随后非法邮箱复验只显示单一 `@rebuy.test` 格式错误，旧服务错误已清除；placeholder 精确为 `name@rebuy.test`；移动错误态无重叠。
 - 页面 title/URL 正确，console `warn/error=[]`。本补充关闭桌面/移动初始态与错误态 browser 缺口；不声称存档截图文件。历史 `agent-browser` CLI 不可用仍保留为工具事实，不覆盖本次 In-app Browser 证据。
 - active Supabase 下 OTP 输入态仍未用浏览器截图；真实 OTP request→Mailpit→verify→session→replay/resend 链路仍以已记录的本地 harness 证据为准。
+
+## 当前安全修复候选与复审状态（2026-08-30）
+
+- 独立安全审查针对 `98a3f0d4739eb835fa068b4736347285b7d23193` 为 **NO-GO**；本次 worktree 中的实现与证据是待复审修复候选，不预写 REVIEW GO、E2a GO 或 G2-A1 整体通过。
+- P0/P1 修复候选覆盖：严格 canonical local URL 与 public-key allowlist；Rebuy 专属 Auth cookie 及 strict Route Handler cookie writer；固定 `127.0.0.1:3000` request URL/Origin/Host 三重匹配；streaming 1024-byte body gate、无 Content-Length 超限取消、UTF-8/JSON 拒绝；有限 provider 错误/限速状态；合同测试与真实 local runtime harness。
+- P2 候选覆盖：可清除 callback 状态、客户端错误与服务错误分离、local `max_frequency=1s` 对应 resend cooldown，以及匿名/错误项目 cookie/验证成功的 session 检查。刷新/撤销在本批未作稳定证明，保留为残余风险。
+- 本批实际状态仍拆分 E2a 与 E2b：E2a 只限 local GoTrue/Mailpit、`@rebuy.test` 成功邮箱和 `.invalid` 负向；E2b invite 继续 NO-GO，provider invite 不等于 Rebuy membership invite。用户仅授权本地计划执行，不授权特权密钥或外部动作。
+
+## 当前验证补充（2026-08-30）
+
+- Node `22.12.0`、Corepack pnpm `10.33.3`、worktree 独立依赖：`corepack pnpm test:auth` 为 `27/27`；`typecheck`、`lint`、`build` 均退出 0。无 lockfile 变更。
+- 脱敏 runtime harness `test:auth:local` 阶段均通过：anonymous session、wrong project cookie、request、Mailpit capture、wrong OTP、verify、authenticated session、replay、resend、old OTP rejection、resend verify、`.invalid` no-send，最终 `E2A_RUNTIME_PASS`。未把 fake replay 当真实 Supabase 证据。
+- 浏览器回归：Codex In-app Browser 检查默认桌面和临时 `390x844` mobile 初始态、mobile 字段错误态与 active local OTP 控件；OTP 控件为 numeric、maxlength 6，修改邮箱回到无旧状态的 email step；console warn/error 为 0，最终 reset 默认视口。未保存含邮箱/OTP/token/cookie/key 的截图文件；active OTP 只做无敏感 DOM 检查。
+- 浏览器与 Next 兼容性：Next 16 的 URL normalization 会把 loopback request URL 归一为 `localhost`；当前配置使用官方现有 `skipProxyUrlNormalize` 以保留原始 request URL，确保固定 loopback origin gate 在实际 runtime 与代码合同一致。该设置仅为本地同源边界兼容控制，不放宽 allowlist。

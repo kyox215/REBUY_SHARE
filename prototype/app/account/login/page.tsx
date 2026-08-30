@@ -22,5 +22,5 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
       ? AUTH_CALLBACK_ERROR_MESSAGES[rawError]
       : undefined;
 
-  return <LoginPrototype authStatus={authStatus} />;
+  return <LoginPrototype key={authStatus ?? "none"} authStatus={authStatus} />;
 }

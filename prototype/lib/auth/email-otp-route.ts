@@ -6,6 +6,8 @@ import {
 } from "./email-otp";
 
 export const EMAIL_OTP_MAX_BODY_BYTES = 1024;
+export const EMAIL_OTP_APP_ORIGIN = "http://127.0.0.1:3000";
+export const EMAIL_OTP_APP_HOST = "127.0.0.1:3000";
 
 const noStoreHeaders = {
   "Cache-Control": "no-store",
@@ -31,20 +33,18 @@ function jsonResponse(
 
 function isSameOrigin(request: Request) {
   const origin = request.headers.get("origin");
-  if (!origin) {
+  const host = request.headers.get("host");
+  if (!origin || !host) {
     return false;
   }
 
   try {
-    const requestUrl = new URL(request.url);
-    const requestOrigins = new Set([requestUrl.origin]);
-    const host = request.headers.get("host");
-
-    if (host) {
-      requestOrigins.add(new URL(`${requestUrl.protocol}//${host}`).origin);
-    }
-
-    return requestOrigins.has(new URL(origin).origin);
+    const requestOrigin = new URL(request.url).origin;
+    return (
+      requestOrigin === EMAIL_OTP_APP_ORIGIN &&
+      origin === EMAIL_OTP_APP_ORIGIN &&
+      host === EMAIL_OTP_APP_HOST
+    );
   } catch {
     return false;
   }
@@ -62,7 +62,7 @@ function hasJsonContentType(request: Request) {
 async function readJsonBody(request: Request): Promise<BodyReadResult> {
   const contentLength = request.headers.get("content-length");
   if (contentLength !== null) {
-    if (!/^\d+$/.test(contentLength.trim())) {
+    if (!/^\d+$/.test(contentLength)) {
       return { ok: false, status: 400 };
     }
 
@@ -72,18 +72,53 @@ async function readJsonBody(request: Request): Promise<BodyReadResult> {
     }
   }
 
-  let text: string;
-  try {
-    text = await request.text();
-  } catch {
+  const body = request.body;
+  if (!body) {
     return { ok: false, status: 400 };
   }
 
-  if (new TextEncoder().encode(text).byteLength > EMAIL_OTP_MAX_BODY_BYTES) {
-    return { ok: false, status: 413 };
+  const reader = body.getReader();
+  const chunks: Uint8Array[] = [];
+  let totalBytes = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) {
+        break;
+      }
+
+      if (!(value instanceof Uint8Array)) {
+        return { ok: false, status: 400 };
+      }
+
+      totalBytes += value.byteLength;
+      if (totalBytes > EMAIL_OTP_MAX_BODY_BYTES) {
+        try {
+          await reader.cancel();
+        } catch {
+          // The body is already rejected; cancellation is best effort.
+        }
+        return { ok: false, status: 413 };
+      }
+
+      chunks.push(value);
+    }
+  } catch {
+    return { ok: false, status: 400 };
+  } finally {
+    reader.releaseLock();
   }
 
+  const bodyBytes = new Uint8Array(totalBytes);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bodyBytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+
+  let text: string;
   try {
+    text = new TextDecoder("utf-8", { fatal: true }).decode(bodyBytes);
     return { ok: true, value: JSON.parse(text) as unknown };
   } catch {
     return { ok: false, status: 400 };
