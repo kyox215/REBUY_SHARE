@@ -65,3 +65,15 @@
 - 实际 Next loopback smoke（无 provider、无 Supabase exchange）对 `/auth/callback?error=access_denied` 返回固定 `303` 到本地 login 的有限 `provider_error`；Host spoof 与 forwarded-host spoof 均返回固定 `303`/`exchange_error`，没有触发 exchange。请求未跟随重定向，未写入或保存敏感值。
 - “verifier cleanup 已覆盖”当前仅指上述 adapter/锁定库语义与无网络合同；live Google provider、state/nonce 完整绑定、跨请求 replay、真实 provider callback/session 仍未验证，fake replay 不作替代证据。E3 external Google OAuth 继续 **NO-GO / CLOSED**，本批仍只是 code-only 安全准备候选，待独立复审。
 - 运行环境为 Node `22.12.0`、pnpm `10.33.3`；未启动 Supabase、未连接 hosted/provider、未使用 secret/admin/service_role、未写真实数据或外部资源。
+
+## 11. 2026-08-30 independent review closeout
+
+- 独立 `sol_specialist` 针对 exact code head=`d60c05856db4ac1ac2db19a2d831171a2bb91177` 给出 **REVIEW GO**，P0=0、P1=0、P2=4；该 head 可接受为 **E3 code-only prerequisite accepted at d60c058**。本结论不覆盖更早历史记录，也不把 E3 external Google OAuth 标为通过。
+- P2=4 精确登记为 external Gate 前收口：
+  1. auth-js multi-flow 消费后可能重写非空 flow index，而 ephemeral adapter 只允许删除；可能留下 stale flow index，失败时 legacy verifier 删除也可能只停在 SSR buffer。
+  2. provider-token sentinel 目前只查明文默认 base64url cookie，不能单独证明字段不存在；成功 refresh 分支未覆盖。
+  3. `test:auth` runner 尚未导入真实 callback Route Handler/server.ts；实际 Next smoke 仍只有文档陈述，缺 listener mode、启动 ref、脱敏原始输出和 exact-head 绑定。
+  4. `code`/`error`/`error_description`/`next` 重复 singleton query 尚未 fail closed；当前只有 `sb_flow_id` 拒绝重复。
+- P3 残余：全部 forwarded 头缺失的接受依赖固定 loopback bind；strict cookie writer 理论上可能在顺序写入中途异常时产生 partial cookie，当前没有现实可达证据。
+- 本轮是 docs-only closeout，未重跑 `test:auth`、typecheck、lint、build，未启动服务或 Supabase，未连接 provider，未执行外部动作；仅复用 `d60c058` 未变源码的既有验证记录，不进行 hash。
+- provider-ready/live provider、state、nonce、跨请求 replay、signup containment、真实 callback/session、浏览器完整 cookie 生命周期仍未验证；fake replay 不作真实 provider 证据。E3 external Google OAuth 继续 **NO-GO / CLOSED**。

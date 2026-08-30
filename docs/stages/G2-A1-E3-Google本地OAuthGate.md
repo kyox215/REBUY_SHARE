@@ -108,3 +108,10 @@ Live provider 结果必须与 fake contract 结果分开记录。不得用 fake 
 - `test:auth` 当前为 `37/37`；typecheck、lint、build 均通过。真实 `createServerClient`/`setSession` wiring 的 fake-fetch 测试验证成功只写固定 Rebuy session cookie base/chunks 且不含 provider-token sentinel，过期 refresh failure 无 cookie 写入。
 - 复用现有 Next listener 的 loopback smoke：`/auth/callback?error=access_denied` 返回固定 `303`/`provider_error` 且不触发 exchange；Host spoof 与 forwarded-host spoof 返回固定 `303`/`exchange_error`。没有 provider、Supabase runtime 或外部网络参与。
 - state、nonce、跨请求 replay、真实 Google provider callback/session、signup containment 和 active provider response 仍未验证；fake replay 不作真实证据。E3 overall 仍为 **NO-GO / CLOSED**，本批仅为 code-only 安全准备候选，等待独立复审。
+
+## 11. 2026-08-30 independent review closeout（当前 code-only 状态）
+
+- 独立 `sol_specialist` 对 exact code head=`d60c05856db4ac1ac2db19a2d831171a2bb91177` 给出 **REVIEW GO**，P0=0、P1=0、P2=4；`d60c058` 当前接受为 **E3 code-only prerequisite accepted**。这只接受本地 callback code-only 前置，不打开 E3 external Google OAuth，后者继续 **NO-GO / CLOSED**。
+- P2=4 保留为 external Gate 前收口事项：multi-flow index/legacy verifier 可能 stale 或停留 SSR buffer；sentinel 仅覆盖明文默认 base64url cookie 且成功 refresh 未覆盖；`test:auth` 尚未导入真实 callback Route Handler/server.ts、Next smoke 缺 listener mode/启动 ref/脱敏原始输出/exact-head 绑定；singleton `code`/`error`/`error_description`/`next` 重复 query 尚未 fail closed。
+- P3 残余为 forwarded 全缺失接受依赖固定 loopback bind，以及 strict cookie writer 顺序写入中途异常的理论 partial-cookie 风险；当前无现实可达证据。provider-ready/live provider、state/nonce、跨请求 replay、signup containment、真实 provider callback/session 和浏览器完整 cookie 生命周期仍未验证。
+- 本轮仅为 docs-only closeout，未重跑测试、typecheck、lint、build，未启动 Supabase/provider 或服务，未执行外部动作；复用 `d60c058` 未变源码证据，不进行 hash。历史 `98a3f0d` NO-GO 与 `2083656` REVIEW GO/P2=5 保留，不静默覆盖。

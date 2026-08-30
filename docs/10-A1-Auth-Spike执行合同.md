@@ -505,3 +505,9 @@ resource/cost/secret Gate 通过前，仅可继续维护无资源后端原型、
 - 按锁定 `@supabase/auth-js 2.112.4` 的 `[A-Za-z0-9_-]{8,64}` flow-id 合同解析 `sb_flow_id`；ephemeral exchange client 仅允许本次 flow slot、flow index、legacy verifier 键及精确 deletion，strict persistence client 仅接收 access/refresh 二元组并要求完整 `setSession` 结果。provider token 不进入 persistence、cookie、日志、响应或 evidence。
 - 当前 `test:auth` 为 `37/37`，typecheck、lint、build 均通过；真实 `createServerClient`/`setSession` wiring 的 fake-fetch 合同验证成功只产生固定 Rebuy session cookie base/chunks，过期 refresh failure 不写 cookie。实际 Next loopback callback smoke 对 provider error 返回固定 `303`/`provider_error`，Host/forwarded spoof 返回固定 `303`/`exchange_error`，均未触发 provider/Supabase exchange。
 - 本批仍不证明 live Google provider、state/nonce、跨请求 replay、signup containment 或浏览器 cookie 生命周期；fake replay 仅为本地契约。E2a local GoTrue/Mailpit GO、E2b invite、E4/E5、P2/DB/RLS、hosted/Production、secret/admin/service_role、真实 PII、push/deploy 与外部写入继续冻结。
+
+## 37. 2026-08-30｜E3 callback code-only independent review closeout
+
+- 独立 `sol_specialist` 针对 exact code head=`d60c05856db4ac1ac2db19a2d831171a2bb91177` 给出 **REVIEW GO**，P0=0、P1=0、P2=4；该 head 可接受为 **E3 code-only prerequisite accepted at d60c058**。E3 external Google OAuth 仍 **NO-GO / CLOSED**，不预写 provider-ready 或 live 成功。
+- P2=4 作为 external Gate 前收口登记：auth-js multi-flow 消费后的 flow index/legacy verifier stale 或 SSR buffer 风险；明文 base64url sentinel 检查不足且成功 refresh 未覆盖；`test:auth` 未导入真实 callback Route Handler/server.ts、Next smoke 缺 listener mode/启动 ref/脱敏原始输出/exact-head 绑定；`code`、`error`、`error_description`、`next` 重复 singleton query 未 fail closed。P3 另保留 forwarded 全缺失接受依赖固定 loopback bind 和 strict cookie writer 理论 partial-cookie 风险。
+- 本轮仅 docs-only closeout，未重跑 `test:auth`、typecheck、lint、build，未运行服务/Supabase/provider，未执行外部动作，复用 `d60c058` 未变源码证据且不做 hash。provider-ready/live provider、state/nonce、跨请求 replay、signup containment、真实 callback/session 和浏览器完整 cookie 生命周期仍未验证；E2a GO、E2b/E4/E5/P2/DB/RLS/hosted/Production 及特权凭据继续冻结。
