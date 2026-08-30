@@ -70,6 +70,13 @@ E1 当前状态为**本地完成候选/独立审查 GO，待 PR/CI/merge**。首
 - [G2-A1 E2b 本地 Provider 邀请 Gate](./G2-A1-E2b-本地Provider邀请Gate.md) 当前 **CLOSED / 待 exact action-time Owner 批准**；只准备 provider primitive Gate，不等于 Rebuy membership invite。
 - [P2-L 本地 Schema 与 RLS 纵切 Gate](./P2-L-本地Schema与RLS纵切Gate.md) 当前 **待 Owner 决定 / CLOSED**；推荐的 synthetic-only local slice 不预写授权，不打开完整 P2 或 G2-A1 整体。
 
+## 1.11 2026-08-30｜E3/E4/E5 Gate 准备记录（追加纠正）
+
+- [G2-A1-E3 Google 本地 OAuth Gate](./G2-A1-E3-Google本地OAuthGate.md) 当前 **CLOSED / NO-GO**；先决是固定 callback origin/Host/path、provider token 不持久化、state/nonce/PKCE/replay 合同。Testing test users/授权期限不作为 signup containment 硬边界。
+- [G2-A1-E4 Apple OAuth Gate](./G2-A1-E4-AppleOAuthGate.md) 当前 **CLOSED / NO-GO / PAID-BLOCKED**；Developer enrollment、Team/App/Services ID、hosted HTTPS callback/provider、Key/.p8/client secret、relay 五项独立，当前不付款、不提交法定资料、不创建标识符或 secret。
+- [G2-A1-E5 Hosted Auth 分项 Gate](./G2-A1-E5-HostedAuth分项Gate.md) umbrella 当前 **NO-GO**，LINK、CALLBACK、HOSTED-AUTH、INVITE、CUSTOM-SMTP 五项均 **CLOSED**；不接受 wide Gate。signup containment 必须先成立，provider invite 不等于 Rebuy membership invite，hosted 默认 SMTP 不证明 local Mailpit。
+- E2a 保持 **GO** 且仅限 local GoTrue/Mailpit、@rebuy.test synthetic-only；E2b、P2-L、E3、E4、E5 均按各自 Gate 保持 CLOSED/待 Owner，未预写任何授权。旧文档中 Google test users/7 天的表述保留为历史 planning assumption，现追加纠正为非硬边界；当前没有活动 provider 暴露。
+
 ## 2. 命名与追加规则
 
 1. 文件名使用 `<阶段ID>-<短名称>.md`，阶段 ID 与 [14 全局路线](../14-全局执行总计划.md#4-阶段依赖链) 一致；示例：`G0-P1-视觉验收与UI冻结.md`。

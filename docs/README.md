@@ -90,6 +90,13 @@ G2-A0 远端 docs-only reconciliation 已完成：PR #7 merge=`fd9b712c7b07bf343
 - [G2-A1 E2b 本地 Provider 邀请 Gate](./stages/G2-A1-E2b-本地Provider邀请Gate.md) 为 **CLOSED / 待 exact action-time Owner 批准**。它只准备 provider invite primitive，不等于 Rebuy membership invite；不授予或使用 admin key。
 - [P2-L 本地 Schema 与 RLS 纵切 Gate](./stages/P2-L-本地Schema与RLS纵切Gate.md) 为 **待 Owner 决定 / CLOSED**。推荐的 synthetic-only local slice 不预写授权；E2b、E3-E5、hosted、真实数据、推送部署继续冻结。
 
+## 7.3 2026-08-30｜E3/E4/E5 Gate 准备记录（追加纠正）
+
+- [G2-A1-E3 Google 本地 OAuth Gate](./stages/G2-A1-E3-Google本地OAuthGate.md) 当前 **CLOSED / NO-GO**；必须先完成固定 callback origin/Host/path、provider token 不持久化、state/nonce/PKCE/replay 合同。Testing test users/授权期限仅为配置事实，不是 signup containment 硬边界。
+- [G2-A1-E4 Apple OAuth Gate](./stages/G2-A1-E4-AppleOAuthGate.md) 当前 **CLOSED / NO-GO / PAID-BLOCKED**；Developer enrollment、Team/App/Services ID、hosted HTTPS callback/provider、Key/.p8/client secret、relay 分为五个独立 Gate，当前不付款、不提交法定资料、不创建标识符或 secret。
+- [G2-A1-E5 Hosted Auth 分项 Gate](./stages/G2-A1-E5-HostedAuth分项Gate.md) umbrella 当前 **NO-GO**，LINK、CALLBACK、HOSTED-AUTH、INVITE、CUSTOM-SMTP 均 **CLOSED**；不使用 wide Gate。signup containment 必须先成立，provider invite 不等于 Rebuy membership invite，hosted 默认 SMTP 不证明 local Mailpit。
+- E2a 保持 **GO** 且仅限 local GoTrue/Mailpit、@rebuy.test synthetic-only；E2b 与 P2-L 继续按现状 CLOSED/待 Owner，E3/E4/E5 继续 CLOSED/待 Owner，均未预写批准。旧 Google test users/7 天表述保留在历史段落并追加纠正为历史 planning assumption、非硬边界；当前没有活动 provider 暴露。
+
 ## 8. 2026-08-27 G2-A0 Exit closeout 历史快照
 
 在该日期的历史快照中，状态为 `G2-A0 Exit GO；远端 docs-only reconciliation 已获批，尚未执行`。公开外发范围限于原 12 个 Markdown 路径、相关 Git 历史、Owner 姓名、账号安全架构、威胁模型、角色权限和阶段治理信息；远端 preflight 为 `main=7ea1e45ad22ab29105910665baf4bbd7212241c5`、目标 branch/PR 无。140ea 历史 preflight 审计为 `351437` bytes，无 binary/image/secret/phone/address/customer PII；新增内容审计未发现新增邮箱但漏计继承内容，base/public main 及既有 Git author metadata 已含同一 Owner 邮箱，G2-A0 未引入不同邮箱。该段仅保留当时事实，不代表当前状态；当前事实见上方 2026-08-28 纠正。
