@@ -59,7 +59,7 @@
 ## 仍关闭的 Gate 与风险
 
 - E2b provider/admin invite、`inviteUserByEmail`、service_role/secret/db password、Rebuy membership invite、Google、Apple、custom SMTP、hosted Supabase/Auth、真实邮件/账号/PII、业务 DB/schema/RLS、Storage、Realtime、MFA、linking、push/PR/merge、Vercel deployment、Staging/Production 均 CLOSED。
-- 已知风险：浏览器自动化未能执行桌面/移动状态截图；本地条件 GO 不等于生产或 hosted 验收；OTP 限速、邮件投递和 cookie 行为仍需在后续授权 Gate 下复核。
+- 已知风险：active Supabase 下 OTP 输入态仍未用浏览器截图（真实 OTP 链路已有 harness 证据）；桌面/移动初始与错误态缺口已由主代理 In-app Browser 关闭，且未存档截图文件；本地条件 GO 不等于生产或 hosted 验收；OTP 限速、邮件投递和 cookie 行为仍需在后续授权 Gate 下复核。
 
 ## 官方语义依据
 
@@ -67,3 +67,10 @@
 - [Supabase local email templates](https://supabase.com/docs/guides/local-development/customizing-email-templates)
 - [Supabase local testing and Mailpit](https://supabase.com/docs/guides/local-development/cli/testing-and-linting)
 - [Supabase changelog](https://supabase.com/changelog)
+
+## 主代理浏览器补充验收（纠正，2026-08-30）
+
+- 主代理使用 Codex In-app Browser 对 `http://127.0.0.1:3000/account/login` 完成默认桌面与临时 `390x844` 移动 viewport 验收，最后已 reset 为默认 viewport；浏览器 tab 保留为 deliverable。
+- 初始 DOM/截图确认 Apple/Google disabled、合成邮箱状态和无布局重叠；Supabase 已 cleanup 时提交 `@rebuy.test` 合成邮箱只显示有限发送失败；随后非法邮箱复验只显示单一 `@rebuy.test` 格式错误，旧服务错误已清除；placeholder 精确为 `name@rebuy.test`；移动错误态无重叠。
+- 页面 title/URL 正确，console `warn/error=[]`。本补充关闭桌面/移动初始态与错误态 browser 缺口；不声称存档截图文件。历史 `agent-browser` CLI 不可用仍保留为工具事实，不覆盖本次 In-app Browser 证据。
+- active Supabase 下 OTP 输入态仍未用浏览器截图；真实 OTP request→Mailpit→verify→session→replay/resend 链路仍以已记录的本地 harness 证据为准。
