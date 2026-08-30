@@ -4,7 +4,7 @@
 
 - 日期：2026-08-30，Europe/Rome。
 - 执行范围是 G2-A1 E2a local email OTP only：本地 Supabase Auth/GoTrue、合成邮箱 OTP request/verify/resend、Mailpit 捕获、同源服务端协调和 session cookie。
-- 历史执行记录曾记为 E2a 条件 GO；但对精确 head=`98a3f0d4739eb835fa068b4736347285b7d23193` 的独立安全审查结论为 **NO-GO**。当前本批仅是修复候选，待最终精确提交复审；E2b invite 当前仍 NO-GO。provider invite 不等于 Rebuy membership invite；本证据不代表 G2-A1 整体通过。
+- 历史执行记录曾记为 E2a 条件 GO；对精确 head=`98a3f0d4739eb835fa068b4736347285b7d23193` 的独立安全审查结论为历史 **NO-GO**，并保留上一提交 `2083656f6a1eb888f0db06339bc2b30151f31c43` 的 **REVIEW GO/P2=5**。当前 exact head=`30131c0cfad69a6df7c0e0c61268029890c7dce1` 已获独立 Sol E2a **REVIEW GO，P0=0、P1=0、P2 open=0**，本地 slice 标为完成/通过；E2b invite 当前仍 NO-GO。provider invite 不等于 Rebuy membership invite；本证据不代表 G2-A1 整体通过。
 - 成功路径只使用专用 `@rebuy.test` 合成域名；`.invalid` 只用于 no-send、负向和反枚举。具体邮箱原值、验证码、token、cookie、key 和 PII 不写入本记录。
 
 ## 隔离与配置
@@ -59,7 +59,7 @@
 ## 仍关闭的 Gate 与风险
 
 - E2b provider/admin invite、`inviteUserByEmail`、service_role/secret/db password、Rebuy membership invite、Google、Apple、custom SMTP、hosted Supabase/Auth、真实邮件/账号/PII、业务 DB/schema/RLS、Storage、Realtime、MFA、linking、push/PR/merge、Vercel deployment、Staging/Production 均 CLOSED。
-- 已知风险：精确 head=`98a3f0d4739eb835fa068b4736347285b7d23193` 的历史审查 NO-GO 仍保留，当前 follow-up 精确提交仍待独立复审；active Supabase 下 OTP 输入态仍未用浏览器截图（真实 OTP 链路已有 harness 证据）；桌面/移动初始与错误态缺口已由主代理 In-app Browser 关闭，且未存档截图文件；本地修复候选不等于生产或 hosted 验收；刷新/撤销语义未在本批稳定证明，实际 provider rate-limited runtime 未被刻意触发，限流映射仅有有限合同/route 证据，仍需后续授权 Gate 持续复核。Next 预览按用户要求故意保留，不是 cleanup 遗漏。
+- 已知风险：精确 head=`98a3f0d4739eb835fa068b4736347285b7d23193` 的历史审查 NO-GO 与 `2083656f6a1eb888f0db06339bc2b30151f31c43` 的 REVIEW GO/P2=5 均保留；当前 exact head=`30131c0cfad69a6df7c0e0c61268029890c7dce1` 已 REVIEW GO，P0/P1=0、P2 open=0。active Supabase 下 OTP 输入态仍未用浏览器截图；桌面/移动初始与错误态缺口已由主代理 In-app Browser 关闭，且未存档截图文件；本批未主动触发真实 provider HTTP 429，refresh/revoke 未证明。这些不阻塞 E2a local slice，但不得外推为 hosted、Production 或更广能力。Next 预览按用户要求故意保留，不是 cleanup 遗漏。
 
 ## 官方语义依据
 
@@ -75,9 +75,9 @@
 - 页面 title/URL 正确，console `warn/error=[]`。本补充关闭桌面/移动初始态与错误态 browser 缺口；不声称存档截图文件。历史 `agent-browser` CLI 不可用仍保留为工具事实，不覆盖本次 In-app Browser 证据。
 - active Supabase 下 OTP 输入态仍未用浏览器截图；真实 OTP request→Mailpit→verify→session→replay/resend 链路仍以已记录的本地 harness 证据为准。
 
-## 当前安全修复候选与复审状态（2026-08-30）
+## 历史安全修复候选与复审状态（2026-08-30；当前见末节）
 
-- 独立安全审查针对 `98a3f0d4739eb835fa068b4736347285b7d23193` 为 **NO-GO**；本次 worktree 中的实现与证据是待复审修复候选，不预写 REVIEW GO、E2a GO 或 G2-A1 整体通过。
+- 独立安全审查针对 `98a3f0d4739eb835fa068b4736347285b7d23193` 为 **NO-GO**；截至该精确 head，本次 worktree 中的实现与证据是待复审修复候选。当前状态见末节，不覆盖该历史结论。
 - P0/P1 修复候选覆盖：严格 canonical local URL 与 public-key allowlist；Rebuy 专属 Auth cookie 及 strict Route Handler cookie writer；固定 `127.0.0.1:3000` request URL/Origin/Host 三重匹配；streaming 1024-byte body gate、无 Content-Length 超限取消、UTF-8/JSON 拒绝；有限 provider 错误/限速状态；合同测试与真实 local runtime harness。
 - P2 候选覆盖：可清除 callback 状态、客户端错误与服务错误分离、local `max_frequency=1s` 对应 resend cooldown，以及匿名/错误项目 cookie/验证成功的 session 检查。刷新/撤销在本批未作稳定证明，保留为残余风险。
 - 本批实际状态仍拆分 E2a 与 E2b：E2a 只限 local GoTrue/Mailpit、`@rebuy.test` 成功邮箱和 `.invalid` 负向；E2b invite 继续 NO-GO，provider invite 不等于 Rebuy membership invite。用户仅授权本地计划执行，不授权特权密钥或外部动作。
@@ -94,3 +94,9 @@
 - 脱敏 runtime harness `test:auth:local` 阶段均通过：anonymous session、wrong project cookie、request、Mailpit capture、wrong OTP、verify、authenticated session、replay、resend、old OTP rejection、resend verify、`.invalid` no-send，最终 `E2A_RUNTIME_PASS`。所有 app/Mailpit fetch 使用 manual redirect 并校验固定 origin；重发 token 不同，旧 OTP 被拒且新 OTP 可验证；未把 fake replay 当真实 Supabase 证据。
 - 当前收口只做必要的无敏感页面 HTTP/DOM smoke：登录页返回 200，`name@rebuy.test` placeholder 和本地测试认证状态文案存在；未填入邮箱或 OTP，未生成或保存新截图。此前主代理的桌面/移动 In-app Browser 证据与 active OTP 截图缺口事实继续保留。
 - 浏览器与 Next 兼容性：Next 16 的 URL normalization 会把 loopback request URL 归一为 `localhost`；当前配置使用官方现有 `skipProxyUrlNormalize` 以保留原始 request URL，确保固定 loopback origin gate 在实际 runtime 与代码合同一致。该设置仅为本地同源边界兼容控制，不放宽 allowlist。
+
+## 当前 follow-up 精确提交复审（2026-08-30）
+
+- 独立 Sol 对 exact code head=`30131c0cfad69a6df7c0e0c61268029890c7dce1` 给出 E2a **REVIEW GO**，P0=0、P1=0、P2 open=0。历史 `98a3f0d4739eb835fa068b4736347285b7d23193` **NO-GO** 与 `2083656f6a1eb888f0db06339bc2b30151f31c43` **REVIEW GO/P2=5** 均保留，不静默覆盖。
+- E2a local email OTP slice 标为**完成/通过**，仅限 local GoTrue/Mailpit、`@rebuy.test` synthetic-only、OTP request/verify/resend、session 和有限错误；不等于 G2-A1 整体、E2b/E3-E5、P2、hosted 或 Production 打开。E2b invite 仍 NO-GO，provider invite 不等于 Rebuy membership invite。
+- 残余范围：未主动触发真实 provider HTTP 429、refresh/revoke 未证明、active Auth OTP UI 未保存截图。均不阻塞 E2a local slice，但不得外推。push/deploy/hosted/admin key/真实 PII/custom SMTP 继续冻结；Supabase local stack 已清理；`http://127.0.0.1:3000` Next preview 按用户要求故意保留，不是 cleanup 遗漏。

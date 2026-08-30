@@ -470,15 +470,22 @@ resource/cost/secret Gate 通过前，仅可继续维护无资源后端原型、
 - E2a 与 E2b invite 明确拆分：E2b 当前 NO-GO；Supabase/provider invite 不等于 Rebuy membership invite，admin invite/inviteUserByEmail 需要的 secret/service_role 永不在本批使用。用户当前只授权本地计划执行，不授权特权密钥、外部动作、真实邮件/账号/PII。
 - E2a 通过标准为本地正向闭环、有限负向和清理证据；它不代表生产、hosted Supabase/Auth/SMTP、OAuth 或 G2-A1 整体验收。具体执行证据见[E2a local email OTP evidence](./evidence/G2-A1/2026-08-30-e2a-local-email-otp/README.md)。
 
-## 32. 2026-08-30｜E2a 精确提交安全审查纠正（当前）
+## 32. 2026-08-30｜E2a 精确提交安全审查纠正（历史状态；当前见第 34 节）
 
 - 独立安全审查针对精确 head=`98a3f0d4739eb835fa068b4736347285b7d23193` 给出 **NO-GO**；其 findings 覆盖 local Auth URL/key allowlist、Rebuy 专属 cookie、固定 origin/Host、streaming body 上限、strict route-cookie、可重复测试与当前证据状态。
-- 当前 E2a 代码与证据是修复候选，待最终精确提交复审；历史 E2a 条件 GO 不得外推为本批修复已 GO，也不等于 G2-A1 整体通过。E2b invite 继续 NO-GO，provider invite 不等于 Rebuy membership invite。
+- 截至该精确 head，E2a 代码与证据是待复审修复候选；历史 E2a 条件 GO 不得外推为本批修复已 GO，也不等于 G2-A1 整体通过。当前状态见第 34 节。E2b invite 继续 NO-GO，provider invite 不等于 Rebuy membership invite。
 - 本阶段只接受本地 Supabase/GoTrue、Mailpit 和 `@rebuy.test` 合成数据；`.invalid` 只用于 no-send/负向/反枚举。用户当前仅授权本地计划执行，不授权 service_role/secret/admin key、DB password、custom SMTP、hosted/Production、真实邮件/账号/PII 或外部写入。
 
-## 33. 2026-08-30｜E2a 精确提交复审记录与环境边界（追加纠正）
+## 33. 2026-08-30｜E2a 精确提交复审记录与环境边界（历史记录；当前见第 34 节）
 
-- 记录上一精确提交 `2083656f6a1eb888f0db06339bc2b30151f31c43` 的独立结果为 **REVIEW GO，P0=0、P1=0、P2=5**；该事实不覆盖精确 head=`98a3f0d4739eb835fa068b4736347285b7d23193` 的历史 **NO-GO**，当前 follow-up 仍是待复审候选，不预写新的 REVIEW GO/E2a GO。
+- 记录上一精确提交 `2083656f6a1eb888f0db06339bc2b30151f31c43` 的独立结果为 **REVIEW GO，P0=0、P1=0、P2=5**；该事实不覆盖精确 head=`98a3f0d4739eb835fa068b4736347285b7d23193` 的历史 **NO-GO**。截至该提交，follow-up 仍是待复审候选；当前状态见第 34 节。
 - 当前实现的 Supabase env 读取仅允许 server-only `SUPABASE_URL` 与 `SUPABASE_PUBLISHABLE_KEY`；纯 validator 不读取环境，browser client 只接受服务端显式传入的已验证 public config。旧 `NEXT_PUBLIC_*` 计划文字保留为历史快照，不作为当前 runtime setup。
 - runtime harness 的成功路径仍仅使用 `@rebuy.test`，`.invalid` 只用于 no-send/负向/反枚举；Next `127.0.0.1:3000` 预览按用户要求故意保留，不属于 cleanup 遗漏。E2b invite、provider/admin invite、secret/service_role、custom SMTP、hosted/Production 与真实 PII 继续 CLOSED。
 - 当前修复候选已在 Node `22.12.0`/pnpm `10.33.3` 下完成 `test:auth` `29/29`、typecheck、lint、build、sentinel 构建产物扫描、真实 local OTP/Mailpit/runtime 与无敏感页面 smoke；验证结果不替代新的精确提交复审。
+
+## 34. 2026-08-30｜E2a follow-up 精确提交复审收口（当前）
+
+- 独立 Sol 对 exact code head=`30131c0cfad69a6df7c0e0c61268029890c7dce1` 给出 E2a **REVIEW GO**，P0=0、P1=0、P2 open=0。该结果是时间序列中的当前记录，不覆盖 `98a3f0d4739eb835fa068b4736347285b7d23193` 历史 **NO-GO** 或 `2083656f6a1eb888f0db06339bc2b30151f31c43` 的 **REVIEW GO/P2=5**。
+- E2a local email OTP slice 标为**完成/通过**，范围仅限 local GoTrue/Mailpit、`@rebuy.test` synthetic-only、OTP request/verify/resend、session 和有限错误；不等于 G2-A1 整体、E2b/E3-E5、P2、hosted 或 Production 打开。
+- 残余范围为未主动触发真实 provider HTTP 429、refresh/revoke 未证明、active Auth OTP UI 未保存截图；均不阻塞 E2a local slice，但不得外推为更广能力。
+- push/deploy/hosted/admin key/真实 PII/custom SMTP 继续冻结；Supabase local stack 已清理；`http://127.0.0.1:3000` Next preview 按用户要求故意保留，不是 cleanup 遗漏。
