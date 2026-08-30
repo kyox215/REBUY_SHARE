@@ -297,6 +297,15 @@
   font-size: 12px;
 }
 
+.authMessage {
+  min-height: 20px;
+  margin: 2px 0 0;
+  color: var(--success);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
 .demoNotice {
   padding: 10px 12px;
   border: 1px solid color-mix(in srgb, var(--info) 35%, var(--line));
@@ -336,6 +345,32 @@
 
 .editButton:hover {
   color: var(--accent-strong);
+}
+
+.otpActions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 2px;
+}
+
+.resendButton {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.resendButton:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--accent-soft);
 }
 
 .completionStatus {
@@ -411,6 +446,10 @@
 
   .loginPanel {
     padding: 20px 16px;
+  }
+
+  .otpActions {
+    grid-template-columns: 1fr;
   }
 }
 

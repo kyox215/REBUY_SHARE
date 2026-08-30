@@ -10,8 +10,8 @@ type LoginPageProps = {
 };
 
 export const metadata: Metadata = {
-  title: "登录 Rebuy | 本地账号原型",
-  description: "Rebuy 本地登录原型，未连接真实认证。",
+  title: "登录 Rebuy | 本地测试认证",
+  description: "Rebuy 本地测试认证，仅限合成邮箱，不代表生产登录。",
 };
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {

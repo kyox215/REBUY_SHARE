@@ -26,6 +26,8 @@ const tscArgs = [
   "lib/auth/redirect.ts",
   "lib/auth/callback.ts",
   "lib/auth/callback-route.ts",
+  "lib/auth/email-otp.ts",
+  "lib/auth/email-otp-route.ts",
   "tests/auth/contract.test.ts",
 ];
 

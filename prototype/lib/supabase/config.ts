@@ -4,7 +4,7 @@ const publishableKeyEnvName = "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY";
 export class SupabaseConfigError extends Error {
   constructor() {
     super(
-      `Supabase is not configured. Set ${supabaseUrlEnvName} and ${publishableKeyEnvName}.`,
+      `Local Supabase is not configured. Set ${supabaseUrlEnvName} and ${publishableKeyEnvName}.`,
     );
     this.name = "SupabaseConfigError";
   }
@@ -28,9 +28,10 @@ export function getSupabaseConfig() {
   const isLocalHttp =
     parsedUrl.protocol === "http:" &&
     (parsedUrl.hostname === "localhost" ||
-      parsedUrl.hostname === "127.0.0.1");
+      parsedUrl.hostname === "127.0.0.1") &&
+    parsedUrl.port === "55321";
 
-  if (parsedUrl.protocol !== "https:" && !isLocalHttp) {
+  if (!isLocalHttp) {
     throw new SupabaseConfigError();
   }
 

@@ -8,6 +8,16 @@ import {
   isAuthCallbackErrorCode,
 } from "../../lib/auth/callback";
 import { handleAuthCallback } from "../../lib/auth/callback-route";
+import {
+  EMAIL_OTP_LENGTH,
+  SYNTHETIC_EMAIL_DOMAIN,
+  runEmailOtp,
+  type EmailOtpAuthAdapter,
+} from "../../lib/auth/email-otp";
+import {
+  EMAIL_OTP_MAX_BODY_BYTES,
+  handleEmailOtpRequest,
+} from "../../lib/auth/email-otp-route";
 import { normalizeSafeNext } from "../../lib/auth/redirect";
 
 test("normalizes safe same-origin destinations", () => {
@@ -342,4 +352,273 @@ test("applies a final origin check to the route decision", async () => {
   assert.equal(location.pathname, "/account/login");
   assert.equal(location.searchParams.get("auth_error"), "exchange_error");
   assert.equal(location.toString().includes("outside.invalid"), false);
+});
+
+const syntheticEmail = `e2a-contract@${SYNTHETIC_EMAIL_DOMAIN}`;
+const validOtp = "7".repeat(EMAIL_OTP_LENGTH);
+
+function makeAdapter(overrides: Partial<EmailOtpAuthAdapter> = {}) {
+  return {
+    signInWithOtp: async () => ({ error: null }),
+    verifyOtp: async () => ({ error: null }),
+    ...overrides,
+  } satisfies EmailOtpAuthAdapter;
+}
+
+function makeJsonRequest(value: unknown, headers: Record<string, string> = {}) {
+  return new Request("http://127.0.0.1:3000/api/auth/email-otp", {
+    method: "POST",
+    headers: {
+      Origin: "http://127.0.0.1:3000",
+      "Content-Type": "application/json",
+      ...headers,
+    },
+    body: JSON.stringify(value),
+  });
+}
+
+async function responseJson(response: Response) {
+  return (await response.json()) as Record<string, unknown>;
+}
+
+test("rejects invalid email OTP input without calling the adapter", async () => {
+  let calls = 0;
+  const adapter = makeAdapter({
+    signInWithOtp: async () => {
+      calls += 1;
+      return { error: null };
+    },
+    verifyOtp: async () => {
+      calls += 1;
+      return { error: null };
+    },
+  });
+  const invalidInputs = [
+    { action: "request", email: "person@example.invalid" },
+    { action: "request", email: syntheticEmail, extra: true },
+    { action: "verify", email: syntheticEmail, token: "1".repeat(EMAIL_OTP_LENGTH - 1) },
+    { action: "verify", email: syntheticEmail, token: validOtp, extra: true },
+    null,
+  ];
+
+  for (const input of invalidInputs) {
+    assert.deepEqual(await runEmailOtp(input, adapter), {
+      kind: "error",
+      code: "invalid_input",
+    });
+  }
+
+  assert.equal(calls, 0);
+});
+
+test("normalizes a valid email and calls request and resend exactly once", async () => {
+  const signInCalls: Array<{ email: string; shouldCreateUser: true }> = [];
+  const adapter = makeAdapter({
+    signInWithOtp: async ({ email, options }) => {
+      signInCalls.push({ email, shouldCreateUser: options.shouldCreateUser });
+      return { error: null };
+    },
+  });
+
+  const request = await runEmailOtp(
+    { action: "request", email: `  E2A-CONTRACT@${SYNTHETIC_EMAIL_DOMAIN.toUpperCase()} ` },
+    adapter,
+  );
+  const resend = await runEmailOtp(
+    { action: "resend", email: syntheticEmail },
+    adapter,
+  );
+
+  assert.deepEqual(request, { kind: "success", action: "request", status: "otp_sent" });
+  assert.deepEqual(resend, { kind: "success", action: "resend", status: "otp_sent" });
+  assert.deepEqual(signInCalls, [
+    { email: syntheticEmail, shouldCreateUser: true },
+    { email: syntheticEmail, shouldCreateUser: true },
+  ]);
+});
+
+test("verifies a six digit OTP once and maps wrong or replayed OTP errors", async () => {
+  const verifyCalls: Array<{ email: string; token: string; type: "email" }> = [];
+  const adapter = makeAdapter({
+    verifyOtp: async (credentials) => {
+      verifyCalls.push(credentials);
+      return verifyCalls.length === 1
+        ? { error: null }
+        : { error: new Error("provider-otp-error-that-must-not-leak") };
+    },
+  });
+
+  const verified = await runEmailOtp(
+    { action: "verify", email: syntheticEmail, token: validOtp },
+    adapter,
+  );
+  const replayed = await runEmailOtp(
+    { action: "verify", email: syntheticEmail, token: validOtp },
+    adapter,
+  );
+
+  assert.deepEqual(verified, { kind: "success", action: "verify", status: "verified" });
+  assert.deepEqual(replayed, { kind: "error", action: "verify", code: "verify_failed" });
+  assert.deepEqual(verifyCalls, [
+    { email: syntheticEmail, token: validOtp, type: "email" },
+    { email: syntheticEmail, token: validOtp, type: "email" },
+  ]);
+  assert.equal(JSON.stringify(replayed).includes("provider-otp-error-that-must-not-leak"), false);
+});
+
+test("maps thrown request and verify failures to finite codes", async () => {
+  const requestFailure = await runEmailOtp(
+    { action: "request", email: syntheticEmail },
+    makeAdapter({
+      signInWithOtp: async () => {
+        throw new Error("provider-request-error-that-must-not-leak");
+      },
+    }),
+  );
+  const verifyFailure = await runEmailOtp(
+    { action: "verify", email: syntheticEmail, token: validOtp },
+    makeAdapter({
+      verifyOtp: async () => {
+        throw new Error("provider-verify-error-that-must-not-leak");
+      },
+    }),
+  );
+
+  assert.deepEqual(requestFailure, { kind: "error", action: "request", code: "request_failed" });
+  assert.deepEqual(verifyFailure, { kind: "error", action: "verify", code: "verify_failed" });
+  assert.equal(JSON.stringify(requestFailure).includes("provider-request-error-that-must-not-leak"), false);
+  assert.equal(JSON.stringify(verifyFailure).includes("provider-verify-error-that-must-not-leak"), false);
+});
+
+test("enforces same-origin JSON and body gates before creating an adapter", async () => {
+  let factoryCalls = 0;
+  const createAdapter = async () => {
+    factoryCalls += 1;
+    return makeAdapter();
+  };
+  const cases = [
+    {
+      request: new Request("http://127.0.0.1:3000/api/auth/email-otp", {
+        method: "POST",
+        headers: {
+          Host: "127.0.0.1:3000",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ action: "request", email: syntheticEmail }),
+      }),
+      status: 403,
+      code: "origin_not_allowed",
+    },
+    {
+      request: makeJsonRequest({ action: "request", email: syntheticEmail }, { Origin: "http://outside.invalid" }),
+      status: 403,
+      code: "origin_not_allowed",
+    },
+    {
+      request: new Request("http://127.0.0.1:3000/api/auth/email-otp", {
+        method: "POST",
+        headers: { Origin: "http://127.0.0.1:3000", "Content-Type": "text/plain" },
+        body: "{}",
+      }),
+      status: 415,
+      code: "unsupported_media_type",
+    },
+    {
+      request: makeJsonRequest({ action: "request", email: syntheticEmail }, {
+        "Content-Length": String(EMAIL_OTP_MAX_BODY_BYTES + 1),
+      }),
+      status: 413,
+      code: "body_too_large",
+    },
+    {
+      request: makeJsonRequest({ action: "request", email: syntheticEmail }, { "Content-Length": "not-a-size" }),
+      status: 400,
+      code: "invalid_request",
+    },
+    {
+      request: new Request("http://127.0.0.1:3000/api/auth/email-otp", {
+        method: "POST",
+        headers: { Origin: "http://127.0.0.1:3000", "Content-Type": "application/json" },
+        body: "{",
+      }),
+      status: 400,
+      code: "invalid_request",
+    },
+    {
+      request: makeJsonRequest({ action: "request", email: "person@example.invalid" }),
+      status: 400,
+      code: "invalid_request",
+    },
+  ] as const;
+
+  for (const item of cases) {
+    const response = await handleEmailOtpRequest(item.request, createAdapter);
+    assert.equal(response.status, item.status);
+    assert.deepEqual(await responseJson(response), { status: "error", code: item.code });
+  }
+
+  assert.equal(factoryCalls, 0);
+});
+
+test("returns finite route results and preserves no-store headers", async () => {
+  let factoryCalls = 0;
+  let signInCalls = 0;
+  let verifyCalls = 0;
+  const createAdapter = async () => {
+    factoryCalls += 1;
+    return makeAdapter({
+      signInWithOtp: async () => {
+        signInCalls += 1;
+        return { error: null };
+      },
+      verifyOtp: async () => {
+        verifyCalls += 1;
+        return { error: null };
+      },
+    });
+  };
+
+  const requestResponse = await handleEmailOtpRequest(
+    makeJsonRequest({ action: "request", email: syntheticEmail }),
+    createAdapter,
+  );
+  const verifyResponse = await handleEmailOtpRequest(
+    makeJsonRequest({ action: "verify", email: syntheticEmail, token: validOtp }),
+    createAdapter,
+  );
+
+  assert.equal(requestResponse.status, 200);
+  assert.deepEqual(await responseJson(requestResponse), { status: "otp_sent" });
+  assert.equal(verifyResponse.status, 200);
+  assert.deepEqual(await responseJson(verifyResponse), { status: "verified" });
+  assert.equal(requestResponse.headers.get("Cache-Control"), "no-store");
+  assert.equal(requestResponse.headers.get("Referrer-Policy"), "no-referrer");
+  assert.equal(requestResponse.headers.get("X-Content-Type-Options"), "nosniff");
+  assert.equal(factoryCalls, 2);
+  assert.equal(signInCalls, 1);
+  assert.equal(verifyCalls, 1);
+});
+
+test("does not expose provider errors or factory failures through the route", async () => {
+  const providerFailure = await handleEmailOtpRequest(
+    makeJsonRequest({ action: "request", email: syntheticEmail }),
+    async () => makeAdapter({
+      signInWithOtp: async () => ({ error: new Error("raw-provider-message") }),
+    }),
+  );
+  const factoryFailure = await handleEmailOtpRequest(
+    makeJsonRequest({ action: "verify", email: syntheticEmail, token: validOtp }),
+    async () => {
+      throw new Error("raw-factory-message");
+    },
+  );
+
+  const providerBody = await responseJson(providerFailure);
+  const factoryBody = await responseJson(factoryFailure);
+  assert.equal(providerFailure.status, 502);
+  assert.deepEqual(providerBody, { status: "error", code: "request_failed" });
+  assert.equal(factoryFailure.status, 500);
+  assert.deepEqual(factoryBody, { status: "error", code: "server_error" });
+  assert.equal(JSON.stringify(providerBody).includes("raw-provider-message"), false);
+  assert.equal(JSON.stringify(factoryBody).includes("raw-factory-message"), false);
 });

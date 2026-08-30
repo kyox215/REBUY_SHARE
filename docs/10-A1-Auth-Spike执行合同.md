@@ -459,3 +459,13 @@ resource/cost/secret Gate 通过前，仅可继续维护无资源后端原型、
 - PR head=`fc6153b60872328b55b525730f3c653579ac2ea2`，merge=`a5e7fd1ae2ca7468610c0aab936121a27d124c02`，parents=`b3240577026a0f390ae634f2119426842827805e` + `fc6153b60872328b55b525730f3c653579ac2ea2`；来源分支保留。PR head CI run=`33256006999`/job=`99109715930` success；main exact merge CI run=`33256185497`/job=`99110205068` success；精确 merge 的 GitHub deployments=`0`。
 - 刚刚只读核对的 Vercel 事实为 3 个既有 READY deployments，其中 2 个 Preview、1 个 Production；本批没有新增 deployment。不记录 creator email 或其他 PII。
 - 独立安全审查 GO，P0=0、P1=0，唯一 P2 已修；E2–E5、hosted Supabase/Auth/DB/Storage/OAuth/SMTP、真实账号/邮件、业务 schema、新 Vercel deployment、promote/alias/rollback、Production 操作继续 CLOSED。下一步仅可进入 E2 action-time Gate 评估，不代表 E2 已打开或可执行。
+
+## 31. 2026-08-30 E2a local email OTP 合同补充
+
+本条是对历史原型边界的追加纠正，不静默改写既有 A1 计划或把本地证据扩大为整体 A1 通过：
+
+- E2a 仅验证 local email OTP：邮箱输入、OTP request/verify/resend、Auth/GoTrue、Mailpit 捕获、同源服务端协调及 session cookie。成功路径只能使用专用 `@rebuy.test` 合成域名；`.invalid` 只用于 no-send/负向/反枚举。
+- 信任边界在服务端：Next.js Node runtime Route Handler 复用现有 Supabase server client，执行 `signInWithOtp`/`verifyOtp` 并写 cookie；响应 `no-store`，客户端只接收有限状态。Origin、Content-Type、body size、JSON/字段格式是拒绝门禁；provider 原始错误不进入 UI、响应或证据。
+- local config 只启用 Auth email signup/confirmation 所需最小项，保持 Google、Apple、manual linking、anonymous、phone、MFA、业务 DB/schema/RLS、Storage、Realtime 和 custom SMTP CLOSED。`[auth.email.smtp]` 必须省略，成功邮件使用 CLI 默认本地 Inbucket/Mailpit 捕获；magic-link 模板只渲染 `{{ .Token }}`。
+- E2a 与 E2b invite 明确拆分：E2b 当前 NO-GO；Supabase/provider invite 不等于 Rebuy membership invite，admin invite/inviteUserByEmail 需要的 secret/service_role 永不在本批使用。用户当前只授权本地计划执行，不授权特权密钥、外部动作、真实邮件/账号/PII。
+- E2a 通过标准为本地正向闭环、有限负向和清理证据；它不代表生产、hosted Supabase/Auth/SMTP、OAuth 或 G2-A1 整体验收。具体执行证据见[E2a local email OTP evidence](./evidence/G2-A1/2026-08-30-e2a-local-email-otp/README.md)。
