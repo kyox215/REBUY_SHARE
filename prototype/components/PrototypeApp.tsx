@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import {
   BadgeCheck,
   Boxes,
@@ -991,6 +992,24 @@ export default function PrototypeApp() {
             </button>
           ))}
         </div>
+      </section>
+
+      <section className="profile-section">
+        <div className="section-heading">
+          <div>
+            <h2>账号中心</h2>
+          </div>
+        </div>
+        <Link className="role-option profile-account-link" href="/account">
+          <span className="role-option__icon">
+            <CircleUserRound size={20} aria-hidden="true" />
+          </span>
+          <span>
+            <strong>登录与账号安全</strong>
+            <small>查看本地账号状态与登录方式</small>
+          </span>
+          <ChevronRight size={18} aria-hidden="true" />
+        </Link>
       </section>
 
       <section className="profile-section">

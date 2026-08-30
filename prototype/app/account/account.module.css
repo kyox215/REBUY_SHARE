@@ -1,0 +1,336 @@
+.page {
+  min-height: 100svh;
+  overflow-x: clip;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.frame {
+  width: min(100%, 900px);
+  min-height: 100svh;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.topbar {
+  display: grid;
+  min-height: 72px;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+}
+
+.iconLink,
+.iconButton {
+  display: inline-grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.iconLink:hover,
+.iconLink:focus-visible,
+.iconButton:hover,
+.iconButton:focus-visible {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.iconButton {
+  cursor: pointer;
+}
+
+.brand {
+  display: inline-flex;
+  justify-content: center;
+}
+
+.content {
+  width: min(100%, 680px);
+  margin: 0 auto;
+  padding: 44px 0 72px;
+}
+
+.pageHeading {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.eyebrow {
+  color: var(--faint);
+  font-size: 12px;
+  font-weight: 750;
+  letter-spacing: 0;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.pageHeading h1 {
+  margin-top: 9px;
+  font-size: 2.35rem;
+  font-weight: 780;
+}
+
+.headingCopy {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.profileMark {
+  display: inline-grid;
+  width: 56px;
+  height: 56px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--accent) 38%, var(--line));
+  border-radius: 8px;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.previewStatus {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  gap: 10px;
+  margin-top: 25px;
+  padding: 7px 12px;
+  border: 1px solid color-mix(in srgb, var(--accent) 32%, var(--line));
+  border-radius: 8px;
+  background: var(--accent-soft);
+}
+
+.previewStatusDot {
+  width: 9px;
+  height: 9px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 15%, transparent);
+}
+
+.previewStatus span:last-child {
+  display: grid;
+  gap: 1px;
+}
+
+.previewStatus strong {
+  color: var(--accent-on-soft);
+  font-size: 13px;
+}
+
+.previewStatus small {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.groups {
+  display: grid;
+  gap: 26px;
+  margin-top: 34px;
+}
+
+.group {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.groupHeading {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 17px 18px 13px;
+}
+
+.groupHeading h2 {
+  font-size: 15px;
+  font-weight: 780;
+}
+
+.groupHeading span {
+  color: var(--faint);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.rowList {
+  display: grid;
+}
+
+.accountRow {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 72px;
+  padding: 12px 18px;
+  border-top: 1px solid var(--line);
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  text-decoration: none;
+}
+
+a.accountRow:hover,
+a.accountRow:focus-visible {
+  background: var(--surface-soft);
+}
+
+.rowIcon {
+  display: inline-grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--surface-soft);
+  color: var(--accent);
+}
+
+.rowCopy {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.rowCopy strong,
+.rowCopy small {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.rowCopy strong {
+  font-size: 14px;
+  font-weight: 740;
+}
+
+.rowCopy small {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.rowMeta {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
+  color: var(--faint);
+}
+
+.statusPill {
+  display: inline-flex;
+  min-height: 26px;
+  max-width: 100px;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 740;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.statusPillPositive {
+  border-color: color-mix(in srgb, var(--success) 42%, var(--line));
+  background: color-mix(in srgb, var(--success) 10%, var(--surface));
+  color: var(--success);
+}
+
+.note {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  gap: 9px;
+  margin-top: 28px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.note svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  color: var(--faint);
+}
+
+.note p {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 620px) {
+  .frame {
+    padding-right: 16px;
+    padding-left: 16px;
+  }
+
+  .content {
+    padding-top: 34px;
+  }
+
+  .pageHeading h1 {
+    font-size: 1.95rem;
+  }
+
+  .accountRow {
+    grid-template-columns: 34px minmax(0, 1fr);
+    gap: 10px;
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+
+  .rowIcon {
+    width: 34px;
+    height: 34px;
+  }
+
+  .rowMeta {
+    grid-column: 2;
+    justify-content: flex-start;
+    margin-top: -4px;
+  }
+
+  .rowMeta > svg {
+    display: none;
+  }
+
+  .groupHeading {
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+}
+
+@media (max-width: 380px) {
+  .pageHeading {
+    align-items: flex-start;
+  }
+
+  .profileMark {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+  }
+
+  .statusPill {
+    max-width: 84px;
+    white-space: normal;
+  }
+}

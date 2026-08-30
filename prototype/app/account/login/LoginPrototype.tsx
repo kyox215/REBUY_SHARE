@@ -319,12 +319,12 @@ export default function LoginPrototype({ authStatus }: LoginPrototypeProps) {
             {step === "email" ? (
               <>
                 <div className={styles.providerStack} role="group" aria-label="第三方登录入口">
-                  <button className={styles.appleButton} type="button" disabled title="本地测试阶段暂不可用">
-                    使用 Apple 登录（暂不可用）
-                  </button>
-                  <button className={styles.googleButton} type="button" disabled title="本地测试阶段暂不可用">
-                    使用 Google 登录（暂不可用）
-                  </button>
+                  <Link className={styles.appleButton} href="/account/provider/apple" title="查看 Apple 登录状态">
+                    使用 Apple 登录（待配置）
+                  </Link>
+                  <Link className={styles.googleButton} href="/account/provider/google" title="查看 Google 登录状态">
+                    使用 Google 登录（待配置）
+                  </Link>
                 </div>
 
                 <div className={styles.divider} aria-hidden="true">

@@ -2077,6 +2077,10 @@ h2 {
   font-weight: 700;
 }
 
+.profile-account-link {
+  text-decoration: none;
+}
+
 .setting-row input {
   position: absolute;
   width: 1px;

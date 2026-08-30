@@ -204,6 +204,7 @@
 .appleButton {
   background: var(--text);
   color: var(--surface);
+  text-decoration: none;
 }
 
 .appleButton:hover {
@@ -214,6 +215,7 @@
   border: 1px solid var(--line-strong);
   background: var(--surface);
   color: var(--text);
+  text-decoration: none;
 }
 
 .googleButton:hover {
