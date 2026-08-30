@@ -31,6 +31,7 @@ const tscArgs = [
   "lib/auth/session.ts",
   "lib/supabase/config.ts",
   "lib/supabase/cookies.ts",
+  "lib/supabase/server-config.ts",
   "tests/auth/contract.test.ts",
 ];
 

@@ -6,6 +6,27 @@ const APP_HOST = "127.0.0.1:3000";
 const MAILPIT_ORIGIN = "http://127.0.0.1:55324";
 const AUTH_COOKIE_NAME = "rebuy-g2-a1-e2a-auth-token";
 const RESEND_COOLDOWN_MS = 1000;
+const FAILURE_STAGES = new Set([
+  "anonymous_session",
+  "assertion",
+  "authenticated_session",
+  "mailpit_message",
+  "mailpit_search",
+  "mailpit_timeout",
+  "mailpit_token",
+  "negative_email",
+  "NOT_PROVEN",
+  "old_otp",
+  "replay",
+  "request",
+  "resend",
+  "resend_semantics_request",
+  "resend_semantics_resend",
+  "resend_verify",
+  "verify",
+  "wrong_cookie",
+  "wrong_otp",
+]);
 
 class HarnessError extends Error {
   constructor(stage) {
@@ -15,7 +36,7 @@ class HarnessError extends Error {
 }
 
 function fail(stage) {
-  throw new HarnessError(stage);
+  throw new HarnessError(FAILURE_STAGES.has(stage) ? stage : "assertion");
 }
 
 function makeSyntheticEmail() {
@@ -30,10 +51,26 @@ function assertFiniteBody(body, expected) {
   assert.deepEqual(body, expected);
 }
 
-async function fetchJson(stage, url, init) {
+function assertResponseOrigin(response, expectedOrigin, stage) {
+  try {
+    if (response.redirected || new URL(response.url).origin !== expectedOrigin) {
+      fail(stage);
+    }
+
+    const location = response.headers.get("location");
+    if (location && new URL(location, response.url).origin !== expectedOrigin) {
+      fail(stage);
+    }
+  } catch {
+    fail(stage);
+  }
+}
+
+async function fetchJson(stage, url, init, expectedOrigin) {
   let response;
   try {
-    response = await fetch(url, init);
+    response = await fetch(url, { ...init, redirect: "manual" });
+    assertResponseOrigin(response, expectedOrigin, stage);
   } catch {
     fail(stage);
   }
@@ -62,7 +99,7 @@ async function postOtp(stage, payload) {
     method: "POST",
     headers: appHeaders(),
     body: JSON.stringify(payload),
-  });
+  }, APP_ORIGIN);
 }
 
 function responseCookieHeader(response) {
@@ -83,7 +120,9 @@ async function searchMailpit(email) {
   try {
     response = await fetch(`${MAILPIT_ORIGIN}/api/v1/search?query=${query}`, {
       headers: { Accept: "application/json" },
+      redirect: "manual",
     });
+    assertResponseOrigin(response, MAILPIT_ORIGIN, "mailpit_search");
   } catch {
     fail("mailpit_search");
   }
@@ -107,7 +146,9 @@ async function readMailpitToken(messageId) {
   try {
     response = await fetch(`${MAILPIT_ORIGIN}/api/v1/message/${encodeURIComponent(messageId)}`, {
       headers: { Accept: "application/json" },
+      redirect: "manual",
     });
+    assertResponseOrigin(response, MAILPIT_ORIGIN, "mailpit_message");
   } catch {
     fail("mailpit_message");
   }
@@ -157,7 +198,7 @@ async function getSession(stage, cookieHeader) {
     method: "GET",
     headers,
     cache: "no-store",
-  });
+  }, APP_ORIGIN);
 }
 
 async function requestOtp(email, stage = "request") {
@@ -211,7 +252,7 @@ async function exerciseMainFlow() {
   console.log("REPLAY_PASS");
 
   await new Promise((resolve) => setTimeout(resolve, RESEND_COOLDOWN_MS + 100));
-  const resend = await postOtp(email, { action: "resend", email });
+  const resend = await postOtp("resend", { action: "resend", email });
   assert.equal(resend.response.status, 200);
   assertFiniteBody(resend.body, { status: "otp_sent" });
   const resentMail = await waitForNewOtp(email, firstMail.seenIds);
@@ -231,8 +272,7 @@ async function exerciseOldOtpSemantics() {
   const afterResend = await waitForNewOtp(email, beforeResend.seenIds);
 
   if (beforeResend.token === afterResend.token) {
-    console.log("OLD_OTP_SEMANTICS_NOT_PROVEN");
-    return;
+    fail("NOT_PROVEN");
   }
 
   const oldOtp = await verifyOtp(email, beforeResend.token, "old_otp");

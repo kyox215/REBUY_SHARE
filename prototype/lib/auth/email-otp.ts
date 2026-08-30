@@ -48,17 +48,34 @@ export type ParsedEmailOtpInput =
   | { ok: true; input: EmailOtpInput }
   | { ok: false };
 
-function isRateLimitMessage(value: string) {
-  return /rate|too many|frequency|after\s+\d+\s*second|limit/i.test(value);
+const RATE_LIMIT_CODES = new Set([
+  "email_rate_limit_exceeded",
+  "over_email_send_rate_limit",
+  "rate_limit_exceeded",
+  "too_many_requests",
+]);
+const RATE_LIMIT_MESSAGES = new Set([
+  "email rate limit exceeded",
+  "for security purposes, you can only request this after 1 second.",
+  "rate limit exceeded",
+  "too many requests",
+]);
+
+function normalizeProviderText(value: string) {
+  return value.trim().toLowerCase();
+}
+
+function isRateLimitCode(value: unknown) {
+  return typeof value === "string" && RATE_LIMIT_CODES.has(normalizeProviderText(value));
+}
+
+function isRateLimitMessage(value: unknown) {
+  return typeof value === "string" && RATE_LIMIT_MESSAGES.has(normalizeProviderText(value));
 }
 
 export function isRateLimitedAuthError(value: unknown) {
-  if (typeof value === "string") {
-    return isRateLimitMessage(value);
-  }
-
   if (!value || typeof value !== "object" || Array.isArray(value)) {
-    return false;
+    return isRateLimitMessage(value);
   }
 
   const record = value as Record<string, unknown>;
@@ -66,14 +83,14 @@ export function isRateLimitedAuthError(value: unknown) {
     return true;
   }
 
-  for (const key of ["code", "errorCode"]) {
+  for (const key of ["code", "errorCode", "error_code"]) {
     const code = record[key];
-    if (typeof code === "string" && isRateLimitMessage(code)) {
+    if (isRateLimitCode(code)) {
       return true;
     }
   }
 
-  return typeof record.message === "string" && isRateLimitMessage(record.message);
+  return isRateLimitMessage(record.message);
 }
 
 function failedCode(action: EmailOtpAction, error?: unknown): EmailOtpErrorCode {

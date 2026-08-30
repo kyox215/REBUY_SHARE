@@ -59,7 +59,7 @@
 ## 仍关闭的 Gate 与风险
 
 - E2b provider/admin invite、`inviteUserByEmail`、service_role/secret/db password、Rebuy membership invite、Google、Apple、custom SMTP、hosted Supabase/Auth、真实邮件/账号/PII、业务 DB/schema/RLS、Storage、Realtime、MFA、linking、push/PR/merge、Vercel deployment、Staging/Production 均 CLOSED。
-- 已知风险：精确 head=`98a3f0d4739eb835fa068b4736347285b7d23193` 的审查 NO-GO 尚待本批最终精确提交复审；active Supabase 下 OTP 输入态仍未用浏览器截图（真实 OTP 链路已有 harness 证据）；桌面/移动初始与错误态缺口已由主代理 In-app Browser 关闭，且未存档截图文件；本地修复候选不等于生产或 hosted 验收；刷新/撤销语义未在本批稳定证明，OTP 限速、邮件投递和 cookie 行为仍需后续授权 Gate 持续复核。
+- 已知风险：精确 head=`98a3f0d4739eb835fa068b4736347285b7d23193` 的历史审查 NO-GO 仍保留，当前 follow-up 精确提交仍待独立复审；active Supabase 下 OTP 输入态仍未用浏览器截图（真实 OTP 链路已有 harness 证据）；桌面/移动初始与错误态缺口已由主代理 In-app Browser 关闭，且未存档截图文件；本地修复候选不等于生产或 hosted 验收；刷新/撤销语义未在本批稳定证明，实际 provider rate-limited runtime 未被刻意触发，限流映射仅有有限合同/route 证据，仍需后续授权 Gate 持续复核。Next 预览按用户要求故意保留，不是 cleanup 遗漏。
 
 ## 官方语义依据
 
@@ -82,9 +82,15 @@
 - P2 候选覆盖：可清除 callback 状态、客户端错误与服务错误分离、local `max_frequency=1s` 对应 resend cooldown，以及匿名/错误项目 cookie/验证成功的 session 检查。刷新/撤销在本批未作稳定证明，保留为残余风险。
 - 本批实际状态仍拆分 E2a 与 E2b：E2a 只限 local GoTrue/Mailpit、`@rebuy.test` 成功邮箱和 `.invalid` 负向；E2b invite 继续 NO-GO，provider invite 不等于 Rebuy membership invite。用户仅授权本地计划执行，不授权特权密钥或外部动作。
 
+## 上一精确提交复审记录与预览保留纠正（2026-08-30）
+
+- 追加记录上一精确提交 `2083656f6a1eb888f0db06339bc2b30151f31c43` 的独立审查结果：**REVIEW GO，P0=0、P1=0、P2=5**。该记录不覆盖历史精确 head=`98a3f0d4739eb835fa068b4736347285b7d23193` 的 **NO-GO**，不把当前 follow-up 或 E2a/G2-A1 整体预写成 GO。
+- `http://127.0.0.1:3000` Next 预览是用户明确要求保留的无敏感值本地预览，不是 local Supabase/Mailpit cleanup 遗漏。预览只代表 UI 可查看，不能代表 Auth 后端仍在运行或生产能力已打开。
+- 历史 `agent-browser` CLI 不可用、主代理 In-app Browser 补充验收和 active Supabase 下 OTP 输入态未存档截图的事实均保留；真实 request→Mailpit→verify→session→replay/resend 仍以脱敏 runtime harness 为证据。
+
 ## 当前验证补充（2026-08-30）
 
-- Node `22.12.0`、Corepack pnpm `10.33.3`、worktree 独立依赖：`corepack pnpm test:auth` 为 `27/27`；`typecheck`、`lint`、`build` 均退出 0。无 lockfile 变更。
-- 脱敏 runtime harness `test:auth:local` 阶段均通过：anonymous session、wrong project cookie、request、Mailpit capture、wrong OTP、verify、authenticated session、replay、resend、old OTP rejection、resend verify、`.invalid` no-send，最终 `E2A_RUNTIME_PASS`。未把 fake replay 当真实 Supabase 证据。
-- 浏览器回归：Codex In-app Browser 检查默认桌面和临时 `390x844` mobile 初始态、mobile 字段错误态与 active local OTP 控件；OTP 控件为 numeric、maxlength 6，修改邮箱回到无旧状态的 email step；console warn/error 为 0，最终 reset 默认视口。未保存含邮箱/OTP/token/cookie/key 的截图文件；active OTP 只做无敏感 DOM 检查。
+- Node `22.12.0`、Corepack pnpm `10.33.3`、worktree 独立依赖：`corepack pnpm test:auth` 为 `29/29`；`typecheck`、`lint`、含固定假 sentinel 的 `build` 均退出 0。sentinel 未进入 `.next/static`、tracked tree 或 env；无 lockfile 变更。
+- 脱敏 runtime harness `test:auth:local` 阶段均通过：anonymous session、wrong project cookie、request、Mailpit capture、wrong OTP、verify、authenticated session、replay、resend、old OTP rejection、resend verify、`.invalid` no-send，最终 `E2A_RUNTIME_PASS`。所有 app/Mailpit fetch 使用 manual redirect 并校验固定 origin；重发 token 不同，旧 OTP 被拒且新 OTP 可验证；未把 fake replay 当真实 Supabase 证据。
+- 当前收口只做必要的无敏感页面 HTTP/DOM smoke：登录页返回 200，`name@rebuy.test` placeholder 和本地测试认证状态文案存在；未填入邮箱或 OTP，未生成或保存新截图。此前主代理的桌面/移动 In-app Browser 证据与 active OTP 截图缺口事实继续保留。
 - 浏览器与 Next 兼容性：Next 16 的 URL normalization 会把 loopback request URL 归一为 `localhost`；当前配置使用官方现有 `skipProxyUrlNormalize` 以保留原始 request URL，确保固定 loopback origin gate 在实际 runtime 与代码合同一致。该设置仅为本地同源边界兼容控制，不放宽 allowlist。

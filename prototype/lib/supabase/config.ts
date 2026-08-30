@@ -1,8 +1,5 @@
 import type { CookieOptionsWithName } from "@supabase/ssr";
 
-const supabaseUrlEnvName = "NEXT_PUBLIC_SUPABASE_URL";
-const publishableKeyEnvName = "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY";
-
 export const LOCAL_SUPABASE_URL = "http://127.0.0.1:55321/";
 export const REBUY_AUTH_COOKIE_NAME = "rebuy-g2-a1-e2a-auth-token";
 export const REBUY_AUTH_COOKIE_OPTIONS = {
@@ -11,6 +8,11 @@ export const REBUY_AUTH_COOKIE_OPTIONS = {
   sameSite: "lax",
   secure: false,
 } as const satisfies CookieOptionsWithName;
+
+export type SupabasePublicConfig = {
+  url: typeof LOCAL_SUPABASE_URL;
+  publishableKey: string;
+};
 
 const modernPublishableKeyPattern = /^sb_publishable_[A-Za-z0-9_-]+$/;
 const base64UrlPattern = /^[A-Za-z0-9_-]+$/;
@@ -77,17 +79,15 @@ export function isAllowedSupabasePublicKey(value: unknown): value is string {
 
 export class SupabaseConfigError extends Error {
   constructor() {
-    super(
-      `Local Supabase is not configured. Set ${supabaseUrlEnvName} and ${publishableKeyEnvName}.`,
-    );
+    super("Local Supabase configuration is invalid.");
     this.name = "SupabaseConfigError";
   }
 }
 
-export function getSupabaseConfig() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-
+export function validateSupabaseConfig(
+  url: unknown,
+  publishableKey: unknown,
+): SupabasePublicConfig {
   if (url !== LOCAL_SUPABASE_URL || !isAllowedSupabasePublicKey(publishableKey)) {
     throw new SupabaseConfigError();
   }

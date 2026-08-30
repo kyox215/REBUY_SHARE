@@ -1,4 +1,5 @@
-import { getSupabaseConfig, SupabaseConfigError } from "@/lib/supabase/config";
+import { SupabaseConfigError } from "@/lib/supabase/config";
+import { getSupabaseServerConfig } from "@/lib/supabase/server-config";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,10 +20,10 @@ function jsonHealth(
 }
 
 export async function GET() {
-  let config: ReturnType<typeof getSupabaseConfig>;
+  let config: ReturnType<typeof getSupabaseServerConfig>;
 
   try {
-    config = getSupabaseConfig();
+    config = getSupabaseServerConfig();
   } catch (error) {
     if (error instanceof SupabaseConfigError) {
       return jsonHealth(false, false, 503);

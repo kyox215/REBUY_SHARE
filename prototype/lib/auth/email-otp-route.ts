@@ -134,6 +134,10 @@ function outcomeResponse(outcome: EmailOtpOutcome) {
     return jsonResponse({ status: "error", code: outcome.code }, 400);
   }
 
+  if (outcome.code === "rate_limited") {
+    return jsonResponse({ status: "error", code: outcome.code }, 429);
+  }
+
   if (outcome.code === "verify_failed") {
     return jsonResponse({ status: "error", code: outcome.code }, 422);
   }

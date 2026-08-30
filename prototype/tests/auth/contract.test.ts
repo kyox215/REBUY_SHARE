@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { test } from "node:test";
 
 import {
@@ -26,11 +28,11 @@ import {
 } from "../../lib/auth/email-otp";
 import { resolveSessionStatus } from "../../lib/auth/session";
 import {
-  getSupabaseConfig,
   isAllowedSupabasePublicKey,
   LOCAL_SUPABASE_URL,
   REBUY_AUTH_COOKIE_NAME,
   REBUY_AUTH_COOKIE_OPTIONS,
+  validateSupabaseConfig,
 } from "../../lib/supabase/config";
 import { createServerCookieMethods } from "../../lib/supabase/cookies";
 import { normalizeSafeNext } from "../../lib/auth/redirect";
@@ -663,49 +665,18 @@ const legacyPrivilegedFixture = [
   "fixture-signature",
 ].join(".");
 
-function withSupabaseEnv<T>(url: string | undefined, key: string | undefined, callback: () => T) {
-  const previousUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const previousKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-
-  if (url === undefined) {
-    delete process.env.NEXT_PUBLIC_SUPABASE_URL;
-  } else {
-    process.env.NEXT_PUBLIC_SUPABASE_URL = url;
-  }
-  if (key === undefined) {
-    delete process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-  } else {
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = key;
-  }
-
-  try {
-    return callback();
-  } finally {
-    if (previousUrl === undefined) {
-      delete process.env.NEXT_PUBLIC_SUPABASE_URL;
-    } else {
-      process.env.NEXT_PUBLIC_SUPABASE_URL = previousUrl;
-    }
-    if (previousKey === undefined) {
-      delete process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-    } else {
-      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = previousKey;
-    }
-  }
-}
-
 test("accepts only the canonical local URL and anonymous public key forms", () => {
   assert.equal(isAllowedSupabasePublicKey("sb_publishable_test_fixture"), true);
   assert.equal(isAllowedSupabasePublicKey(legacyAnonFixture), true);
   assert.deepEqual(
-    withSupabaseEnv(LOCAL_SUPABASE_URL, "sb_publishable_test_fixture", () => getSupabaseConfig()),
+    validateSupabaseConfig(LOCAL_SUPABASE_URL, "sb_publishable_test_fixture"),
     {
       url: LOCAL_SUPABASE_URL,
       publishableKey: "sb_publishable_test_fixture",
     },
   );
   assert.deepEqual(
-    withSupabaseEnv(LOCAL_SUPABASE_URL, legacyAnonFixture, () => getSupabaseConfig()),
+    validateSupabaseConfig(LOCAL_SUPABASE_URL, legacyAnonFixture),
     {
       url: LOCAL_SUPABASE_URL,
       publishableKey: legacyAnonFixture,
@@ -727,8 +698,8 @@ test("rejects URL variants, privileged keys, unknown keys, and malformed JWTs", 
 
   for (const url of rejectedUrls) {
     assert.throws(
-      () => withSupabaseEnv(url, "sb_publishable_test_fixture", () => getSupabaseConfig()),
-      /Local Supabase is not configured/,
+      () => validateSupabaseConfig(url, "sb_publishable_test_fixture"),
+      /Local Supabase configuration is invalid/,
       url,
     );
   }
@@ -744,11 +715,29 @@ test("rejects URL variants, privileged keys, unknown keys, and malformed JWTs", 
   for (const key of rejectedKeys) {
     assert.equal(isAllowedSupabasePublicKey(key), false, key);
     assert.throws(
-      () => withSupabaseEnv(LOCAL_SUPABASE_URL, key, () => getSupabaseConfig()),
-      /Local Supabase is not configured/,
+      () => validateSupabaseConfig(LOCAL_SUPABASE_URL, key),
+      /Local Supabase configuration is invalid/,
       key,
     );
   }
+});
+
+test("keeps Supabase environment reads server-only and browser config explicit", () => {
+  const source = (relativePath: string) =>
+    readFileSync(resolve(process.cwd(), relativePath), "utf8");
+  const configSource = source("lib/supabase/config.ts");
+  const serverConfigSource = source("lib/supabase/server-config.ts");
+  const browserClientSource = source("lib/supabase/client.ts");
+
+  assert.doesNotMatch(configSource, /\bprocess\.env\b/);
+  assert.doesNotMatch(configSource, /NEXT_PUBLIC_/);
+  assert.match(serverConfigSource, /import ["']server-only["']/);
+  assert.match(serverConfigSource, /process\.env\.SUPABASE_URL/);
+  assert.match(serverConfigSource, /process\.env\.SUPABASE_PUBLISHABLE_KEY/);
+  assert.doesNotMatch(serverConfigSource, /NEXT_PUBLIC_/);
+  assert.doesNotMatch(browserClientSource, /\bprocess\.env\b/);
+  assert.doesNotMatch(browserClientSource, /NEXT_PUBLIC_/);
+  assert.match(browserClientSource, /createClient\(config: SupabasePublicConfig\)/);
 });
 
 test("keeps the Rebuy cookie name fixed and makes route writes strict", () => {
@@ -805,10 +794,15 @@ test("resolves authenticated, anonymous, and error session states without leakin
   assert.equal(JSON.stringify(failed).includes(rawError), false);
 });
 
-test("maps rate limits to a finite error and keeps the resend cooldown aligned to local config", async () => {
+test("maps only explicit rate limits and keeps resend cooldown aligned to local config", async () => {
   assert.equal(EMAIL_OTP_RESEND_COOLDOWN_MS, 1000);
   assert.equal(isRateLimitedAuthError({ status: 429, message: "raw provider text" }), true);
   assert.equal(isRateLimitedAuthError({ code: "over_email_send_rate_limit" }), true);
+  assert.equal(isRateLimitedAuthError({ error_code: "too_many_requests" }), true);
+  assert.equal(isRateLimitedAuthError("For security purposes, you can only request this after 1 second."), true);
+  assert.equal(isRateLimitedAuthError({ message: "rate is not a limit" }), false);
+  assert.equal(isRateLimitedAuthError({ code: "rate-something-else" }), false);
+  assert.equal(isRateLimitedAuthError("a provider mentioned rate in an unrelated message"), false);
 
   const outcome = await runEmailOtp(
     { action: "resend", email: syntheticEmail },
@@ -820,6 +814,21 @@ test("maps rate limits to a finite error and keeps the resend cooldown aligned t
   );
   assert.deepEqual(outcome, { kind: "error", action: "resend", code: "rate_limited" });
   assert.equal(JSON.stringify(outcome).includes("raw provider text"), false);
+});
+
+test("returns HTTP 429 for finite rate-limited route outcomes", async () => {
+  const response = await handleEmailOtpRequest(
+    makeJsonRequest({ action: "resend", email: syntheticEmail }),
+    async () => makeAdapter({
+      signInWithOtp: async () => ({ error: { code: "over_email_send_rate_limit" } }),
+    }),
+  );
+
+  assert.equal(response.status, 429);
+  assert.deepEqual(await responseJson(response), {
+    status: "error",
+    code: "rate_limited",
+  });
 });
 
 test("cancels an over-limit streaming body before creating an adapter", async () => {

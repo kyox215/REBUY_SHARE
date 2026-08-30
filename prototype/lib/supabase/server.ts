@@ -1,11 +1,9 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-import {
-  getSupabaseConfig,
-  REBUY_AUTH_COOKIE_OPTIONS,
-} from "./config";
+import { REBUY_AUTH_COOKIE_OPTIONS } from "./config";
 import { createServerCookieMethods } from "./cookies";
+import { getSupabaseServerConfig } from "./server-config";
 
 export async function createClient() {
   return createConfiguredServerClient("readonly");
@@ -16,7 +14,7 @@ export async function createAuthRouteClient() {
 }
 
 async function createConfiguredServerClient(mode: "readonly" | "strict") {
-  const { url, publishableKey } = getSupabaseConfig();
+  const { url, publishableKey } = getSupabaseServerConfig();
   const cookieStore = await cookies();
 
   return createServerClient(url, publishableKey, {
