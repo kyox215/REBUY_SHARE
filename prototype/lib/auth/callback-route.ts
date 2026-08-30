@@ -5,11 +5,21 @@ import {
   type AuthCallbackInput,
   type AuthCodeExchange,
 } from "./callback";
+import { normalizeSafeNext } from "./redirect";
 
 const redirectHeaders = {
   "Cache-Control": "no-store",
   "Referrer-Policy": "no-referrer",
 };
+
+export const AUTH_CALLBACK_APP_ORIGIN = "http://127.0.0.1:3000";
+export const AUTH_CALLBACK_APP_HOST = "127.0.0.1:3000";
+export const AUTH_CALLBACK_PATH = "/auth/callback";
+
+const forwardedHeaderNames = new Set([
+  "forwarded",
+  "x-real-ip",
+]);
 
 export type AuthCallbackDecider = (
   input: AuthCallbackInput,
@@ -25,26 +35,74 @@ function redirectResponse(target: URL) {
   });
 }
 
-function loginRedirect(requestUrl: URL, code: AuthCallbackErrorCode) {
-  const target = new URL("/account/login", requestUrl);
+function loginRedirect(code: AuthCallbackErrorCode) {
+  const target = new URL("/account/login", AUTH_CALLBACK_APP_ORIGIN);
   target.searchParams.set("auth_error", code);
   target.hash = "";
 
   return redirectResponse(target);
 }
 
+function isTrustedCallbackRequest(request: Request, requestUrl: URL) {
+  if (
+    requestUrl.origin !== AUTH_CALLBACK_APP_ORIGIN ||
+    requestUrl.pathname !== AUTH_CALLBACK_PATH ||
+    requestUrl.username !== "" ||
+    requestUrl.password !== "" ||
+    requestUrl.hash !== "" ||
+    request.headers.get("host") !== AUTH_CALLBACK_APP_HOST
+  ) {
+    return false;
+  }
+
+  let hasForwardedHeader = false;
+  request.headers.forEach((_value, headerName) => {
+    if (
+      forwardedHeaderNames.has(headerName) ||
+      headerName.startsWith("x-forwarded-") ||
+      headerName.startsWith("x-original-")
+    ) {
+      hasForwardedHeader = true;
+    }
+  });
+
+  return !hasForwardedHeader;
+}
+
+function hasUnsafeNext(requestedNext: string | null) {
+  return (
+    requestedNext !== null &&
+    requestedNext.length > 0 &&
+    requestedNext !== "/" &&
+    normalizeSafeNext(requestedNext) === "/"
+  );
+}
+
 /**
- * Apply the callback decision policy to a request without binding it to a
- * provider client. The production route supplies the existing SSR exchange;
- * tests can inject a deterministic decider and verify the final origin check.
+ * Apply the callback decision policy to a fixed local callback request without
+ * binding it to a provider client. The production route supplies the
+ * two-stage exchange adapter; tests can inject a deterministic decider.
  */
 export async function handleAuthCallback(
   request: Request,
   exchange: AuthCodeExchange,
   decider: AuthCallbackDecider = decideAuthCallback,
 ) {
-  const requestUrl = new URL(request.url);
+  let requestUrl: URL;
+  try {
+    requestUrl = new URL(request.url);
+  } catch {
+    return loginRedirect("exchange_error");
+  }
+
+  if (!isTrustedCallbackRequest(request, requestUrl)) {
+    return loginRedirect("exchange_error");
+  }
+
   const searchParams = requestUrl.searchParams;
+  if (hasUnsafeNext(searchParams.get("next"))) {
+    return loginRedirect("exchange_error");
+  }
 
   let decision: AuthCallbackDecision;
   try {
@@ -56,25 +114,29 @@ export async function handleAuthCallback(
       exchange,
     });
   } catch {
-    return loginRedirect(requestUrl, "exchange_error");
+    return loginRedirect("exchange_error");
   }
 
   if (decision.kind === "error") {
-    return loginRedirect(requestUrl, decision.code);
+    return loginRedirect(decision.code);
   }
 
   if (decision.kind !== "success" || typeof decision.next !== "string") {
-    return loginRedirect(requestUrl, "exchange_error");
+    return loginRedirect("exchange_error");
   }
 
   try {
-    const target = new URL(decision.next, requestUrl);
-    if (target.origin !== requestUrl.origin) {
-      return loginRedirect(requestUrl, "exchange_error");
+    if (!decision.next.startsWith("/") || decision.next.startsWith("//")) {
+      return loginRedirect("exchange_error");
+    }
+
+    const target = new URL(decision.next, AUTH_CALLBACK_APP_ORIGIN);
+    if (target.origin !== AUTH_CALLBACK_APP_ORIGIN) {
+      return loginRedirect("exchange_error");
     }
 
     return redirectResponse(target);
   } catch {
-    return loginRedirect(requestUrl, "exchange_error");
+    return loginRedirect("exchange_error");
   }
 }

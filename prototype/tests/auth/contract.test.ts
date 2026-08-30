@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { test } from "node:test";
+import type { CookieOptions } from "@supabase/ssr";
 
 import {
   AUTH_CALLBACK_CODE_MAX_LENGTH,
@@ -9,7 +10,17 @@ import {
   decideAuthCallback,
   isAuthCallbackErrorCode,
 } from "../../lib/auth/callback";
-import { handleAuthCallback } from "../../lib/auth/callback-route";
+import {
+  AUTH_CALLBACK_APP_HOST,
+  AUTH_CALLBACK_APP_ORIGIN,
+  AUTH_CALLBACK_PATH,
+  handleAuthCallback,
+} from "../../lib/auth/callback-route";
+import {
+  exchangeAndPersistSession,
+  REBUY_PKCE_CODE_VERIFIER_COOKIE_NAME,
+  createEphemeralExchangeCookieMethods,
+} from "../../lib/auth/callback-session";
 import {
   EMAIL_OTP_LENGTH,
   SYNTHETIC_EMAIL_DOMAIN,
@@ -292,7 +303,8 @@ test("handles a successful callback request with a same-origin redirect", async 
   let exchangedCode = "";
   const response = await handleAuthCallback(
     new Request(
-      "https://rebuy.local/auth/callback?code=opaque-auth-code&next=%2Faccount%2Forders%3Ftab%3Dopen",
+      `${AUTH_CALLBACK_APP_ORIGIN}${AUTH_CALLBACK_PATH}?code=opaque-auth-code&next=%2Faccount%2Forders%3Ftab%3Dopen`,
+      { headers: { Host: AUTH_CALLBACK_APP_HOST } },
     ),
     async (code) => {
       exchangeCalls += 1;
@@ -303,7 +315,7 @@ test("handles a successful callback request with a same-origin redirect", async 
   const location = new URL(response.headers.get("Location") ?? "");
 
   assert.equal(response.status, 303);
-  assert.equal(location.origin, "https://rebuy.local");
+  assert.equal(location.origin, AUTH_CALLBACK_APP_ORIGIN);
   assert.equal(location.pathname, "/account/orders");
   assert.equal(location.search, "?tab=open");
   assert.equal(response.headers.get("Cache-Control"), "no-store");
@@ -317,15 +329,15 @@ test("handles a successful callback request with a same-origin redirect", async 
 test("redirects callback failures with finite errors and no exchange", async () => {
   const cases = [
     {
-      url: "https://rebuy.local/auth/callback?code=opaque-code&error=access_denied&error_description=provider-internal-description",
+      url: `${AUTH_CALLBACK_APP_ORIGIN}${AUTH_CALLBACK_PATH}?code=opaque-code&error=access_denied&error_description=provider-internal-description`,
       code: "provider_error",
     },
     {
-      url: "https://rebuy.local/auth/callback?code=%20opaque-code",
+      url: `${AUTH_CALLBACK_APP_ORIGIN}${AUTH_CALLBACK_PATH}?code=%20opaque-code`,
       code: "invalid_code",
     },
     {
-      url: "https://rebuy.local/auth/callback",
+      url: `${AUTH_CALLBACK_APP_ORIGIN}${AUTH_CALLBACK_PATH}`,
       code: "missing_code",
     },
   ] as const;
@@ -333,7 +345,7 @@ test("redirects callback failures with finite errors and no exchange", async () 
   for (const item of cases) {
     let exchangeCalls = 0;
     const response = await handleAuthCallback(
-      new Request(item.url),
+      new Request(item.url, { headers: { Host: AUTH_CALLBACK_APP_HOST } }),
       async () => {
         exchangeCalls += 1;
         return { error: null };
@@ -342,7 +354,7 @@ test("redirects callback failures with finite errors and no exchange", async () 
     const location = new URL(response.headers.get("Location") ?? "");
 
     assert.equal(response.status, 303);
-    assert.equal(location.origin, "https://rebuy.local");
+    assert.equal(location.origin, AUTH_CALLBACK_APP_ORIGIN);
     assert.equal(location.pathname, "/account/login");
     assert.equal(location.searchParams.get("auth_error"), item.code);
     assert.equal(response.headers.get("Cache-Control"), "no-store");
@@ -355,7 +367,9 @@ test("redirects callback failures with finite errors and no exchange", async () 
 
 test("applies a final origin check to the route decision", async () => {
   const response = await handleAuthCallback(
-    new Request("https://rebuy.local/auth/callback?code=opaque-code"),
+    new Request(`${AUTH_CALLBACK_APP_ORIGIN}${AUTH_CALLBACK_PATH}?code=opaque-code`, {
+      headers: { Host: AUTH_CALLBACK_APP_HOST },
+    }),
     async () => ({ error: null }),
     async () => ({
       kind: "success",
@@ -365,10 +379,195 @@ test("applies a final origin check to the route decision", async () => {
   const location = new URL(response.headers.get("Location") ?? "");
 
   assert.equal(response.status, 303);
-  assert.equal(location.origin, "https://rebuy.local");
+  assert.equal(location.origin, AUTH_CALLBACK_APP_ORIGIN);
   assert.equal(location.pathname, "/account/login");
   assert.equal(location.searchParams.get("auth_error"), "exchange_error");
   assert.equal(location.toString().includes("outside.invalid"), false);
+});
+
+test("rejects callback URL, Host, path, and forwarded-header spoofing before exchange", async () => {
+  const rejectedRequests = [
+    new Request("http://localhost:3000/auth/callback?code=opaque-code", {
+      headers: { Host: AUTH_CALLBACK_APP_HOST },
+    }),
+    new Request("http://127.0.0.1:3001/auth/callback?code=opaque-code", {
+      headers: { Host: AUTH_CALLBACK_APP_HOST },
+    }),
+    {
+      url: "http://spoof@127.0.0.1:3000/auth/callback?code=opaque-code",
+      headers: new Headers({ Host: AUTH_CALLBACK_APP_HOST }),
+    } as unknown as Request,
+    new Request(`${AUTH_CALLBACK_APP_ORIGIN}/auth/callback/extra?code=opaque-code`, {
+      headers: { Host: AUTH_CALLBACK_APP_HOST },
+    }),
+    new Request(`${AUTH_CALLBACK_APP_ORIGIN}${AUTH_CALLBACK_PATH}?code=opaque-code`, {
+      headers: { Host: "localhost:3000" },
+    }),
+    new Request(`${AUTH_CALLBACK_APP_ORIGIN}${AUTH_CALLBACK_PATH}?code=opaque-code`, {
+      headers: {
+        Host: AUTH_CALLBACK_APP_HOST,
+        "X-Forwarded-Host": "outside.invalid",
+      },
+    }),
+    new Request(`${AUTH_CALLBACK_APP_ORIGIN}${AUTH_CALLBACK_PATH}?code=opaque-code`, {
+      headers: {
+        Host: AUTH_CALLBACK_APP_HOST,
+        Forwarded: "host=outside.invalid",
+      },
+    }),
+  ];
+  let exchangeCalls = 0;
+
+  for (const request of rejectedRequests) {
+    const response = await handleAuthCallback(request, async () => {
+      exchangeCalls += 1;
+      return { error: null };
+    });
+    const location = new URL(response.headers.get("Location") ?? "");
+
+    assert.equal(response.status, 303);
+    assert.equal(location.origin, AUTH_CALLBACK_APP_ORIGIN);
+    assert.equal(location.pathname, "/account/login");
+    assert.equal(location.searchParams.get("auth_error"), "exchange_error");
+  }
+
+  assert.equal(exchangeCalls, 0);
+});
+
+test("uses the fixed login origin for an unsafe callback destination", async () => {
+  let exchangeCalls = 0;
+  const response = await handleAuthCallback(
+    new Request(`${AUTH_CALLBACK_APP_ORIGIN}${AUTH_CALLBACK_PATH}?code=opaque-code&next=https%3A%2F%2Foutside.invalid%2Fprivate`, {
+      headers: { Host: AUTH_CALLBACK_APP_HOST },
+    }),
+    async () => {
+      exchangeCalls += 1;
+      return { error: null };
+    },
+  );
+  const location = new URL(response.headers.get("Location") ?? "");
+
+  assert.equal(response.status, 303);
+  assert.equal(location.origin, AUTH_CALLBACK_APP_ORIGIN);
+  assert.equal(location.pathname, "/account/login");
+  assert.equal(location.searchParams.get("auth_error"), "exchange_error");
+  assert.equal(location.toString().includes("outside.invalid"), false);
+  assert.equal(exchangeCalls, 0);
+});
+
+test("ephemeral callback cookies read only the verifier and delete no session chunks", async () => {
+  const writes: Array<{ name: string; value: string; options: CookieOptions }> = [];
+  const cookieStore = {
+    getAll: () => [
+      { name: REBUY_PKCE_CODE_VERIFIER_COOKIE_NAME, value: "verifier" },
+      { name: "rebuy-g2-a1-e2a-auth-token", value: "provider-token-sentinel" },
+      { name: "rebuy-g2-a1-e2a-auth-token.0", value: "provider-token-sentinel.0" },
+    ],
+    set: (name: string, value: string, options: CookieOptions) => {
+      writes.push({ name, value, options });
+    },
+  };
+  const methods = createEphemeralExchangeCookieMethods(cookieStore);
+  const setAll = methods.setAll;
+
+  assert.ok(setAll);
+  assert.deepEqual(methods.getAll(), [
+    { name: REBUY_PKCE_CODE_VERIFIER_COOKIE_NAME, value: "verifier" },
+  ]);
+
+  await setAll(
+    [
+      {
+        name: "rebuy-g2-a1-e2a-auth-token",
+        value: "provider-token-sentinel",
+        options: { maxAge: 3600 },
+      },
+      {
+        name: "rebuy-g2-a1-e2a-auth-token.0",
+        value: "provider-token-sentinel.0",
+        options: { maxAge: 3600 },
+      },
+      {
+        name: REBUY_PKCE_CODE_VERIFIER_COOKIE_NAME,
+        value: "",
+        options: { maxAge: 0 },
+      },
+      {
+        name: REBUY_PKCE_CODE_VERIFIER_COOKIE_NAME,
+        value: "not-a-deletion",
+        options: { maxAge: 3600 },
+      },
+    ],
+    {},
+  );
+
+  assert.deepEqual(writes, [
+    {
+      name: REBUY_PKCE_CODE_VERIFIER_COOKIE_NAME,
+      value: "",
+      options: { maxAge: 0 },
+    },
+  ]);
+});
+
+test("persists only access and refresh tokens and maps callback failures finitely", async () => {
+  const persisted: Array<Record<string, unknown>> = [];
+  const success = await exchangeAndPersistSession(
+    async () => ({
+      data: {
+        session: {
+          access_token: "access-token",
+          refresh_token: "refresh-token",
+          provider_token: "provider-token-sentinel",
+          provider_refresh_token: "provider-refresh-token-sentinel",
+        },
+      },
+      error: null,
+    }),
+    async (tokens) => {
+      persisted.push(tokens);
+      return { error: null };
+    },
+  );
+
+  assert.deepEqual(success, { kind: "success" });
+  assert.deepEqual(persisted, [
+    { access_token: "access-token", refresh_token: "refresh-token" },
+  ]);
+  assert.deepEqual(Object.keys(persisted[0] ?? {}).sort(), [
+    "access_token",
+    "refresh_token",
+  ]);
+  assert.equal(JSON.stringify(persisted).includes("provider-token-sentinel"), false);
+
+  const missingTokens = await exchangeAndPersistSession(
+    async () => ({
+      data: { session: { provider_token: "provider-token-sentinel" } },
+      error: null,
+    }),
+    async () => ({ error: null }),
+  );
+  const replayedExchange = await exchangeAndPersistSession(
+    async () => ({ error: "replay" }),
+    async () => ({ error: null }),
+  );
+  const persistenceFailure = await exchangeAndPersistSession(
+    async () => ({
+      data: {
+        session: { access_token: "access-token", refresh_token: "refresh-token" },
+      },
+      error: null,
+    }),
+    async () => ({ error: "provider-persistence-error" }),
+  );
+
+  assert.deepEqual(missingTokens, { kind: "error", code: "missing_tokens" });
+  assert.deepEqual(replayedExchange, { kind: "error", code: "exchange_failed" });
+  assert.deepEqual(persistenceFailure, {
+    kind: "error",
+    code: "persistence_failed",
+  });
+  assert.equal(JSON.stringify([missingTokens, replayedExchange, persistenceFailure]).includes("provider"), false);
 });
 
 const syntheticEmail = `e2a-contract@${SYNTHETIC_EMAIL_DOMAIN}`;

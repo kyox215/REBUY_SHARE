@@ -92,3 +92,11 @@ Live provider 结果必须与 fake contract 结果分开记录。不得用 fake 
 - [Supabase Auth sessions](https://supabase.com/docs/guides/auth/sessions)
 
 以上来源只是实现和 action-time 复核依据；网页资料、Testing 状态和 UI disabled 均不能替代本地代码合同、真实受监督证据或 Owner Gate。
+
+## 9. 2026-08-30 local callback code-only 安全准备候选（待独立复审）
+
+- 本批状态为 **code-only 安全准备候选 / 待独立复审**；E3 external Google OAuth 仍 **NO-GO / CLOSED**，不预写 Google、Apple 或 provider 成功。Google/Apple 按钮继续 disabled。
+- P1-A 已加入固定 local app origin=`http://127.0.0.1:3000`、raw Host=`127.0.0.1:3000`、pathname=`/auth/callback` 的 callback trust；request URL/Host/path/forwarded 任一越界均在 exchange 前 fail closed。success、next、login redirect 均以固定 origin 为根，并保留 safe-next、303、no-store、no-referrer 和 code 上限。
+- P1-B 已把 callback 交换和持久化拆成两阶段：ephemeral client 只读取固定 Rebuy PKCE verifier、只允许精确 verifier deletion，忽略所有 session base/chunk 写入；独立 strict client 的 `setSession` 只接收 access/refresh 二元组。provider token 仅在内存提取后丢弃，不返回、不日志、不进 cookie/持久化。
+- 同一 `test:auth` runner 直接覆盖 spoofed request URL/Host/path/forwarded、fixed-origin success、unsafe-next login、verifier cookie policy、provider-token sentinel projection、missing token、replay fake 和 persistence failure；fake replay 不作为真实 provider 证据。
+- 真实 Google provider、state/nonce 完整合同、signup containment 和外部 callback/session 仍未执行，必须由后续独立 review 与 action-time Owner Gate 决定。脱敏记录见[code-only evidence](../evidence/G2-A1/2026-08-30-e3-code-preparation/README.md)。

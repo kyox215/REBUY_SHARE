@@ -489,3 +489,11 @@ resource/cost/secret Gate 通过前，仅可继续维护无资源后端原型、
 - E2a local email OTP slice 标为**完成/通过**，范围仅限 local GoTrue/Mailpit、`@rebuy.test` synthetic-only、OTP request/verify/resend、session 和有限错误；不等于 G2-A1 整体、E2b/E3-E5、P2、hosted 或 Production 打开。
 - 残余范围为未主动触发真实 provider HTTP 429、refresh/revoke 未证明、active Auth OTP UI 未保存截图；均不阻塞 E2a local slice，但不得外推为更广能力。
 - push/deploy/hosted/admin key/真实 PII/custom SMTP 继续冻结；Supabase local stack 已清理；`http://127.0.0.1:3000` Next preview 按用户要求故意保留，不是 cleanup 遗漏。
+
+## 35. 2026-08-30｜E3 callback code-only 安全准备候选（待独立复审）
+
+- 本批仅处理 E3 的 local code-only callback hardening，状态为**安全准备候选 / 待独立复审**；E3 external Google OAuth 继续 **NO-GO / CLOSED**，不预写 provider success。Google/Apple UI 继续 disabled，未发生 hosted/provider/API/管理面写入。
+- callback trust 固定 app origin=`http://127.0.0.1:3000`、raw Host=`127.0.0.1:3000`、pathname=`/auth/callback`；URL、Host、path、userinfo/hash、forwarded header 任一越界都在 exchange 前返回固定 login failure。success、next、login redirect 不使用 request URL 作为 trust root，均以固定 origin 解析。
+- callback session 采用两阶段协调：ephemeral exchange client 只读固定 Rebuy PKCE verifier cookie，`setAll` 只应用精确 verifier deletion，拒绝/忽略 session base/chunk 写入；独立 strict persistence client 的 `setSession` 只接收 access/refresh 二元组。provider token 不返回、不记录、不进 cookie 或其他持久化边界，失败均有限映射。
+- 定向合同测试覆盖 spoofed URL/Host/path/forwarded、固定 origin success、unsafe next login、verifier/session chunk policy、provider-token sentinel 丢弃、missing token、fake replay 和 persistence error；fake replay 不作真实 provider 证据。详细脱敏记录见[E3 code-only evidence](./evidence/G2-A1/2026-08-30-e3-code-preparation/README.md)。
+- state/nonce 完整合同、signup containment、真实 Google/Apple/provider callback、hosted Auth、E2b invite、业务 DB/RLS、custom SMTP、真实数据和 Production 仍按独立 Gate 冻结；本批用户授权仅覆盖本地代码、测试和文档。
