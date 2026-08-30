@@ -14,7 +14,7 @@ export async function createAuthRouteClient() {
   return createConfiguredServerClient("strict");
 }
 
-export async function createAuthCallbackClients() {
+export async function createAuthCallbackClients(flowId?: string) {
   const { url, publishableKey } = getSupabaseServerConfig();
   const cookieStore = await cookies();
   const options = {
@@ -24,7 +24,7 @@ export async function createAuthCallbackClients() {
   return {
     exchange: createServerClient(url, publishableKey, {
       ...options,
-      cookies: createEphemeralExchangeCookieMethods(cookieStore),
+      cookies: createEphemeralExchangeCookieMethods(cookieStore, flowId),
     }),
     persistence: createServerClient(url, publishableKey, {
       ...options,

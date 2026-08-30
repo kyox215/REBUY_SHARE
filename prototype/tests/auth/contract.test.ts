@@ -1,8 +1,12 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import { resolve } from "node:path";
 import { test } from "node:test";
 import type { CookieOptions } from "@supabase/ssr";
+
+const requireFromPrototype = createRequire(resolve(process.cwd(), "package.json"));
+const { createServerClient } = requireFromPrototype("@supabase/ssr") as typeof import("@supabase/ssr");
 
 import {
   AUTH_CALLBACK_CODE_MAX_LENGTH,
@@ -18,7 +22,10 @@ import {
 } from "../../lib/auth/callback-route";
 import {
   exchangeAndPersistSession,
+  getRebuyPkceFlowSlotCookieName,
+  isValidPkceFlowId,
   REBUY_PKCE_CODE_VERIFIER_COOKIE_NAME,
+  REBUY_PKCE_FLOW_INDEX_COOKIE_NAME,
   createEphemeralExchangeCookieMethods,
 } from "../../lib/auth/callback-session";
 import {
@@ -434,6 +441,122 @@ test("rejects callback URL, Host, path, and forwarded-header spoofing before exc
   assert.equal(exchangeCalls, 0);
 });
 
+test("accepts exact Next direct-loopback forwarding and rejects incomplete or multi-value headers", async () => {
+  const nextForwardedHeaders = {
+    Host: AUTH_CALLBACK_APP_HOST,
+    "x-forwarded-host": AUTH_CALLBACK_APP_HOST,
+    "x-forwarded-port": "3000",
+    "x-forwarded-proto": "http",
+    "x-forwarded-for": "127.0.0.1",
+  };
+  let exchangeCalls = 0;
+  const providerError = await handleAuthCallback(
+    new Request(`${AUTH_CALLBACK_APP_ORIGIN}${AUTH_CALLBACK_PATH}?error=access_denied`, {
+      headers: nextForwardedHeaders,
+    }),
+    async () => {
+      exchangeCalls += 1;
+      return { error: null };
+    },
+  );
+  const providerLocation = new URL(providerError.headers.get("Location") ?? "");
+
+  assert.equal(providerError.status, 303);
+  assert.equal(providerLocation.searchParams.get("auth_error"), "provider_error");
+  assert.equal(exchangeCalls, 0);
+
+  for (const forwardedFor of ["::1", "::ffff:127.0.0.1"]) {
+    const response = await handleAuthCallback(
+      new Request(`${AUTH_CALLBACK_APP_ORIGIN}${AUTH_CALLBACK_PATH}?error=access_denied`, {
+        headers: { ...nextForwardedHeaders, "x-forwarded-for": forwardedFor },
+      }),
+      async () => {
+        exchangeCalls += 1;
+        return { error: null };
+      },
+    );
+    assert.equal(new URL(response.headers.get("Location") ?? "").searchParams.get("auth_error"), "provider_error");
+  }
+
+  const rejectedHeaders = [
+    { ...nextForwardedHeaders, "x-forwarded-port": undefined },
+    { ...nextForwardedHeaders, "x-forwarded-for": "127.0.0.1, 127.0.0.1" },
+    { ...nextForwardedHeaders, "x-forwarded-proto": "https" },
+  ];
+  for (const headerValues of rejectedHeaders) {
+    const headers = new Headers();
+    for (const [name, value] of Object.entries(headerValues)) {
+      if (value !== undefined) {
+        headers.set(name, value);
+      }
+    }
+    const response = await handleAuthCallback(
+      new Request(`${AUTH_CALLBACK_APP_ORIGIN}${AUTH_CALLBACK_PATH}?code=opaque-code`, {
+        headers,
+      }),
+      async () => {
+        exchangeCalls += 1;
+        return { error: null };
+      },
+    );
+    const location = new URL(response.headers.get("Location") ?? "");
+    assert.equal(location.searchParams.get("auth_error"), "exchange_error");
+  }
+
+  assert.equal(exchangeCalls, 0);
+});
+
+test("passes only auth-js-compatible callback flow ids to the exchange", async () => {
+  assert.equal(isValidPkceFlowId("a".repeat(8)), true);
+  assert.equal(isValidPkceFlowId("a".repeat(64)), true);
+  assert.equal(isValidPkceFlowId("a".repeat(7)), false);
+  assert.equal(isValidPkceFlowId("a".repeat(65)), false);
+  assert.equal(isValidPkceFlowId("flow.id"), false);
+
+  const validFlowId = "flow_id-1";
+  let receivedFlowId: string | undefined;
+  const success = await handleAuthCallback(
+    new Request(`${AUTH_CALLBACK_APP_ORIGIN}${AUTH_CALLBACK_PATH}?code=opaque-code&sb_flow_id=${validFlowId}`, {
+      headers: { Host: AUTH_CALLBACK_APP_HOST },
+    }),
+    async (_code, flowId) => {
+      receivedFlowId = flowId;
+      return { error: null };
+    },
+  );
+  assert.equal(success.status, 303);
+  assert.equal(new URL(success.headers.get("Location") ?? "").pathname, "/");
+  assert.equal(receivedFlowId, validFlowId);
+
+  for (const invalidFlowId of ["short", "flow.id1", "a".repeat(65)]) {
+    let exchangeCalls = 0;
+    const response = await handleAuthCallback(
+      new Request(`${AUTH_CALLBACK_APP_ORIGIN}${AUTH_CALLBACK_PATH}?code=opaque-code&sb_flow_id=${encodeURIComponent(invalidFlowId)}`, {
+        headers: { Host: AUTH_CALLBACK_APP_HOST },
+      }),
+      async () => {
+        exchangeCalls += 1;
+        return { error: null };
+      },
+    );
+    assert.equal(new URL(response.headers.get("Location") ?? "").searchParams.get("auth_error"), "exchange_error");
+    assert.equal(exchangeCalls, 0);
+  }
+
+  let duplicateCalls = 0;
+  const duplicate = await handleAuthCallback(
+    new Request(`${AUTH_CALLBACK_APP_ORIGIN}${AUTH_CALLBACK_PATH}?code=opaque-code&sb_flow_id=${validFlowId}&sb_flow_id=${validFlowId}`, {
+      headers: { Host: AUTH_CALLBACK_APP_HOST },
+    }),
+    async () => {
+      duplicateCalls += 1;
+      return { error: null };
+    },
+  );
+  assert.equal(new URL(duplicate.headers.get("Location") ?? "").searchParams.get("auth_error"), "exchange_error");
+  assert.equal(duplicateCalls, 0);
+});
+
 test("uses the fixed login origin for an unsafe callback destination", async () => {
   let exchangeCalls = 0;
   const response = await handleAuthCallback(
@@ -455,11 +578,24 @@ test("uses the fixed login origin for an unsafe callback destination", async () 
   assert.equal(exchangeCalls, 0);
 });
 
-test("ephemeral callback cookies read only the verifier and delete no session chunks", async () => {
+test("ephemeral callback cookies follow auth-js single-flow and multi-flow names", async () => {
   const writes: Array<{ name: string; value: string; options: CookieOptions }> = [];
+  const flowId = "flow_id-1";
+  const flowSlot = getRebuyPkceFlowSlotCookieName(flowId);
+  const otherFlowSlot = getRebuyPkceFlowSlotCookieName("otherflow");
+  const deletionOptions = {
+    maxAge: 0,
+    path: "/",
+    sameSite: "lax",
+    secure: false,
+  } satisfies CookieOptions;
   const cookieStore = {
     getAll: () => [
       { name: REBUY_PKCE_CODE_VERIFIER_COOKIE_NAME, value: "verifier" },
+      { name: flowSlot, value: "flow-verifier" },
+      { name: REBUY_PKCE_FLOW_INDEX_COOKIE_NAME, value: "[\"flow_id-1\"]" },
+      { name: otherFlowSlot, value: "other-verifier" },
+      { name: `${flowSlot}.0`, value: "chunked-verifier" },
       { name: "rebuy-g2-a1-e2a-auth-token", value: "provider-token-sentinel" },
       { name: "rebuy-g2-a1-e2a-auth-token.0", value: "provider-token-sentinel.0" },
     ],
@@ -467,12 +603,14 @@ test("ephemeral callback cookies read only the verifier and delete no session ch
       writes.push({ name, value, options });
     },
   };
-  const methods = createEphemeralExchangeCookieMethods(cookieStore);
+  const methods = createEphemeralExchangeCookieMethods(cookieStore, flowId);
   const setAll = methods.setAll;
 
   assert.ok(setAll);
   assert.deepEqual(methods.getAll(), [
     { name: REBUY_PKCE_CODE_VERIFIER_COOKIE_NAME, value: "verifier" },
+    { name: flowSlot, value: "flow-verifier" },
+    { name: REBUY_PKCE_FLOW_INDEX_COOKIE_NAME, value: "[\"flow_id-1\"]" },
   ]);
 
   await setAll(
@@ -480,22 +618,29 @@ test("ephemeral callback cookies read only the verifier and delete no session ch
       {
         name: "rebuy-g2-a1-e2a-auth-token",
         value: "provider-token-sentinel",
-        options: { maxAge: 3600 },
+        options: { ...deletionOptions, maxAge: 3600 },
       },
       {
         name: "rebuy-g2-a1-e2a-auth-token.0",
         value: "provider-token-sentinel.0",
-        options: { maxAge: 3600 },
+        options: { ...deletionOptions, maxAge: 3600 },
       },
       {
         name: REBUY_PKCE_CODE_VERIFIER_COOKIE_NAME,
         value: "",
-        options: { maxAge: 0 },
+        options: deletionOptions,
       },
       {
-        name: REBUY_PKCE_CODE_VERIFIER_COOKIE_NAME,
-        value: "not-a-deletion",
-        options: { maxAge: 3600 },
+        name: flowSlot,
+        value: "",
+        options: { ...deletionOptions, secure: true },
+      },
+      { name: flowSlot, value: "", options: deletionOptions },
+      { name: REBUY_PKCE_FLOW_INDEX_COOKIE_NAME, value: "", options: deletionOptions },
+      {
+        name: `${flowSlot}.0`,
+        value: "",
+        options: deletionOptions,
       },
     ],
     {},
@@ -505,9 +650,215 @@ test("ephemeral callback cookies read only the verifier and delete no session ch
     {
       name: REBUY_PKCE_CODE_VERIFIER_COOKIE_NAME,
       value: "",
-      options: { maxAge: 0 },
+      options: deletionOptions,
     },
+    { name: flowSlot, value: "", options: deletionOptions },
+    { name: REBUY_PKCE_FLOW_INDEX_COOKIE_NAME, value: "", options: deletionOptions },
   ]);
+
+  const legacyMethods = createEphemeralExchangeCookieMethods(cookieStore);
+  assert.deepEqual(legacyMethods.getAll(), [
+    { name: REBUY_PKCE_CODE_VERIFIER_COOKIE_NAME, value: "verifier" },
+  ]);
+  assert.throws(
+    () => createEphemeralExchangeCookieMethods(cookieStore, "short"),
+    /Invalid callback flow identifier/,
+  );
+  assert.throws(
+    () => getRebuyPkceFlowSlotCookieName("flow.id1"),
+    /Invalid callback flow identifier/,
+  );
+});
+
+test("requires a complete persisted session and never treats partial output as success", async () => {
+  const persisted: Array<Record<string, unknown>> = [];
+  const session = {
+    access_token: "access-token",
+    refresh_token: "refresh-token",
+  };
+  const success = await exchangeAndPersistSession(
+    async () => ({
+      data: {
+        session: {
+          ...session,
+          provider_token: "provider-token-sentinel",
+          provider_refresh_token: "provider-refresh-token-sentinel",
+        },
+      },
+      error: null,
+    }),
+    async (tokens) => {
+      persisted.push(tokens);
+      return { data: { session }, error: null };
+    },
+  );
+
+  assert.deepEqual(success, { kind: "success" });
+  assert.deepEqual(persisted, [session]);
+  assert.deepEqual(Object.keys(persisted[0] ?? {}).sort(), [
+    "access_token",
+    "refresh_token",
+  ]);
+  assert.equal(JSON.stringify(persisted).includes("provider-token-sentinel"), false);
+
+  const missingTokens = await exchangeAndPersistSession(
+    async () => ({
+      data: { session: { provider_token: "provider-token-sentinel" } },
+      error: null,
+    }),
+    async () => ({ data: { session }, error: null }),
+  );
+  const replayedExchange = await exchangeAndPersistSession(
+    async () => ({ error: "replay" }),
+    async () => ({ data: { session }, error: null }),
+  );
+  const nullPersistence = await exchangeAndPersistSession(
+    async () => ({ data: { session }, error: null }),
+    async () => ({ data: { session: null }, error: null }),
+  );
+  const partialPersistence = await exchangeAndPersistSession(
+    async () => ({ data: { session }, error: null }),
+    async () => ({ data: { session: { access_token: "access-token" } }, error: null }),
+  );
+  const persistenceFailure = await exchangeAndPersistSession(
+    async () => ({ data: { session }, error: null }),
+    async () => ({ data: { session }, error: "provider-persistence-error" }),
+  );
+
+  assert.deepEqual(missingTokens, { kind: "error", code: "missing_tokens" });
+  assert.deepEqual(replayedExchange, { kind: "error", code: "exchange_failed" });
+  assert.deepEqual(nullPersistence, { kind: "error", code: "persistence_failed" });
+  assert.deepEqual(partialPersistence, { kind: "error", code: "persistence_failed" });
+  assert.deepEqual(persistenceFailure, {
+    kind: "error",
+    code: "persistence_failed",
+  });
+  assert.equal(JSON.stringify([
+    missingTokens,
+    replayedExchange,
+    nullPersistence,
+    partialPersistence,
+    persistenceFailure,
+  ]).includes("provider"), false);
+});
+
+function makeTestJwt(exp: number) {
+  return [
+    encodeJwtPart({ alg: "HS256", typ: "JWT" }),
+    encodeJwtPart({
+      aud: "authenticated",
+      exp,
+      role: "authenticated",
+      sub: "00000000-0000-0000-0000-000000000001",
+    }),
+    "fixture",
+  ].join(".");
+}
+
+function makeRuntimeUser() {
+  return {
+    id: "00000000-0000-0000-0000-000000000001",
+    aud: "authenticated",
+    role: "authenticated",
+    email: "runtime@rebuy.test",
+    app_metadata: { provider: "email", providers: ["email"] },
+    user_metadata: {},
+    identities: [],
+    created_at: "2026-01-01T00:00:00.000Z",
+    updated_at: "2026-01-01T00:00:00.000Z",
+  };
+
+}
+
+test("real SSR setSession wiring writes only strict session cookies and no cookie on refresh failure", async () => {
+  const createClientWithFetch = (fetch: typeof globalThis.fetch) => {
+    const writes: Array<{ name: string; value: string; options: CookieOptions }> = [];
+    const store = {
+      getAll: () => [],
+      set: (name: string, value: string, options: CookieOptions) => {
+        writes.push({ name, value, options });
+      },
+    };
+    const client = createServerClient(LOCAL_SUPABASE_URL, "sb_publishable_test_fixture", {
+      cookieOptions: REBUY_AUTH_COOKIE_OPTIONS,
+      cookies: createServerCookieMethods(store, "strict"),
+      global: { fetch },
+    });
+    return { client, writes };
+  };
+
+  const successRuntime = createClientWithFetch(async (input) => {
+    const url = new URL(typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url);
+    if (url.pathname.endsWith("/user")) {
+      return new Response(JSON.stringify(makeRuntimeUser()), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+    return new Response(null, { status: 404 });
+  });
+  const accessToken = makeTestJwt(Math.floor(Date.now() / 1000) + 3600);
+  let persistenceCalls = 0;
+  const success = await exchangeAndPersistSession(
+    async () => ({
+      data: {
+        session: {
+          access_token: accessToken,
+          refresh_token: "runtime-refresh-token",
+          provider_token: "provider-token-sentinel",
+          provider_refresh_token: "provider-refresh-token-sentinel",
+        },
+      },
+      error: null,
+    }),
+    async (tokens) => {
+      persistenceCalls += 1;
+      const result = await successRuntime.client.auth.setSession(tokens);
+      assert.equal(result.error, null);
+      assert.ok(result.data.session);
+      assert.equal(typeof result.data.session.access_token, "string");
+      assert.equal(typeof result.data.session.refresh_token, "string");
+      return result;
+    },
+  );
+
+  assert.equal(persistenceCalls, 1);
+  assert.deepEqual(success, { kind: "success" });
+  assert.ok(successRuntime.writes.length > 0);
+  assert.equal(successRuntime.writes.some(({ name }) =>
+    name !== REBUY_AUTH_COOKIE_NAME && !name.startsWith(`${REBUY_AUTH_COOKIE_NAME}.`),
+  ), false);
+  assert.equal(successRuntime.writes.some(({ value }) =>
+    value.includes("provider-token-sentinel") || value.includes("provider-refresh-token-sentinel"),
+  ), false);
+
+  const failureRuntime = createClientWithFetch(async (input) => {
+    const url = new URL(typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url);
+    if (url.pathname.endsWith("/token")) {
+      return new Response(JSON.stringify({ error: "invalid_grant" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+    return new Response(null, { status: 404 });
+  });
+  const expiredToken = makeTestJwt(Math.floor(Date.now() / 1000) - 60);
+  const failed = await exchangeAndPersistSession(
+    async () => ({
+      data: {
+        session: {
+          access_token: expiredToken,
+          refresh_token: "runtime-refresh-token",
+          provider_token: "provider-token-sentinel",
+        },
+      },
+      error: null,
+    }),
+    (tokens) => failureRuntime.client.auth.setSession(tokens),
+  );
+
+  assert.deepEqual(failed, { kind: "error", code: "persistence_failed" });
+  assert.deepEqual(failureRuntime.writes, []);
 });
 
 test("persists only access and refresh tokens and maps callback failures finitely", async () => {
@@ -526,7 +877,7 @@ test("persists only access and refresh tokens and maps callback failures finitel
     }),
     async (tokens) => {
       persisted.push(tokens);
-      return { error: null };
+      return { data: { session: tokens }, error: null };
     },
   );
 
@@ -539,35 +890,6 @@ test("persists only access and refresh tokens and maps callback failures finitel
     "refresh_token",
   ]);
   assert.equal(JSON.stringify(persisted).includes("provider-token-sentinel"), false);
-
-  const missingTokens = await exchangeAndPersistSession(
-    async () => ({
-      data: { session: { provider_token: "provider-token-sentinel" } },
-      error: null,
-    }),
-    async () => ({ error: null }),
-  );
-  const replayedExchange = await exchangeAndPersistSession(
-    async () => ({ error: "replay" }),
-    async () => ({ error: null }),
-  );
-  const persistenceFailure = await exchangeAndPersistSession(
-    async () => ({
-      data: {
-        session: { access_token: "access-token", refresh_token: "refresh-token" },
-      },
-      error: null,
-    }),
-    async () => ({ error: "provider-persistence-error" }),
-  );
-
-  assert.deepEqual(missingTokens, { kind: "error", code: "missing_tokens" });
-  assert.deepEqual(replayedExchange, { kind: "error", code: "exchange_failed" });
-  assert.deepEqual(persistenceFailure, {
-    kind: "error",
-    code: "persistence_failed",
-  });
-  assert.equal(JSON.stringify([missingTokens, replayedExchange, persistenceFailure]).includes("provider"), false);
 });
 
 const syntheticEmail = `e2a-contract@${SYNTHETIC_EMAIL_DOMAIN}`;

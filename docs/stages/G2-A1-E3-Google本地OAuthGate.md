@@ -96,7 +96,15 @@ Live provider 结果必须与 fake contract 结果分开记录。不得用 fake 
 ## 9. 2026-08-30 local callback code-only 安全准备候选（待独立复审）
 
 - 本批状态为 **code-only 安全准备候选 / 待独立复审**；E3 external Google OAuth 仍 **NO-GO / CLOSED**，不预写 Google、Apple 或 provider 成功。Google/Apple 按钮继续 disabled。
-- P1-A 已加入固定 local app origin=`http://127.0.0.1:3000`、raw Host=`127.0.0.1:3000`、pathname=`/auth/callback` 的 callback trust；request URL/Host/path/forwarded 任一越界均在 exchange 前 fail closed。success、next、login redirect 均以固定 origin 为根，并保留 safe-next、303、no-store、no-referrer 和 code 上限。
-- P1-B 已把 callback 交换和持久化拆成两阶段：ephemeral client 只读取固定 Rebuy PKCE verifier、只允许精确 verifier deletion，忽略所有 session base/chunk 写入；独立 strict client 的 `setSession` 只接收 access/refresh 二元组。provider token 仅在内存提取后丢弃，不返回、不日志、不进 cookie/持久化。
-- 同一 `test:auth` runner 直接覆盖 spoofed request URL/Host/path/forwarded、fixed-origin success、unsafe-next login、verifier cookie policy、provider-token sentinel projection、missing token、replay fake 和 persistence failure；fake replay 不作为真实 provider 证据。
+- P1-A 已加入固定 local app origin=`http://127.0.0.1:3000`、raw Host=`127.0.0.1:3000`、pathname=`/auth/callback` 的 callback trust；request URL/Host/path/forwarded 任一越界均在 exchange 前 fail closed。为兼容锁定 Next 16.3.2 直连 loopback，全部 forwarded 头缺失或精确固定四元组才可继续；`x-forwarded-host`/`port`/`proto` 必须为 `127.0.0.1:3000`/`3000`/`http`，`x-forwarded-for` 仅接受 `127.0.0.1`、`::1` 或 `::ffff:127.0.0.1`。success、next、login redirect 均以固定 origin 为根，并保留 safe-next、303、no-store、no-referrer 和 code 上限。
+- P1-B 已把 callback 交换和持久化拆成两阶段：ephemeral client 按锁定 auth-js 2.112.4 语义读取当前 flow slot、flow index、legacy verifier 的严格白名单，仅允许精确删除选项，忽略所有 session base/chunk 写入；独立 strict client 的 `setSession` 只接收 access/refresh 二元组，并要求返回完整 session。provider token 仅在内存提取后丢弃，不返回、不日志、不进 cookie/持久化。
+- 同一 `test:auth` runner 直接覆盖 spoofed request URL/Host/path/forwarded、fixed-origin success、unsafe-next login、auth-js flow-id 与 verifier cookie policy、provider-token sentinel projection、missing token、replay fake 和 persistence failure；fake replay 不作为真实 provider 证据。
 - 真实 Google provider、state/nonce 完整合同、signup containment 和外部 callback/session 仍未执行，必须由后续独立 review 与 action-time Owner Gate 决定。脱敏记录见[code-only evidence](../evidence/G2-A1/2026-08-30-e3-code-preparation/README.md)。
+
+## 10. 2026-08-30 callback follow-up verification（仍待独立复审）
+
+- 本节追加修正第 9 节的兼容性与证据边界，不覆盖历史 NO-GO 或预写 provider 成功。锁定 Next `16.3.2` `base-server.js` 的直连补头行为已按源码核对：接受全部缺失，或完整、单值且内部一致的固定 Next quartet；`Forwarded`、`X-Original-*`、`X-Real-IP`、缺项、多值、不一致和非固定值继续拒绝。
+- 锁定 `@supabase/auth-js 2.112.4` 的 flow id 合法形状为 `[A-Za-z0-9_-]{8,64}`；`sb_flow_id` 通过严格解析后，生产 exchange 以 `flowId ? { flowId } : undefined` 调用，仅读取本次 flow slot、index、legacy verifier，拒绝任意 cookie/chunk/越界 flow id。verifier cleanup 证据仅限 adapter 合同与锁定库语义，不等于 live provider/browser 生命周期验证。
+- `test:auth` 当前为 `37/37`；typecheck、lint、build 均通过。真实 `createServerClient`/`setSession` wiring 的 fake-fetch 测试验证成功只写固定 Rebuy session cookie base/chunks 且不含 provider-token sentinel，过期 refresh failure 无 cookie 写入。
+- 复用现有 Next listener 的 loopback smoke：`/auth/callback?error=access_denied` 返回固定 `303`/`provider_error` 且不触发 exchange；Host spoof 与 forwarded-host spoof 返回固定 `303`/`exchange_error`。没有 provider、Supabase runtime 或外部网络参与。
+- state、nonce、跨请求 replay、真实 Google provider callback/session、signup containment 和 active provider response 仍未验证；fake replay 不作真实证据。E3 overall 仍为 **NO-GO / CLOSED**，本批仅为 code-only 安全准备候选，等待独立复审。

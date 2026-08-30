@@ -5,6 +5,7 @@ import {
   type AuthCallbackInput,
   type AuthCodeExchange,
 } from "./callback";
+import { isValidPkceFlowId } from "./callback-session";
 import { normalizeSafeNext } from "./redirect";
 
 const redirectHeaders = {
@@ -16,9 +17,22 @@ export const AUTH_CALLBACK_APP_ORIGIN = "http://127.0.0.1:3000";
 export const AUTH_CALLBACK_APP_HOST = "127.0.0.1:3000";
 export const AUTH_CALLBACK_PATH = "/auth/callback";
 
-const forwardedHeaderNames = new Set([
+const nextForwardedHeaderNames = new Set([
+  "x-forwarded-for",
+  "x-forwarded-host",
+  "x-forwarded-port",
+  "x-forwarded-proto",
+]);
+
+const rejectedForwardedHeaderNames = new Set([
   "forwarded",
   "x-real-ip",
+]);
+
+const nextLoopbackAddresses = new Set([
+  "127.0.0.1",
+  "::1",
+  "::ffff:127.0.0.1",
 ]);
 
 export type AuthCallbackDecider = (
@@ -55,18 +69,39 @@ function isTrustedCallbackRequest(request: Request, requestUrl: URL) {
     return false;
   }
 
+  const forwardedValues: Record<string, string> = {};
   let hasForwardedHeader = false;
-  request.headers.forEach((_value, headerName) => {
+  let hasRejectedHeader = false;
+  request.headers.forEach((value, headerName) => {
     if (
-      forwardedHeaderNames.has(headerName) ||
-      headerName.startsWith("x-forwarded-") ||
+      rejectedForwardedHeaderNames.has(headerName) ||
       headerName.startsWith("x-original-")
     ) {
+      hasRejectedHeader = true;
+      return;
+    }
+
+    if (headerName.startsWith("x-forwarded-")) {
       hasForwardedHeader = true;
+      if (!nextForwardedHeaderNames.has(headerName)) {
+        hasRejectedHeader = true;
+        return;
+      }
+
+      forwardedValues[headerName] = value;
     }
   });
 
-  return !hasForwardedHeader;
+  if (hasRejectedHeader || !hasForwardedHeader) {
+    return !hasRejectedHeader;
+  }
+
+  return (
+    forwardedValues["x-forwarded-host"] === AUTH_CALLBACK_APP_HOST &&
+    forwardedValues["x-forwarded-port"] === "3000" &&
+    forwardedValues["x-forwarded-proto"] === "http" &&
+    nextLoopbackAddresses.has(forwardedValues["x-forwarded-for"] ?? "")
+  );
 }
 
 function hasUnsafeNext(requestedNext: string | null) {
@@ -104,6 +139,12 @@ export async function handleAuthCallback(
     return loginRedirect("exchange_error");
   }
 
+  const flowIds = searchParams.getAll("sb_flow_id");
+  if (flowIds.length > 1 || (flowIds.length === 1 && !isValidPkceFlowId(flowIds[0]))) {
+    return loginRedirect("exchange_error");
+  }
+  const flowId = flowIds[0];
+
   let decision: AuthCallbackDecision;
   try {
     decision = await decider({
@@ -111,6 +152,7 @@ export async function handleAuthCallback(
       error: searchParams.get("error"),
       errorDescription: searchParams.get("error_description"),
       next: searchParams.get("next"),
+      flowId,
       exchange,
     });
   } catch {

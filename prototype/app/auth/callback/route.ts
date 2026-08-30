@@ -6,10 +6,14 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
-  return handleAuthCallback(request, async (code) => {
-    const { exchange, persistence } = await createAuthCallbackClients();
+  return handleAuthCallback(request, async (code, flowId) => {
+    const { exchange, persistence } = await createAuthCallbackClients(flowId);
     const outcome = await exchangeAndPersistSession(
-      () => exchange.auth.exchangeCodeForSession(code),
+      () =>
+        exchange.auth.exchangeCodeForSession(
+          code,
+          flowId ? { flowId } : undefined,
+        ),
       (tokens) => persistence.auth.setSession(tokens),
     );
 

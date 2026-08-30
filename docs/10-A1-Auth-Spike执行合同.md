@@ -497,3 +497,11 @@ resource/cost/secret Gate 通过前，仅可继续维护无资源后端原型、
 - callback session 采用两阶段协调：ephemeral exchange client 只读固定 Rebuy PKCE verifier cookie，`setAll` 只应用精确 verifier deletion，拒绝/忽略 session base/chunk 写入；独立 strict persistence client 的 `setSession` 只接收 access/refresh 二元组。provider token 不返回、不记录、不进 cookie 或其他持久化边界，失败均有限映射。
 - 定向合同测试覆盖 spoofed URL/Host/path/forwarded、固定 origin success、unsafe next login、verifier/session chunk policy、provider-token sentinel 丢弃、missing token、fake replay 和 persistence error；fake replay 不作真实 provider 证据。详细脱敏记录见[E3 code-only evidence](./evidence/G2-A1/2026-08-30-e3-code-preparation/README.md)。
 - state/nonce 完整合同、signup containment、真实 Google/Apple/provider callback、hosted Auth、E2b invite、业务 DB/RLS、custom SMTP、真实数据和 Production 仍按独立 Gate 冻结；本批用户授权仅覆盖本地代码、测试和文档。
+
+## 36. 2026-08-30｜E3 callback code-only follow-up（待独立复审）
+
+- 本批追加修复 E3 callback code-only candidate 的 Next/auth-js 兼容性与 session fail-closed 边界；状态仍为**安全准备候选 / 待独立复审**，E3 external Google OAuth 继续 **NO-GO / CLOSED**，不预写 Google、Apple 或 provider 成功。
+- 锁定 Next `16.3.2` 直连 loopback 会在缺失时补齐 `x-forwarded-host`、`x-forwarded-port`、`x-forwarded-proto` 与 socket `x-forwarded-for`。callback 接受全部缺失或精确固定的内部 quartet：host=`127.0.0.1:3000`、port=`3000`、proto=`http`、for=`127.0.0.1`/`::1`/`::ffff:127.0.0.1`；`Forwarded`、`X-Original-*`、`X-Real-IP`、缺项、多值、不一致、非固定值及 Host/path/query trust spoof 均在 exchange 前 fail closed。
+- 按锁定 `@supabase/auth-js 2.112.4` 的 `[A-Za-z0-9_-]{8,64}` flow-id 合同解析 `sb_flow_id`；ephemeral exchange client 仅允许本次 flow slot、flow index、legacy verifier 键及精确 deletion，strict persistence client 仅接收 access/refresh 二元组并要求完整 `setSession` 结果。provider token 不进入 persistence、cookie、日志、响应或 evidence。
+- 当前 `test:auth` 为 `37/37`，typecheck、lint、build 均通过；真实 `createServerClient`/`setSession` wiring 的 fake-fetch 合同验证成功只产生固定 Rebuy session cookie base/chunks，过期 refresh failure 不写 cookie。实际 Next loopback callback smoke 对 provider error 返回固定 `303`/`provider_error`，Host/forwarded spoof 返回固定 `303`/`exchange_error`，均未触发 provider/Supabase exchange。
+- 本批仍不证明 live Google provider、state/nonce、跨请求 replay、signup containment 或浏览器 cookie 生命周期；fake replay 仅为本地契约。E2a local GoTrue/Mailpit GO、E2b invite、E4/E5、P2/DB/RLS、hosted/Production、secret/admin/service_role、真实 PII、push/deploy 与外部写入继续冻结。
