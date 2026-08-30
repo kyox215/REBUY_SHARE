@@ -84,6 +84,12 @@ A1 独立测试连接骨架、B1 最小连接及配置/能力只读预检已有�
 
 G2-A0 远端 docs-only reconciliation 已完成：PR #7 merge=`fd9b712c7b07bf34399f9838eebb75846425c1d1`，main Actions run=`33122238997` / job=`98691703085` 全绿，merge SHA 的 GitHub deployments=`0`，来源分支保留。G2-A1 执行中；B1 最小连接及配置/能力只读预检已完成；B2 本地 callback 安全基础完成候选，待独立复审和 action-time Owner/主代理 Gate；完整 resource/cost/secret Gate 仍关闭。当前仅允许本地候选的安全契约、文档和测试证据，禁止 secret/env/PII、真实 Auth/DB/Storage/OAuth/SMTP 配置或成功投递、真实数据、部署或 Production。详见[G2-A1 准备与资源门禁](./stages/G2-A1-Auth-Spike准备与资源门禁.md)、[B2 本地安全基础证据](./evidence/G2-A1/2026-08-28-b2-local-foundation/README.md)、[B1 配置/能力预检证据](./evidence/G2-A1/2026-08-28-b1-capability-preflight/README.md)与[Entry preparation 证据](./evidence/G2-A1/2026-08-28-entry-preparation/README.md)。
 
+## 7.2 2026-08-30｜G2-A1 E2a、E2b 与 P2-L 当前导航（追加纠正）
+
+- E2a local email OTP 当前为 **REVIEW GO**，范围仅限 local GoTrue/Mailpit、`@rebuy.test` synthetic-only 和既有本地证据；不等于 G2-A1 整体通过。
+- [G2-A1 E2b 本地 Provider 邀请 Gate](./stages/G2-A1-E2b-本地Provider邀请Gate.md) 为 **CLOSED / 待 exact action-time Owner 批准**。它只准备 provider invite primitive，不等于 Rebuy membership invite；不授予或使用 admin key。
+- [P2-L 本地 Schema 与 RLS 纵切 Gate](./stages/P2-L-本地Schema与RLS纵切Gate.md) 为 **待 Owner 决定 / CLOSED**。推荐的 synthetic-only local slice 不预写授权；E2b、E3-E5、hosted、真实数据、推送部署继续冻结。
+
 ## 8. 2026-08-27 G2-A0 Exit closeout 历史快照
 
 在该日期的历史快照中，状态为 `G2-A0 Exit GO；远端 docs-only reconciliation 已获批，尚未执行`。公开外发范围限于原 12 个 Markdown 路径、相关 Git 历史、Owner 姓名、账号安全架构、威胁模型、角色权限和阶段治理信息；远端 preflight 为 `main=7ea1e45ad22ab29105910665baf4bbd7212241c5`、目标 branch/PR 无。140ea 历史 preflight 审计为 `351437` bytes，无 binary/image/secret/phone/address/customer PII；新增内容审计未发现新增邮箱但漏计继承内容，base/public main 及既有 Git author metadata 已含同一 Owner 邮箱，G2-A0 未引入不同邮箱。该段仅保留当时事实，不代表当前状态；当前事实见上方 2026-08-28 纠正。
