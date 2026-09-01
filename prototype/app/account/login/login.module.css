@@ -141,6 +141,10 @@
 }
 
 .authStatus {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 28px;
+  align-items: start;
+  gap: 8px;
   margin-bottom: 16px;
   padding: 10px 12px;
   border: 1px solid color-mix(in srgb, var(--danger) 35%, var(--line));
@@ -151,6 +155,27 @@
   font-size: 12px;
   font-weight: 650;
   line-height: 1.4;
+}
+
+.authStatusText {
+  min-width: 0;
+}
+
+.dismissButton {
+  display: inline-grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--muted);
+}
+
+.dismissButton:hover,
+.dismissButton:focus-visible {
+  border-color: var(--accent);
+  color: var(--text);
 }
 
 .providerStack,
@@ -179,6 +204,7 @@
 .appleButton {
   background: var(--text);
   color: var(--surface);
+  text-decoration: none;
 }
 
 .appleButton:hover {
@@ -189,6 +215,7 @@
   border: 1px solid var(--line-strong);
   background: var(--surface);
   color: var(--text);
+  text-decoration: none;
 }
 
 .googleButton:hover {
@@ -297,6 +324,15 @@
   font-size: 12px;
 }
 
+.authMessage {
+  min-height: 20px;
+  margin: 2px 0 0;
+  color: var(--success);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
 .demoNotice {
   padding: 10px 12px;
   border: 1px solid color-mix(in srgb, var(--info) 35%, var(--line));
@@ -336,6 +372,32 @@
 
 .editButton:hover {
   color: var(--accent-strong);
+}
+
+.otpActions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 2px;
+}
+
+.resendButton {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.resendButton:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--accent-soft);
 }
 
 .completionStatus {
@@ -411,6 +473,10 @@
 
   .loginPanel {
     padding: 20px 16px;
+  }
+
+  .otpActions {
+    grid-template-columns: 1fr;
   }
 }
 

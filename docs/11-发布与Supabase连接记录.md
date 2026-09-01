@@ -20,7 +20,7 @@
 本地骨架包含：
 
 - 根目录 `.gitignore`：排除环境文件、依赖、Next.js 生成物、Vercel 状态和 Supabase 临时状态；仅保留 `.env.example`。
-- `prototype/.env.example`：只记录两个公开环境变量名称，不包含任何值。
+- `prototype/.env.example`：当前只记录两个 server-only 环境变量名称，不包含任何值。
 - `prototype/lib/supabase/client.ts`：浏览器 `createBrowserClient` 工具。
 - `prototype/lib/supabase/server.ts`：带 Next.js cookie 适配的 `createServerClient` 工具。
 - `prototype/app/api/health/supabase/route.ts`：服务端探针，不返回 URL、key、provider 细节或错误堆栈。
@@ -29,12 +29,14 @@
 
 ## 3. 环境变量、密钥与授权边界
 
-唯一允许的环境变量是：
+当前 tracked `prototype/.env.example` 与实现使用的 server-only 环境变量是：
 
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+- `SUPABASE_URL`
+- `SUPABASE_PUBLISHABLE_KEY`
 
-只使用 publishable key。publishable key 可以出现在浏览器，但只是连接/API key，不是授权边界；服务端授权、Data API grants、RLS、Storage policy、membership 和业务状态共同决定访问。不得加入、读取或部署 service role、secret key、数据库密码或其他管理凭据。环境缺失时，client 工具只在被调用时抛出可控配置错误；模块导入和 Next.js build 不应因缺少环境变量崩溃。
+只使用 publishable key。当前 release 将其限制为 server-only configuration；它不是授权边界，服务端授权、Data API grants、RLS、Storage policy、membership 和业务状态共同决定访问。不得加入、读取或部署 service role、secret key、数据库密码或其他管理凭据。环境缺失时，server-side client/config 工具只在被调用时抛出可控配置错误；模块导入和 Next.js build 不应因缺少环境变量崩溃。
+
+早期记录中的 `NEXT_PUBLIC_SUPABASE_URL` 与 `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` 保留为历史 browser-facing skeleton 名称；它们不是当前 tracked `prototype/.env.example` 或当前 release runtime 的事实，不静默抹除历史。
 
 后续保护页面或数据时，服务端鉴权必须使用 `supabase.auth.getClaims()`；不得使用 `getSession()` 的用户对象作为鉴权依据。
 
@@ -121,3 +123,59 @@
 - E1 local bootstrap 可在本 Gate 独立审查并合并 main 后按条件打开，仅限新 Rebuy local config、合成数据、55320–55329 和缓存复用；E2 local OTP/invite、E3 Google、E4 Apple、E5 hosted callback/linking/invite、custom SMTP、hosted Auth writes、DB/Storage/Production/deploy 继续 CLOSED。拉新镜像、非零费用、端口冲突、修改现有容器或无法清理均 STOP 并另开 Gate。
 - hosted 默认 SMTP 仅预授权团队地址、限额动态且无 SLA；早期每小时 2 封只作历史基线。`.invalid` 只用于 no-send/负向/反枚举，成功路径使用专用 synthetic mailbox/domain 或 local catcher；不得用真实个人/客户邮箱。Google/Apple 需各自的 action-time Gate，Apple 继续 disabled/PAID-BLOCKED。
 - 细节与官方链接见[B2 外部入口 Gate 证据](./evidence/G2-A1/2026-08-28-b2-external-entry-gate/README.md)。本批不把设计、资源观察、本地 preflight 或远端 docs/CI 事实写成 B2/Auth/G2-A1 技术通过。
+
+## 12. 2026-08-30｜Git/Vercel/Supabase 只读 refresh（当前纠正）
+
+- GitHub 只读核对：`git ls-remote origin refs/heads/main` 仍精确为 `de6a3203e20a1a4cea1106baef7bee1b4173d38f`；候选基线 `ea458ff6b97a9f16617fc2a8eec40013792672e5` 为 `origin/main +11`，worktree clean，远端 `codex/rebuy-v1-local-complete` 不存在。本候选 diff 为 `38` files、约 `+3709/-142`；`git diff --check origin/main...HEAD` PASS。tracked env 仅 env example/next-env/历史文档类别；private key、`sb_secret`、`service_role` 赋值及 JWT 字面量扫描 `NO_MATCH`。
+- `d60c058` 的未变源码证据仍为 `test:auth 37/37`、typecheck、lint、build 通过；`ea458ff` 为 docs-only。本批未重跑这些命令。结论是 GitHub source push candidate，不是 deploy/production candidate；本批仍未 push。
+- Vercel 只读事实：项目 `rebuy-share` 存在且为 Next.js，`link=null`（无 Git integration），project setting 为 Node `24.x`，仓库 engines 为 Node `22.x`；历史部署的 resolved Node 22 证据保留，但属于设置漂移。inventory 仍精确 `3` 个 READY deployments（2 Preview、1 Production），无新增。latest good Preview 为 `dpl_D2oNMJhvQsvbbyszgApm24aGLYnZ`，source=CLI、Target=Preview/null target、Next `16.3.2`，route inventory 含 `/api/health/app` 与 `/api/health/supabase`。
+- Production `dpl_DZSmbtizfp3z7x2X4itwdwyLGxrH` 仍 READY/production 且有 `2` 个 aliases；公开根页 HTTP `200`，但 `/api/health/app` 与 `/api/health/supabase` 均 `404`，`x-matched-path=/404`。根因是旧 Production artifact 不含健康路由，不是已证明的函数或 Supabase outage。Preview 受 Vercel Authentication 保护，普通/临时只读访问均停在 `302` SSO cookie handshake；本批无新的 Preview runtime health 结论。未保存 share URL、token、cookie、alias URL 或 creator email；不创建 deployment，不改 Protection、aliases、settings、env 或 Git link。
+- Supabase 只读事实：当前已认证 connector 不列出 Rebuy 目标，仅列其他项目；立即停止，未访问其他项目详情、未写任何资源。Rebuy hosted target 当前状态不可复验，历史 `ACTIVE_HEALTHY` 仅作旧快照。worktree 没有 `prototype/.env.local`。
+- 当前 candidate `.env.example` 使用 server-only `SUPABASE_URL`、`SUPABASE_PUBLISHABLE_KEY`；`config.ts` 只允许 local `http://127.0.0.1:55321/`。因此即便 Vercel 设置 hosted URL，当前候选也会 config fail/503；这是 local-only Gate 设计，不在本批绕过。该 hosted/Preview 结论是源码与配置推断/访问阻塞，不是本次 Supabase endpoint 响应。
+- Remaining：独立 hosted-ready 配置设计、Git integration/link、Preview runtime 验证、环境变量 name/target 只读核对、Node 设置对齐、正式 push/PR/CI。Blocked：hosted Supabase target 不在当前 connector；Preview runtime 受保护且当前工具无法完成 cookie handshake；hosted/Preview/Production Gate 未授权。Next：由用户决定是否仅 push 候选分支；另行决定是否打开“Git link + isolated Preview + hosted Supabase read-only health” Gate，不预写批准。
+
+## 13. 2026-09-01｜UI-only Preview release preflight（历史 preflight；execution result 见第14节）
+
+- 绑定：code candidate=`0e5084b62c76275a781ec08edea287a06d442209`；base remote main=`de6a3203e20a1a4cea1106baef7bee1b4173d38f`；本地分支为 `codex/rebuy-v1-ui-preview-release`，从 exact candidate 创建。Owner 本次授权原话为 `将已完成可推送并部署的进行推送部署`；本条只记录授权边界，不预写 push、PR、Actions、merge 或 deployment 结果。
+- 本地 preflight 在 clean release worktree 完成，使用 Node `22.12.0`、Corepack 驱动 pnpm `10.33.3`；`install --frozen-lockfile`、`typecheck`、`test:auth` `37/37`、`lint`、`build`、`git diff --check` 均 PASS。build 产生的 tracked `prototype/next-env.d.ts` generated import 漂移已恢复，最终 worktree clean。
+- sensitive scan=`SCAN GO`：私钥/认证 header filename-only scan 无文件命中；basic-auth URL 仅为 `prototype/tests/auth/contract.test.ts:1215` 测试假阳性；provider token/JWT 复用既有 0 结果，未重复扫描。未记录匹配值。
+- 发布边界：GitHub 仅非强制 release branch/PR；Vercel 仅受保护、无 `SUPABASE_*` 的 UI-only Preview。Production、alias、promote、hosted Supabase/Auth、Google、Apple、P2-L migration 继续 `NO-GO / CLOSED`。本批不 push、不开 PR、不 deploy。
+- 证据见 [2026-09-01 UI-only Preview release preflight](./evidence/releases/2026-09-01-ui-preview-release/README.md)。本批不修改 `prototype/`、`supabase/` 或其他文件，不运行 build/tests，不记录邮箱、token、team/project/deployment ID 或 secret。
+
+## 14. 2026-09-01｜UI-only Preview execution result（历史执行记录；当前补充收口见第15节）
+
+- code candidate=`0e5084b62c76275a781ec08edea287a06d442209`；release/docs head=`bf10563663b91b3c0270aaf7acc68d6f3d63c526`；remote main=`de6a3203e20a1a4cea1106baef7bee1b4173d38f`。`codex/rebuy-v1-ui-preview-release` 已非强制推送成功；PR [#17](https://github.com/kyox215/REBUY_SHARE/pull/17) 已创建；Actions run `33461861676` success；未 merge、未 auto-merge。
+- 唯一预期 Preview artifact=`dpl_6RCPeszdr4BBtp52oHM6i8iBf9XK`，project=`rebuy-share`，source=`CLI`，`READY`、`target=null`/Preview、`aliases=[]`。Next `16.3.2`；build log 两次明确记录 `engines.node=22.x` 覆盖 project setting `24.x`，实际 Node `22.x`；pnpm `10.33.3`，build success。官方参考：[Vercel Node.js versions](https://vercel.com/docs/functions/runtimes/node-js/node-js-versions)。Preview 无 `SUPABASE_*`；Production、alias、promote 未执行，既有 Production 不变。
+- build route inventory 已记录 `/`、`/account`、`/account-mindmap`、`/account/login`、`/account/provider/[provider]`、`/api/auth/email-otp`、`/api/auth/session`、`/api/health/app`、`/api/health/supabase`、`/auth/callback`。Preview 受 Vercel Authentication 保护，connector health 得到 `302` SSO；GET/HEAD runtime matrix 未完成，未执行 POST、OTP、callback query、form 或 cookie 检查，不把 inventory 写成 runtime pass。
+- 空项目清理时间序列：从未链接 source worktree 运行 `vercel curl` 曾误创建 project=`rebuy-release-0e5084b`；删除前 `latestDeployment=null`、`domains=[]`、deployment count=`0`。Owner 在知情后明确回复 `批准`；删除前 `project inspect` 精确命中该 name、ID=`prj_JvyS0Zb8woXqdBqi2pSejTRsuoVj` 且 team 匹配。首次 non-interactive rm 停在确认提示且未确认；随后同一精确命令以交互 `y` 确认，CLI 返回 `Success! Project rebuy-release-0e5084b removed`；删除后 inspect 返回 `There is no project for "rebuy-release-0e5084b"`。正式 `rebuy-share` 仍精确存在，ID=`prj_g1W3AWm3hkbZib9zDgm6YQfGEyHL`、Root=`prototype`；目标 Preview `dpl_6RCPeszdr4BBtp52oHM6i8iBf9XK` 仍为 `Ready`、target=`preview`、URL 未变；本地 `.vercel`/`.gitignore` 副作用已清理。Supabase/hosted Auth/env 无写入；Google/Apple 仍 page-only placeholder；P2-L migration、merge、Production 继续 `NO-GO`。
+- 本批不重跑 install/typecheck/`test:auth` `37/37`/lint/build，复用相同源码、lockfile、配置和工具链证据；未做 hash，因普通源码/文档与非确定性部署证据不需要 hash。当前结论：GitHub source branch `GO`；受保护 UI-only Preview artifact `READY`，runtime matrix 未完成；PR merge 与 Production `NO-GO`。
+
+## 15. 2026-09-01｜UI-only Preview runtime matrix 与独立审查收口（当前）
+
+- release worktree exact HEAD=`fba8ff30e78b5bb66e87a1e3e4e939bdf364cd60`；9 条 route GET 均针对同一受保护 Preview deployment。
+- 新 exact-head archive 的 link 断言通过：project=`rebuy-share`，`projectId=prj_g1W3AWm3hkbZib9zDgm6YQfGEyHL`，`orgId=team_AOJDnrjov0QDLqpvMyhwA1yc`。临时 archive、workspace 与 link state 已清理，source clean。
+
+| Route | HTTP | Content-Type | Body evidence | Location | Cache-Control |
+|---|---:|---|---|---|---|
+| `/` | 200 | `text/html; charset=utf-8` | non-empty, 30622 bytes | none | not recorded |
+| `/account` | 200 | `text/html; charset=utf-8` | non-empty, 16878 bytes | none | not recorded |
+| `/account-mindmap` | 200 | `text/html; charset=utf-8` | non-empty, 46516 bytes | none | not recorded |
+| `/account/login` | 200 | `text/html; charset=utf-8` | non-empty, 10545 bytes | none | not recorded |
+| `/account/provider/google` | 200 | `text/html; charset=utf-8` | non-empty, 15170 bytes | none | not recorded |
+| `/account/provider/apple` | 200 | `text/html; charset=utf-8` | non-empty, 15162 bytes | none | not recorded |
+| `/api/health/app` | 200 | `application/json` | `{"status":"healthy"}` | none | not recorded |
+| `/api/health/supabase` | 503 | `application/json` | `{"configured":false,"reachable":false,"status":503}` | none | `no-store` |
+| `/api/auth/session` | 500 | `application/json` | `{"status":"error","code":"session_error"}` | none | `no-store` |
+
+- 9 条均为只读 GET；未执行 POST、callback query、form、cookie、share、deploy、alias、env 或 Production 操作。session 500 是 production blocker evidence，不判为通过。
+- 同一 Preview 的 `vercel inspect` 确认 deployment ID=`dpl_6RCPeszdr4BBtp52oHM6i8iBf9XK`、status=`READY`、target=`preview`。
+- PR exact head=`fba8ff30e78b5bb66e87a1e3e4e939bdf364cd60` 为 `MERGEABLE`；required check `prototype-quality` run=`33484635052` 为 `SUCCESS`。source merge to main 为 static `GO`，受保护 UI-only Preview 为 `GO`，直接 Production 仍 `NO-GO`。
+
+### Independent Sol review
+
+- 专用 Sol role 不可用，使用 default Sol / max fallback；结论 P0=0、P1=3、P2=2。
+- P1：生产页面可提交但 local-only OTP/session 必败；hosted callback 路径可能指向 localhost；缺少明确 hosted ui-only mode，且 `secure=false` local cookie/app health 语义不清。
+- 最小修复：显式 server-only local-auth/ui-only mode；ui-only 登录禁用 OTP；OTP/session/callback 返回 `no-store` 503 `auth_unavailable` 且无 localhost Location/Set-Cookie；`secure=false` 仅限 local reachable；health 报告 `mode=ui-only`；补充 production-like Host contract tests 与 `test:auth`/typecheck/lint/build/runtime matrix。
+- source merge 可以继续但不能自动 Production；Production/alias/promote 继续 `NO-GO`。
+
+- 本批为 docs-only release evidence closeout；不重跑测试，复用 GitHub exact-head CI；不做 hash，未修改 `prototype/` 或 `supabase/`。

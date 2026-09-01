@@ -1,27 +1,45 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-import { getSupabaseConfig } from "./config";
+import { createEphemeralExchangeCookieMethods } from "../auth/callback-session";
+import { REBUY_AUTH_COOKIE_OPTIONS } from "./config";
+import { createServerCookieMethods } from "./cookies";
+import { getSupabaseServerConfig } from "./server-config";
 
 export async function createClient() {
-  const { url, publishableKey } = getSupabaseConfig();
+  return createConfiguredServerClient("readonly");
+}
+
+export async function createAuthRouteClient() {
+  return createConfiguredServerClient("strict");
+}
+
+export async function createAuthCallbackClients(flowId?: string) {
+  const { url, publishableKey } = getSupabaseServerConfig();
+  const cookieStore = await cookies();
+  const options = {
+    cookieOptions: REBUY_AUTH_COOKIE_OPTIONS,
+  } as const;
+
+  return {
+    exchange: createServerClient(url, publishableKey, {
+      ...options,
+      cookies: createEphemeralExchangeCookieMethods(cookieStore, flowId),
+    }),
+    persistence: createServerClient(url, publishableKey, {
+      ...options,
+      cookies: createServerCookieMethods(cookieStore, "strict"),
+    }),
+  };
+}
+
+async function createConfiguredServerClient(mode: "readonly" | "strict") {
+  const { url, publishableKey } = getSupabaseServerConfig();
   const cookieStore = await cookies();
 
   return createServerClient(url, publishableKey, {
-    cookies: {
-      getAll() {
-        return cookieStore.getAll();
-      },
-      setAll(cookiesToSet) {
-        try {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            cookieStore.set(name, value, options);
-          });
-        } catch {
-          // Server Components cannot write cookies; the future Proxy owns refresh writes.
-        }
-      },
-    },
+    cookieOptions: REBUY_AUTH_COOKIE_OPTIONS,
+    cookies: createServerCookieMethods(cookieStore, mode),
   });
 }
 

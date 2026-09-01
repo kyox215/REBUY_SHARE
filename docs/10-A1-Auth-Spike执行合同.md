@@ -459,3 +459,55 @@ resource/cost/secret Gate 通过前，仅可继续维护无资源后端原型、
 - PR head=`fc6153b60872328b55b525730f3c653579ac2ea2`，merge=`a5e7fd1ae2ca7468610c0aab936121a27d124c02`，parents=`b3240577026a0f390ae634f2119426842827805e` + `fc6153b60872328b55b525730f3c653579ac2ea2`；来源分支保留。PR head CI run=`33256006999`/job=`99109715930` success；main exact merge CI run=`33256185497`/job=`99110205068` success；精确 merge 的 GitHub deployments=`0`。
 - 刚刚只读核对的 Vercel 事实为 3 个既有 READY deployments，其中 2 个 Preview、1 个 Production；本批没有新增 deployment。不记录 creator email 或其他 PII。
 - 独立安全审查 GO，P0=0、P1=0，唯一 P2 已修；E2–E5、hosted Supabase/Auth/DB/Storage/OAuth/SMTP、真实账号/邮件、业务 schema、新 Vercel deployment、promote/alias/rollback、Production 操作继续 CLOSED。下一步仅可进入 E2 action-time Gate 评估，不代表 E2 已打开或可执行。
+
+## 31. 2026-08-30 E2a local email OTP 合同补充
+
+本条是对历史原型边界的追加纠正，不静默改写既有 A1 计划或把本地证据扩大为整体 A1 通过：
+
+- E2a 仅验证 local email OTP：邮箱输入、OTP request/verify/resend、Auth/GoTrue、Mailpit 捕获、同源服务端协调及 session cookie。成功路径只能使用专用 `@rebuy.test` 合成域名；`.invalid` 只用于 no-send/负向/反枚举。
+- 信任边界在服务端：Next.js Node runtime Route Handler 复用现有 Supabase server client，执行 `signInWithOtp`/`verifyOtp` 并写 cookie；响应 `no-store`，客户端只接收有限状态。Origin、Content-Type、body size、JSON/字段格式是拒绝门禁；provider 原始错误不进入 UI、响应或证据。
+- local config 只启用 Auth email signup/confirmation 所需最小项，保持 Google、Apple、manual linking、anonymous、phone、MFA、业务 DB/schema/RLS、Storage、Realtime 和 custom SMTP CLOSED。`[auth.email.smtp]` 必须省略，成功邮件使用 CLI 默认本地 Inbucket/Mailpit 捕获；magic-link 模板只渲染 `{{ .Token }}`。
+- E2a 与 E2b invite 明确拆分：E2b 当前 NO-GO；Supabase/provider invite 不等于 Rebuy membership invite，admin invite/inviteUserByEmail 需要的 secret/service_role 永不在本批使用。用户当前只授权本地计划执行，不授权特权密钥、外部动作、真实邮件/账号/PII。
+- E2a 通过标准为本地正向闭环、有限负向和清理证据；它不代表生产、hosted Supabase/Auth/SMTP、OAuth 或 G2-A1 整体验收。具体执行证据见[E2a local email OTP evidence](./evidence/G2-A1/2026-08-30-e2a-local-email-otp/README.md)。
+
+## 32. 2026-08-30｜E2a 精确提交安全审查纠正（历史状态；当前见第 34 节）
+
+- 独立安全审查针对精确 head=`98a3f0d4739eb835fa068b4736347285b7d23193` 给出 **NO-GO**；其 findings 覆盖 local Auth URL/key allowlist、Rebuy 专属 cookie、固定 origin/Host、streaming body 上限、strict route-cookie、可重复测试与当前证据状态。
+- 截至该精确 head，E2a 代码与证据是待复审修复候选；历史 E2a 条件 GO 不得外推为本批修复已 GO，也不等于 G2-A1 整体通过。当前状态见第 34 节。E2b invite 继续 NO-GO，provider invite 不等于 Rebuy membership invite。
+- 本阶段只接受本地 Supabase/GoTrue、Mailpit 和 `@rebuy.test` 合成数据；`.invalid` 只用于 no-send/负向/反枚举。用户当前仅授权本地计划执行，不授权 service_role/secret/admin key、DB password、custom SMTP、hosted/Production、真实邮件/账号/PII 或外部写入。
+
+## 33. 2026-08-30｜E2a 精确提交复审记录与环境边界（历史记录；当前见第 34 节）
+
+- 记录上一精确提交 `2083656f6a1eb888f0db06339bc2b30151f31c43` 的独立结果为 **REVIEW GO，P0=0、P1=0、P2=5**；该事实不覆盖精确 head=`98a3f0d4739eb835fa068b4736347285b7d23193` 的历史 **NO-GO**。截至该提交，follow-up 仍是待复审候选；当前状态见第 34 节。
+- 当前实现的 Supabase env 读取仅允许 server-only `SUPABASE_URL` 与 `SUPABASE_PUBLISHABLE_KEY`；纯 validator 不读取环境，browser client 只接受服务端显式传入的已验证 public config。旧 `NEXT_PUBLIC_*` 计划文字保留为历史快照，不作为当前 runtime setup。
+- runtime harness 的成功路径仍仅使用 `@rebuy.test`，`.invalid` 只用于 no-send/负向/反枚举；Next `127.0.0.1:3000` 预览按用户要求故意保留，不属于 cleanup 遗漏。E2b invite、provider/admin invite、secret/service_role、custom SMTP、hosted/Production 与真实 PII 继续 CLOSED。
+- 当前修复候选已在 Node `22.12.0`/pnpm `10.33.3` 下完成 `test:auth` `29/29`、typecheck、lint、build、sentinel 构建产物扫描、真实 local OTP/Mailpit/runtime 与无敏感页面 smoke；验证结果不替代新的精确提交复审。
+
+## 34. 2026-08-30｜E2a follow-up 精确提交复审收口（当前）
+
+- 独立 Sol 对 exact code head=`30131c0cfad69a6df7c0e0c61268029890c7dce1` 给出 E2a **REVIEW GO**，P0=0、P1=0、P2 open=0。该结果是时间序列中的当前记录，不覆盖 `98a3f0d4739eb835fa068b4736347285b7d23193` 历史 **NO-GO** 或 `2083656f6a1eb888f0db06339bc2b30151f31c43` 的 **REVIEW GO/P2=5**。
+- E2a local email OTP slice 标为**完成/通过**，范围仅限 local GoTrue/Mailpit、`@rebuy.test` synthetic-only、OTP request/verify/resend、session 和有限错误；不等于 G2-A1 整体、E2b/E3-E5、P2、hosted 或 Production 打开。
+- 残余范围为未主动触发真实 provider HTTP 429、refresh/revoke 未证明、active Auth OTP UI 未保存截图；均不阻塞 E2a local slice，但不得外推为更广能力。
+- push/deploy/hosted/admin key/真实 PII/custom SMTP 继续冻结；Supabase local stack 已清理；`http://127.0.0.1:3000` Next preview 按用户要求故意保留，不是 cleanup 遗漏。
+
+## 35. 2026-08-30｜E3 callback code-only 安全准备候选（待独立复审）
+
+- 本批仅处理 E3 的 local code-only callback hardening，状态为**安全准备候选 / 待独立复审**；E3 external Google OAuth 继续 **NO-GO / CLOSED**，不预写 provider success。Google/Apple UI 继续 disabled，未发生 hosted/provider/API/管理面写入。
+- callback trust 固定 app origin=`http://127.0.0.1:3000`、raw Host=`127.0.0.1:3000`、pathname=`/auth/callback`；URL、Host、path、userinfo/hash、forwarded header 任一越界都在 exchange 前返回固定 login failure。success、next、login redirect 不使用 request URL 作为 trust root，均以固定 origin 解析。
+- callback session 采用两阶段协调：ephemeral exchange client 只读固定 Rebuy PKCE verifier cookie，`setAll` 只应用精确 verifier deletion，拒绝/忽略 session base/chunk 写入；独立 strict persistence client 的 `setSession` 只接收 access/refresh 二元组。provider token 不返回、不记录、不进 cookie 或其他持久化边界，失败均有限映射。
+- 定向合同测试覆盖 spoofed URL/Host/path/forwarded、固定 origin success、unsafe next login、verifier/session chunk policy、provider-token sentinel 丢弃、missing token、fake replay 和 persistence error；fake replay 不作真实 provider 证据。详细脱敏记录见[E3 code-only evidence](./evidence/G2-A1/2026-08-30-e3-code-preparation/README.md)。
+- state/nonce 完整合同、signup containment、真实 Google/Apple/provider callback、hosted Auth、E2b invite、业务 DB/RLS、custom SMTP、真实数据和 Production 仍按独立 Gate 冻结；本批用户授权仅覆盖本地代码、测试和文档。
+
+## 36. 2026-08-30｜E3 callback code-only follow-up（待独立复审）
+
+- 本批追加修复 E3 callback code-only candidate 的 Next/auth-js 兼容性与 session fail-closed 边界；状态仍为**安全准备候选 / 待独立复审**，E3 external Google OAuth 继续 **NO-GO / CLOSED**，不预写 Google、Apple 或 provider 成功。
+- 锁定 Next `16.3.2` 直连 loopback 会在缺失时补齐 `x-forwarded-host`、`x-forwarded-port`、`x-forwarded-proto` 与 socket `x-forwarded-for`。callback 接受全部缺失或精确固定的内部 quartet：host=`127.0.0.1:3000`、port=`3000`、proto=`http`、for=`127.0.0.1`/`::1`/`::ffff:127.0.0.1`；`Forwarded`、`X-Original-*`、`X-Real-IP`、缺项、多值、不一致、非固定值及 Host/path/query trust spoof 均在 exchange 前 fail closed。
+- 按锁定 `@supabase/auth-js 2.112.4` 的 `[A-Za-z0-9_-]{8,64}` flow-id 合同解析 `sb_flow_id`；ephemeral exchange client 仅允许本次 flow slot、flow index、legacy verifier 键及精确 deletion，strict persistence client 仅接收 access/refresh 二元组并要求完整 `setSession` 结果。provider token 不进入 persistence、cookie、日志、响应或 evidence。
+- 当前 `test:auth` 为 `37/37`，typecheck、lint、build 均通过；真实 `createServerClient`/`setSession` wiring 的 fake-fetch 合同验证成功只产生固定 Rebuy session cookie base/chunks，过期 refresh failure 不写 cookie。实际 Next loopback callback smoke 对 provider error 返回固定 `303`/`provider_error`，Host/forwarded spoof 返回固定 `303`/`exchange_error`，均未触发 provider/Supabase exchange。
+- 本批仍不证明 live Google provider、state/nonce、跨请求 replay、signup containment 或浏览器 cookie 生命周期；fake replay 仅为本地契约。E2a local GoTrue/Mailpit GO、E2b invite、E4/E5、P2/DB/RLS、hosted/Production、secret/admin/service_role、真实 PII、push/deploy 与外部写入继续冻结。
+
+## 37. 2026-08-30｜E3 callback code-only independent review closeout
+
+- 独立 `sol_specialist` 针对 exact code head=`d60c05856db4ac1ac2db19a2d831171a2bb91177` 给出 **REVIEW GO**，P0=0、P1=0、P2=4；该 head 可接受为 **E3 code-only prerequisite accepted at d60c058**。E3 external Google OAuth 仍 **NO-GO / CLOSED**，不预写 provider-ready 或 live 成功。
+- P2=4 作为 external Gate 前收口登记：auth-js multi-flow 消费后的 flow index/legacy verifier stale 或 SSR buffer 风险；明文 base64url sentinel 检查不足且成功 refresh 未覆盖；`test:auth` 未导入真实 callback Route Handler/server.ts、Next smoke 缺 listener mode/启动 ref/脱敏原始输出/exact-head 绑定；`code`、`error`、`error_description`、`next` 重复 singleton query 未 fail closed。P3 另保留 forwarded 全缺失接受依赖固定 loopback bind 和 strict cookie writer 理论 partial-cookie 风险。
+- 本轮仅 docs-only closeout，未重跑 `test:auth`、typecheck、lint、build，未运行服务/Supabase/provider，未执行外部动作，复用 `d60c058` 未变源码证据且不做 hash。provider-ready/live provider、state/nonce、跨请求 replay、signup containment、真实 callback/session 和浏览器完整 cookie 生命周期仍未验证；E2a GO、E2b/E4/E5/P2/DB/RLS/hosted/Production 及特权凭据继续冻结。

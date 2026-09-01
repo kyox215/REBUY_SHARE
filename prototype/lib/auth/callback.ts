@@ -41,6 +41,7 @@ export type AuthCallbackDecision =
 
 export type AuthCodeExchange = (
   code: string,
+  flowId?: string,
 ) => Promise<{ error?: unknown } | null | undefined>;
 
 export type AuthCallbackInput = {
@@ -48,6 +49,7 @@ export type AuthCallbackInput = {
   error?: unknown;
   errorDescription?: unknown;
   next?: unknown;
+  flowId?: string;
   exchange: AuthCodeExchange;
 };
 
@@ -75,6 +77,7 @@ export async function decideAuthCallback({
   error,
   errorDescription,
   next,
+  flowId,
   exchange,
 }: AuthCallbackInput): Promise<AuthCallbackDecision> {
   const safeNext = normalizeSafeNext(next);
@@ -97,7 +100,7 @@ export async function decideAuthCallback({
   }
 
   try {
-    const result = await exchange(code);
+    const result = await exchange(code, flowId);
 
     if (!result || result.error) {
       return errorDecision("exchange_failed", safeNext);

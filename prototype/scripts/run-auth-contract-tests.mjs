@@ -26,6 +26,12 @@ const tscArgs = [
   "lib/auth/redirect.ts",
   "lib/auth/callback.ts",
   "lib/auth/callback-route.ts",
+  "lib/auth/email-otp.ts",
+  "lib/auth/email-otp-route.ts",
+  "lib/auth/session.ts",
+  "lib/supabase/config.ts",
+  "lib/supabase/cookies.ts",
+  "lib/supabase/server-config.ts",
   "tests/auth/contract.test.ts",
 ];
 
