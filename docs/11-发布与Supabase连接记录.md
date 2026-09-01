@@ -188,3 +188,11 @@
 - Node=`22.12.0`、pnpm=`10.33.3`；`test:auth`=`43/43`、typecheck、lint、build、`git diff --check` 均 PASS。desktop=`1440x1000`、mobile=`390x844` login smoke 均非空、无 overlay、无 OTP form/request、provider 内链；server/browser/临时截图已清理。
 - 首轮 Sol review 为 P0=0/P1=2/P2=1，本批完成定向修复；follow-up exact review 为 P0/P1/P2=`0/0/0`。专用 roles 不可用，Luna/Sol 均使用 default fallback max。
 - candidate-level Source、受保护 Preview candidate、Production candidate 均 `GO`；尚未 commit、push、创建 Preview 或执行 Production。无 hosted Supabase/Google/Apple/env/secret/DB/Production 写入；普通源码不做 hash。
+
+## 17. 2026-09-01｜Protected Preview runtime execution closeout（当前）
+
+- exact Preview deployment=`dpl_HHPp2g6hGPDgD6HnYn2YcXtfDkYt`，project=`rebuy-share`，`READY`/`preview`/`aliases=[]`；整体 deploy_count=`1`，本次 continuation 不创建 deployment。Preview URL 不写入仓库；Preview env names 为空，无 `SUPABASE_URL`/`SUPABASE_PUBLISHABLE_KEY`。
+- Vercel build 有限日志：CLI=`59.3.0`、pnpm=`10.33.3`、Next=`16.3.2`、build success；route inventory 已包含首页、账号页、provider page-only 页、三 auth route、两 health route 与 callback。当前 log 未单独打印 Node 版本；源码 engines=`22.x` 与前一 Preview resolved Node=`22.x` 仅保留为背景证据。
+- runtime total=`9`：root 200；login 200 且有界面预览/登录未开放文案、无 form/email/OTP；Google/Apple 200 且无 Location；app health 200 healthy + `mode=ui-only`；Supabase health 503 configured=false；session 503；callback 无 query 503；空体 email OTP POST 503。三条 auth 路径均 `no-store`、无 Set-Cookie/Location/localhost，POST 未带 email/body 且 no-send。
+- 首包第二 route 的解析命令在请求前失败并停止，未重试；continuation 未重复 root，完成余 8 条。最终 inspect 仍 READY/preview/aliases=[]；临时 archive、`.vercel` 与响应文件已清理，source clean。
+- 结论为 exact Protected Preview runtime `GO`；Production execution 仍未发生。下一步为 PR exact CI 后 merge main，再单独进行 Production Gate。未执行 Production/alias/promote/share/env/provider/DB 写入。
