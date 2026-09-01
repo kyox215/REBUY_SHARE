@@ -131,3 +131,11 @@
 - Supabase 只读事实：当前已认证 connector 不列出 Rebuy 目标，仅列其他项目；立即停止，未访问其他项目详情、未写任何资源。Rebuy hosted target 当前状态不可复验，历史 `ACTIVE_HEALTHY` 仅作旧快照。worktree 没有 `prototype/.env.local`。
 - 当前 candidate `.env.example` 使用 server-only `SUPABASE_URL`、`SUPABASE_PUBLISHABLE_KEY`；`config.ts` 只允许 local `http://127.0.0.1:55321/`。因此即便 Vercel 设置 hosted URL，当前候选也会 config fail/503；这是 local-only Gate 设计，不在本批绕过。该 hosted/Preview 结论是源码与配置推断/访问阻塞，不是本次 Supabase endpoint 响应。
 - Remaining：独立 hosted-ready 配置设计、Git integration/link、Preview runtime 验证、环境变量 name/target 只读核对、Node 设置对齐、正式 push/PR/CI。Blocked：hosted Supabase target 不在当前 connector；Preview runtime 受保护且当前工具无法完成 cookie handshake；hosted/Preview/Production Gate 未授权。Next：由用户决定是否仅 push 候选分支；另行决定是否打开“Git link + isolated Preview + hosted Supabase read-only health” Gate，不预写批准。
+
+## 13. 2026-09-01｜UI-only Preview release preflight（当前）
+
+- 绑定：code candidate=`0e5084b62c76275a781ec08edea287a06d442209`；base remote main=`de6a3203e20a1a4cea1106baef7bee1b4173d38f`；本地分支为 `codex/rebuy-v1-ui-preview-release`，从 exact candidate 创建。Owner 本次授权原话为 `将已完成可推送并部署的进行推送部署`；本条只记录授权边界，不预写 push、PR、Actions、merge 或 deployment 结果。
+- 本地 preflight 在 clean release worktree 完成，使用 Node `22.12.0`、Corepack 驱动 pnpm `10.33.3`；`install --frozen-lockfile`、`typecheck`、`test:auth` `37/37`、`lint`、`build`、`git diff --check` 均 PASS。build 产生的 tracked `prototype/next-env.d.ts` generated import 漂移已恢复，最终 worktree clean。
+- sensitive scan=`SCAN GO`：私钥/认证 header filename-only scan 无文件命中；basic-auth URL 仅为 `prototype/tests/auth/contract.test.ts:1215` 测试假阳性；provider token/JWT 复用既有 0 结果，未重复扫描。未记录匹配值。
+- 发布边界：GitHub 仅非强制 release branch/PR；Vercel 仅受保护、无 `SUPABASE_*` 的 UI-only Preview。Production、alias、promote、hosted Supabase/Auth、Google、Apple、P2-L migration 继续 `NO-GO / CLOSED`。本批不 push、不开 PR、不 deploy。
+- 证据见 [2026-09-01 UI-only Preview release preflight](./evidence/releases/2026-09-01-ui-preview-release/README.md)。本批不修改 `prototype/`、`supabase/` 或其他文件，不运行 build/tests，不记录邮箱、token、team/project/deployment ID 或 secret。
