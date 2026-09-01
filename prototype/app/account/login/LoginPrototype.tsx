@@ -18,6 +18,7 @@ type BusyAction = EmailOtpAction | null;
 
 type LoginPrototypeProps = {
   authStatus?: string;
+  mode: "ui-only" | "local-auth";
 };
 
 type EmailOtpApiResponse =
@@ -117,7 +118,7 @@ function maskEmail(email: string) {
   return `${localPart?.slice(0, 1) ?? "*"}***@${domain ?? "rebuy.test"}`;
 }
 
-export default function LoginPrototype({ authStatus }: LoginPrototypeProps) {
+export default function LoginPrototype({ authStatus, mode }: LoginPrototypeProps) {
   const [theme, setTheme] = useState<Theme>("light");
   const [email, setEmail] = useState("");
   const [step, setStep] = useState<LoginStep>("email");
@@ -144,7 +145,7 @@ export default function LoginPrototype({ authStatus }: LoginPrototypeProps) {
 
   const handleEmailSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (busyAction) {
+    if (mode === "ui-only" || busyAction) {
       return;
     }
 
@@ -187,7 +188,7 @@ export default function LoginPrototype({ authStatus }: LoginPrototypeProps) {
 
   const handleOtpSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (busyAction) {
+    if (mode === "ui-only" || busyAction) {
       return;
     }
 
@@ -241,7 +242,7 @@ export default function LoginPrototype({ authStatus }: LoginPrototypeProps) {
   };
 
   const handleResend = async () => {
-    if (busyAction || !email || resendCooldownMs > 0) {
+    if (mode === "ui-only" || busyAction || !email || resendCooldownMs > 0) {
       return;
     }
 
@@ -268,7 +269,10 @@ export default function LoginPrototype({ authStatus }: LoginPrototypeProps) {
   };
 
   return (
-    <main className={`${theme === "light" ? "theme-light" : "theme-dark"} ${styles.page}`}>
+    <main
+      className={`${theme === "light" ? "theme-light" : "theme-dark"} ${styles.page}`}
+      data-auth-mode={mode}
+    >
       <div className={styles.frame}>
         <header className={styles.topbar}>
           <Link
@@ -297,7 +301,9 @@ export default function LoginPrototype({ authStatus }: LoginPrototypeProps) {
           <div className={styles.intro}>
             <p className={styles.eyebrow}>账号入口</p>
             <h1 id="login-title">登录 Rebuy</h1>
-            <p className={styles.status}>本地测试认证 · 仅限合成邮箱</p>
+            <p className={styles.status}>
+              {mode === "ui-only" ? "当前为界面预览 · 登录功能暂未开放" : "本地测试认证 · 仅限合成邮箱"}
+            </p>
           </div>
 
           <div className={styles.loginPanel}>
@@ -316,17 +322,22 @@ export default function LoginPrototype({ authStatus }: LoginPrototypeProps) {
               </div>
             ) : null}
 
-            {step === "email" ? (
-              <>
-                <div className={styles.providerStack} role="group" aria-label="第三方登录入口">
-                  <Link className={styles.appleButton} href="/account/provider/apple" title="查看 Apple 登录状态">
-                    使用 Apple 登录（待配置）
-                  </Link>
-                  <Link className={styles.googleButton} href="/account/provider/google" title="查看 Google 登录状态">
-                    使用 Google 登录（待配置）
-                  </Link>
-                </div>
+            <div className={styles.providerStack} role="group" aria-label="第三方登录入口">
+              <Link className={styles.appleButton} href="/account/provider/apple" title="查看 Apple 登录状态">
+                使用 Apple 登录（待配置）
+              </Link>
+              <Link className={styles.googleButton} href="/account/provider/google" title="查看 Google 登录状态">
+                使用 Google 登录（待配置）
+              </Link>
+            </div>
 
+            {mode === "ui-only" ? (
+              <div className={styles.previewNotice} role="status">
+                <h2>账号登录暂未开放</h2>
+                <p>当前为界面预览，邮箱验证码登录暂未开放。</p>
+              </div>
+            ) : step === "email" ? (
+              <>
                 <div className={styles.divider} aria-hidden="true">
                   <span />
                   <small>或使用邮箱</small>

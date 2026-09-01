@@ -1,13 +1,13 @@
-import {
-  handleEmailOtpRequest,
-} from "@/lib/auth/email-otp-route";
+import { createEmailOtpPostHandler } from "@/lib/auth/route-composition";
+import { getAuthRuntimeMode } from "@/lib/auth/runtime-mode";
 import { createAuthRouteClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function POST(request: Request) {
-  return handleEmailOtpRequest(request, async () => {
+const postEmailOtp = createEmailOtpPostHandler(
+  (request) => getAuthRuntimeMode(request),
+  async () => {
     const supabase = await createAuthRouteClient();
 
     return {
@@ -16,5 +16,9 @@ export async function POST(request: Request) {
       verifyOtp: ({ email, token, type }: { email: string; token: string; type: "email" }) =>
         supabase.auth.verifyOtp({ email, token, type }),
     };
-  });
+  },
+);
+
+export function POST(request: Request) {
+  return postEmailOtp(request);
 }

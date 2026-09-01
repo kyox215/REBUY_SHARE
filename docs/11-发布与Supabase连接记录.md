@@ -179,3 +179,12 @@
 - source merge 可以继续但不能自动 Production；Production/alias/promote 继续 `NO-GO`。
 
 - 本批为 docs-only release evidence closeout；不重跑测试，复用 GitHub exact-head CI；不做 hash，未修改 `prototype/` 或 `supabase/`。
+
+## 16. 2026-09-01｜UI-only Production hardening candidate closeout（当前）
+
+- 绑定：base/main=`68bebaebebec66cedd8dcda9ab5ff5576ec8d6c9`；branch=`codex/ui-only-production-hardening`；worktree=`.worktrees/rebuy-ui-only-production-hardening`。证据见[UI-only Production hardening candidate](./evidence/releases/2026-09-01-ui-only-production-hardening/README.md)。
+- runtime mode 显式区分 `ui-only`/`local-auth`：仅 canonical local origin=`http://127.0.0.1:3000`、Host=`127.0.0.1:3000` 且现有 local Supabase config 有效时为 `local-auth`；production-like Host 即使 config 合法仍为 `ui-only`。`resolveAuthRuntimeMode` 只捕获 `SupabaseConfigError`，其他异常继续抛出。
+- `ui-only` 登录页不渲染 OTP form、不发 fetch；Google/Apple 保持 page-only 内链。email/session/callback 在 adapter、cookie、exchange 与 body 读取前返回 503 `auth_unavailable`、`no-store`，无 Set-Cookie/Location/localhost；app health 200 报告 mode；canonical local-auth 行为保留。
+- Node=`22.12.0`、pnpm=`10.33.3`；`test:auth`=`43/43`、typecheck、lint、build、`git diff --check` 均 PASS。desktop=`1440x1000`、mobile=`390x844` login smoke 均非空、无 overlay、无 OTP form/request、provider 内链；server/browser/临时截图已清理。
+- 首轮 Sol review 为 P0=0/P1=2/P2=1，本批完成定向修复；follow-up exact review 为 P0/P1/P2=`0/0/0`。专用 roles 不可用，Luna/Sol 均使用 default fallback max。
+- candidate-level Source、受保护 Preview candidate、Production candidate 均 `GO`；尚未 commit、push、创建 Preview 或执行 Production。无 hosted Supabase/Google/Apple/env/secret/DB/Production 写入；普通源码不做 hash。

@@ -5,16 +5,19 @@ import {
   type AuthCallbackInput,
   type AuthCodeExchange,
 } from "./callback";
+import { LOCAL_APP_HOST, LOCAL_APP_ORIGIN } from "./app-origin";
 import { isValidPkceFlowId } from "./callback-session";
 import { normalizeSafeNext } from "./redirect";
+import { authUnavailableResponse } from "./auth-unavailable";
+import type { AuthRuntimeMode } from "./runtime-mode-core";
 
 const redirectHeaders = {
   "Cache-Control": "no-store",
   "Referrer-Policy": "no-referrer",
 };
 
-export const AUTH_CALLBACK_APP_ORIGIN = "http://127.0.0.1:3000";
-export const AUTH_CALLBACK_APP_HOST = "127.0.0.1:3000";
+export const AUTH_CALLBACK_APP_ORIGIN = LOCAL_APP_ORIGIN;
+export const AUTH_CALLBACK_APP_HOST = LOCAL_APP_HOST;
 export const AUTH_CALLBACK_PATH = "/auth/callback";
 
 const nextForwardedHeaderNames = new Set([
@@ -181,4 +184,17 @@ export async function handleAuthCallback(
   } catch {
     return loginRedirect("exchange_error");
   }
+}
+
+export async function handleAuthCallbackForMode(
+  request: Request,
+  mode: AuthRuntimeMode,
+  exchange: AuthCodeExchange,
+  decider: AuthCallbackDecider = decideAuthCallback,
+) {
+  if (mode === "ui-only") {
+    return authUnavailableResponse();
+  }
+
+  return handleAuthCallback(request, exchange, decider);
 }
