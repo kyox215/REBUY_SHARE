@@ -179,3 +179,20 @@
 - source merge 可以继续但不能自动 Production；Production/alias/promote 继续 `NO-GO`。
 
 - 本批为 docs-only release evidence closeout；不重跑测试，复用 GitHub exact-head CI；不做 hash，未修改 `prototype/` 或 `supabase/`。
+
+## 16. 2026-09-01｜UI-only Production hardening candidate closeout（当前）
+
+- 绑定：base/main=`68bebaebebec66cedd8dcda9ab5ff5576ec8d6c9`；branch=`codex/ui-only-production-hardening`；worktree=`.worktrees/rebuy-ui-only-production-hardening`。证据见[UI-only Production hardening candidate](./evidence/releases/2026-09-01-ui-only-production-hardening/README.md)。
+- runtime mode 显式区分 `ui-only`/`local-auth`：仅 canonical local origin=`http://127.0.0.1:3000`、Host=`127.0.0.1:3000` 且现有 local Supabase config 有效时为 `local-auth`；production-like Host 即使 config 合法仍为 `ui-only`。`resolveAuthRuntimeMode` 只捕获 `SupabaseConfigError`，其他异常继续抛出。
+- `ui-only` 登录页不渲染 OTP form、不发 fetch；Google/Apple 保持 page-only 内链。email/session/callback 在 adapter、cookie、exchange 与 body 读取前返回 503 `auth_unavailable`、`no-store`，无 Set-Cookie/Location/localhost；app health 200 报告 mode；canonical local-auth 行为保留。
+- Node=`22.12.0`、pnpm=`10.33.3`；`test:auth`=`43/43`、typecheck、lint、build、`git diff --check` 均 PASS。desktop=`1440x1000`、mobile=`390x844` login smoke 均非空、无 overlay、无 OTP form/request、provider 内链；server/browser/临时截图已清理。
+- 首轮 Sol review 为 P0=0/P1=2/P2=1，本批完成定向修复；follow-up exact review 为 P0/P1/P2=`0/0/0`。专用 roles 不可用，Luna/Sol 均使用 default fallback max。
+- candidate-level Source、受保护 Preview candidate、Production candidate 均 `GO`；尚未 commit、push、创建 Preview 或执行 Production。无 hosted Supabase/Google/Apple/env/secret/DB/Production 写入；普通源码不做 hash。
+
+## 17. 2026-09-01｜Protected Preview runtime execution closeout（当前）
+
+- exact Preview deployment=`dpl_HHPp2g6hGPDgD6HnYn2YcXtfDkYt`，project=`rebuy-share`，`READY`/`preview`/`aliases=[]`；整体 deploy_count=`1`，本次 continuation 不创建 deployment。Preview URL 不写入仓库；Preview env names 为空，无 `SUPABASE_URL`/`SUPABASE_PUBLISHABLE_KEY`。
+- Vercel build 有限日志：CLI=`59.3.0`、pnpm=`10.33.3`、Next=`16.3.2`、build success；route inventory 已包含首页、账号页、provider page-only 页、三 auth route、两 health route 与 callback。当前 log 未单独打印 Node 版本；源码 engines=`22.x` 与前一 Preview resolved Node=`22.x` 仅保留为背景证据。
+- runtime total=`9`：root 200；login 200 且有界面预览/登录未开放文案、无 form/email/OTP；Google/Apple 200 且无 Location；app health 200 healthy + `mode=ui-only`；Supabase health 503 configured=false；session 503；callback 无 query 503；空体 email OTP POST 503。三条 auth 路径均 `no-store`、无 Set-Cookie/Location/localhost，POST 未带 email/body 且 no-send。
+- 首包第二 route 的解析命令在请求前失败并停止，未重试；continuation 未重复 root，完成余 8 条。最终 inspect 仍 READY/preview/aliases=[]；临时 archive、`.vercel` 与响应文件已清理，source clean。
+- 结论为 exact Protected Preview runtime `GO`；Production execution 仍未发生。下一步为 PR exact CI 后 merge main，再单独进行 Production Gate。未执行 Production/alias/promote/share/env/provider/DB 写入。

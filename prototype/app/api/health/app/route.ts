@@ -1,13 +1,13 @@
+import { getAuthRuntimeMode } from "@/lib/auth/runtime-mode";
+import { createAppHealthGetHandler } from "@/lib/health/route-composition";
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const noStoreHeaders = {
-  "Cache-Control": "no-store",
-};
+const getAppHealth = createAppHealthGetHandler(
+  (request) => getAuthRuntimeMode(request),
+);
 
-export async function GET() {
-  return Response.json(
-    { status: "healthy" },
-    { status: 200, headers: noStoreHeaders },
-  );
+export function GET(request: Request) {
+  return getAppHealth(request);
 }

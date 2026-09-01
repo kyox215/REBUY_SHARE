@@ -4,10 +4,13 @@ import {
   type EmailOtpAuthAdapter,
   type EmailOtpOutcome,
 } from "./email-otp";
+import { LOCAL_APP_HOST, LOCAL_APP_ORIGIN } from "./app-origin";
+import { authUnavailableResponse } from "./auth-unavailable";
+import type { AuthRuntimeMode } from "./runtime-mode-core";
 
 export const EMAIL_OTP_MAX_BODY_BYTES = 1024;
-export const EMAIL_OTP_APP_ORIGIN = "http://127.0.0.1:3000";
-export const EMAIL_OTP_APP_HOST = "127.0.0.1:3000";
+export const EMAIL_OTP_APP_ORIGIN = LOCAL_APP_ORIGIN;
+export const EMAIL_OTP_APP_HOST = LOCAL_APP_HOST;
 
 const noStoreHeaders = {
   "Cache-Control": "no-store",
@@ -182,4 +185,16 @@ export async function handleEmailOtpRequest(
 
   const outcome = await executeEmailOtp(parsed.input, adapter);
   return outcomeResponse(outcome);
+}
+
+export async function handleEmailOtpRequestForMode(
+  request: Request,
+  mode: AuthRuntimeMode,
+  createAuthAdapter: EmailOtpAuthAdapterFactory,
+) {
+  if (mode === "ui-only") {
+    return authUnavailableResponse();
+  }
+
+  return handleEmailOtpRequest(request, createAuthAdapter);
 }
