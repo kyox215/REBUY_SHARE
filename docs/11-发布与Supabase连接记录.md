@@ -132,10 +132,18 @@
 - 当前 candidate `.env.example` 使用 server-only `SUPABASE_URL`、`SUPABASE_PUBLISHABLE_KEY`；`config.ts` 只允许 local `http://127.0.0.1:55321/`。因此即便 Vercel 设置 hosted URL，当前候选也会 config fail/503；这是 local-only Gate 设计，不在本批绕过。该 hosted/Preview 结论是源码与配置推断/访问阻塞，不是本次 Supabase endpoint 响应。
 - Remaining：独立 hosted-ready 配置设计、Git integration/link、Preview runtime 验证、环境变量 name/target 只读核对、Node 设置对齐、正式 push/PR/CI。Blocked：hosted Supabase target 不在当前 connector；Preview runtime 受保护且当前工具无法完成 cookie handshake；hosted/Preview/Production Gate 未授权。Next：由用户决定是否仅 push 候选分支；另行决定是否打开“Git link + isolated Preview + hosted Supabase read-only health” Gate，不预写批准。
 
-## 13. 2026-09-01｜UI-only Preview release preflight（当前）
+## 13. 2026-09-01｜UI-only Preview release preflight（历史 preflight；execution result 见第14节）
 
 - 绑定：code candidate=`0e5084b62c76275a781ec08edea287a06d442209`；base remote main=`de6a3203e20a1a4cea1106baef7bee1b4173d38f`；本地分支为 `codex/rebuy-v1-ui-preview-release`，从 exact candidate 创建。Owner 本次授权原话为 `将已完成可推送并部署的进行推送部署`；本条只记录授权边界，不预写 push、PR、Actions、merge 或 deployment 结果。
 - 本地 preflight 在 clean release worktree 完成，使用 Node `22.12.0`、Corepack 驱动 pnpm `10.33.3`；`install --frozen-lockfile`、`typecheck`、`test:auth` `37/37`、`lint`、`build`、`git diff --check` 均 PASS。build 产生的 tracked `prototype/next-env.d.ts` generated import 漂移已恢复，最终 worktree clean。
 - sensitive scan=`SCAN GO`：私钥/认证 header filename-only scan 无文件命中；basic-auth URL 仅为 `prototype/tests/auth/contract.test.ts:1215` 测试假阳性；provider token/JWT 复用既有 0 结果，未重复扫描。未记录匹配值。
 - 发布边界：GitHub 仅非强制 release branch/PR；Vercel 仅受保护、无 `SUPABASE_*` 的 UI-only Preview。Production、alias、promote、hosted Supabase/Auth、Google、Apple、P2-L migration 继续 `NO-GO / CLOSED`。本批不 push、不开 PR、不 deploy。
 - 证据见 [2026-09-01 UI-only Preview release preflight](./evidence/releases/2026-09-01-ui-preview-release/README.md)。本批不修改 `prototype/`、`supabase/` 或其他文件，不运行 build/tests，不记录邮箱、token、team/project/deployment ID 或 secret。
+
+## 14. 2026-09-01｜UI-only Preview execution result（当前）
+
+- code candidate=`0e5084b62c76275a781ec08edea287a06d442209`；release/docs head=`bf10563663b91b3c0270aaf7acc68d6f3d63c526`；remote main=`de6a3203e20a1a4cea1106baef7bee1b4173d38f`。`codex/rebuy-v1-ui-preview-release` 已非强制推送成功；PR [#17](https://github.com/kyox215/REBUY_SHARE/pull/17) 已创建；Actions run `33461861676` success；未 merge、未 auto-merge。
+- 唯一预期 Preview artifact=`dpl_6RCPeszdr4BBtp52oHM6i8iBf9XK`，project=`rebuy-share`，source=`CLI`，`READY`、`target=null`/Preview、`aliases=[]`。Next `16.3.2`；build log 两次明确记录 `engines.node=22.x` 覆盖 project setting `24.x`，实际 Node `22.x`；pnpm `10.33.3`，build success。官方参考：[Vercel Node.js versions](https://vercel.com/docs/functions/runtimes/node-js/node-js-versions)。Preview 无 `SUPABASE_*`；Production、alias、promote 未执行，既有 Production 不变。
+- build route inventory 已记录 `/`、`/account`、`/account-mindmap`、`/account/login`、`/account/provider/[provider]`、`/api/auth/email-otp`、`/api/auth/session`、`/api/health/app`、`/api/health/supabase`、`/auth/callback`。Preview 受 Vercel Authentication 保护，connector health 得到 `302` SSO；GET/HEAD runtime matrix 未完成，未执行 POST、OTP、callback query、form 或 cookie 检查，不把 inventory 写成 runtime pass。
+- 后续从未链接 source worktree 运行 `vercel curl` 曾误创建空 project=`rebuy-release-0e5084b`；`latestDeployment=null`、`domains=[]`、deployment count=`0`。本地 `.vercel`/`.gitignore` 副作用已清理；删除该空外部项目的请求被安全门拒绝，须 Owner 知情后明确批准，当前不得写成已删除。Supabase/hosted Auth/env 无写入；Google/Apple 仍 page-only placeholder；P2-L migration、merge、Production 继续 `NO-GO`。
+- 本批不重跑 install/typecheck/`test:auth` `37/37`/lint/build，复用相同源码、lockfile、配置和工具链证据；未做 hash，因普通源码/文档与非确定性部署证据不需要 hash。当前结论：GitHub source branch `GO`；受保护 UI-only Preview artifact `READY`，runtime matrix 未完成；PR merge 与 Production `NO-GO`。
