@@ -61,3 +61,26 @@
 - 首包第二 route 的本地解析命令在发请求前失败，随后停止且未重试；continuation 未重复 root，完成剩余 8 条。每条 header/body/status 仅写入唯一临时文件并已删除，未保存完整 HTML/headers。
 - 最终 inspect 仍为同一 deployment `READY`/`preview`/`aliases=[]`；archive、`.vercel`、临时响应文件已清理，source clean。未执行 Production、alias、promote、share、env、hosted Supabase、Google、Apple 或 DB 操作。
 - 结论：exact Protected Preview runtime `GO`；Production execution 尚未发生。下一步为 PR exact CI 后 merge main，再单独打开 Production Gate。
+
+## 2026-09-01 Production execution closeout
+
+- exact main merge=`3c6ebf20b56f7ab37956a4ad9c543389a5636e65`；PR #18 Actions run=`33497321436`，`SUCCESS`。Production preflight 从该 exact commit 的 `git archive` 临时根执行并显式链接既有项目；`projectId=prj_g1W3AWm3hkbZib9zDgm6YQfGEyHL`、`orgId=team_AOJDnrjov0QDLqpvMyhwA1yc` 均匹配。Production env names 为空，无 `SUPABASE_URL` / `SUPABASE_PUBLISHABLE_KEY`。
+- previous Production=`dpl_DZSmbtizfp3z7x2X4itwdwyLGxrH`，`READY`/`production`，aliases=`2`。记录的 rollback syntax 为 `vercel rollback url|deploymentId -y`；本次未触发 rollback。`deploy_count=1`；new Production=`dpl_F8ontC7D4cMip2jtcmDoRDY1XxJh`，`READY`/`production`。唯一 deployment URL 不写入仓库。
+- 最终 inspect 确认为 `READY`/`production`/aliases=`2`：公共主域名 `https://rebuy-share.vercel.app` 与 1 个团队默认 alias。Vercel CLI=`59.3.0`、pnpm=`10.33.3`、Next=`16.3.2`，build success；route inventory 包含首页、账号页、provider page-only 页、三 auth route、两 health route 与 callback。
+
+Runtime total=`9`（8 GET + 1 empty-body POST），全部通过：
+
+| Route | Result |
+|---|---|
+| `GET /` | 200，`text/html`，non-empty，Location none |
+| `GET /account/login` | 200，`text/html`；ui-only 文案存在，无 `<form`、email、OTP，Location none |
+| `GET /account/provider/google` | 200，`text/html`，Location none |
+| `GET /account/provider/apple` | 200，`text/html`，Location none |
+| `GET /api/health/app` | 200，no-store JSON `{"status":"healthy","mode":"ui-only"}` |
+| `GET /api/health/supabase` | 503，JSON `{"configured":false,"reachable":false,"status":503}` |
+| `GET /api/auth/session` | 503，`{"status":"error","code":"auth_unavailable"}`，no-store，无 Set-Cookie/Location/localhost |
+| `GET /auth/callback`（无 query） | 503，同上，no-store，无 Set-Cookie/Location/localhost |
+| 空体 `POST /api/auth/email-otp` | 503，同上，no-store，无 Set-Cookie/Location/localhost；无 email/body，no-send |
+
+- 公共主域名 root GET 为 200 `text/html`；app-health GET 为 200、no-store JSON `ui-only`。未 rollback、未重试请求；未执行 hosted Supabase、Google、Apple、env、DB 或 secret 写入。临时 archive/link/runtime 文件已清理，source clean。
+- 本次 Production 仅代表 UI-only 已发布，不代表 P2-L/P3-P8、真实 Auth、支付或运营完成。该 docs-only closeout 不重跑测试/build/network，复用 main CI 与已记录 runtime；未做 hash。

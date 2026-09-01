@@ -196,3 +196,10 @@
 - runtime total=`9`：root 200；login 200 且有界面预览/登录未开放文案、无 form/email/OTP；Google/Apple 200 且无 Location；app health 200 healthy + `mode=ui-only`；Supabase health 503 configured=false；session 503；callback 无 query 503；空体 email OTP POST 503。三条 auth 路径均 `no-store`、无 Set-Cookie/Location/localhost，POST 未带 email/body 且 no-send。
 - 首包第二 route 的解析命令在请求前失败并停止，未重试；continuation 未重复 root，完成余 8 条。最终 inspect 仍 READY/preview/aliases=[]；临时 archive、`.vercel` 与响应文件已清理，source clean。
 - 结论为 exact Protected Preview runtime `GO`；Production execution 仍未发生。下一步为 PR exact CI 后 merge main，再单独进行 Production Gate。未执行 Production/alias/promote/share/env/provider/DB 写入。
+
+## 18. 2026-09-01｜UI-only Production execution closeout（当前）
+
+- PR #18 exact merge=`3c6ebf20b56f7ab37956a4ad9c543389a5636e65`，Actions run=`33497321436` `SUCCESS`。Production preflight 使用该 exact main 的 `git archive` 临时根并链接既有 `rebuy-share`：`projectId=prj_g1W3AWm3hkbZib9zDgm6YQfGEyHL`、`orgId=team_AOJDnrjov0QDLqpvMyhwA1yc`；Production env names 为空，无 `SUPABASE_URL`/`SUPABASE_PUBLISHABLE_KEY`。
+- previous Production=`dpl_DZSmbtizfp3z7x2X4itwdwyLGxrH`，`READY`/`production`/aliases=`2`；rollback syntax=`vercel rollback url|deploymentId -y`，未触发。唯一 `deploy_count=1`；new Production=`dpl_F8ontC7D4cMip2jtcmDoRDY1XxJh`，`READY`/`production`。最终 inspect 确认 aliases=`2`，其中公共主域名为 `https://rebuy-share.vercel.app`，另 1 个为团队默认 alias；唯一 deployment URL 不写入仓库。
+- Vercel CLI=`59.3.0`、pnpm=`10.33.3`、Next=`16.3.2`，build success，route inventory 覆盖页面、provider page-only、auth、health 与 callback。runtime total=`9` 全部 PASS：root/login/Google/Apple 200；login 为 ui-only、无 form/email/OTP；app health 200 `healthy`/`ui-only`；Supabase health 503 unconfigured；session、无 query callback、空体 email OTP POST 均 503 `auth_unavailable`、no-store、无 Set-Cookie/Location/localhost，POST no-send。
+- 公共主域名 root 200 `text/html`，app-health 200 no-store JSON ui-only。未 rollback、未重试、未写 hosted Supabase/provider/env/DB/secret；临时资源清理、source clean。该 Production 仅证明 UI-only 已发布，不等于 P2-L/P3-P8、真实 Auth、支付或运营完成。本 docs-only 批次不重跑测试/build/network，复用 main CI/runtime 证据，不做 hash。
