@@ -19,7 +19,13 @@ import {
   AUTH_CALLBACK_APP_ORIGIN,
   AUTH_CALLBACK_PATH,
   handleAuthCallback,
+  handleAuthCallbackForMode,
 } from "../../lib/auth/callback-route";
+import {
+  LOCAL_APP_HOST,
+  LOCAL_APP_ORIGIN,
+  isCanonicalLocalAppRequest,
+} from "../../lib/auth/app-origin";
 import {
   exchangeAndPersistSession,
   getRebuyPkceFlowSlotCookieName,
@@ -39,14 +45,29 @@ import {
   EMAIL_OTP_APP_HOST,
   EMAIL_OTP_APP_ORIGIN,
   handleEmailOtpRequest,
+  handleEmailOtpRequestForMode,
 } from "../../lib/auth/email-otp-route";
 import {
   EMAIL_OTP_RESEND_COOLDOWN_MS,
   isRateLimitedAuthError,
 } from "../../lib/auth/email-otp";
 import { resolveSessionStatus } from "../../lib/auth/session";
+import { handleSessionRequest } from "../../lib/auth/session-route";
+import {
+  createAuthCallbackGetHandler,
+  createEmailOtpPostHandler,
+  createLogoutPostHandler,
+  createSessionGetHandler,
+} from "../../lib/auth/route-composition";
+import {
+  AUTH_RUNTIME_MODES,
+  resolveAuthRuntimeMode,
+} from "../../lib/auth/runtime-mode-core";
+import { createAppHealthResponse } from "../../lib/health/app";
+import { createAppHealthGetHandler } from "../../lib/health/route-composition";
 import {
   handleLogoutRequest,
+  handleLogoutRequestForMode,
   LOGOUT_APP_HOST,
   LOGOUT_APP_ORIGIN,
 } from "../../lib/auth/logout";
@@ -55,6 +76,7 @@ import {
   LOCAL_SUPABASE_URL,
   REBUY_AUTH_COOKIE_NAME,
   REBUY_AUTH_COOKIE_OPTIONS,
+  SupabaseConfigError,
   validateSupabaseConfig,
 } from "../../lib/supabase/config";
 import { createServerCookieMethods } from "../../lib/supabase/cookies";
@@ -909,11 +931,11 @@ function makeAdapter(overrides: Partial<EmailOtpAuthAdapter> = {}) {
 }
 
 function makeJsonRequest(value: unknown, headers: Record<string, string> = {}) {
-  return new Request("http://127.0.0.1:3000/api/auth/email-otp", {
+  return new Request(`${EMAIL_OTP_APP_ORIGIN}/api/auth/email-otp`, {
     method: "POST",
     headers: {
-      Origin: "http://127.0.0.1:3000",
-      Host: "127.0.0.1:3000",
+      Origin: EMAIL_OTP_APP_ORIGIN,
+      Host: EMAIL_OTP_APP_HOST,
       "Content-Type": "application/json",
       ...headers,
     },
@@ -924,6 +946,335 @@ function makeJsonRequest(value: unknown, headers: Record<string, string> = {}) {
 async function responseJson(response: Response) {
   return (await response.json()) as Record<string, unknown>;
 }
+
+async function assertAuthUnavailable(response: Response) {
+  assert.equal(response.status, 503);
+  const body = await responseJson(response);
+  assert.deepEqual(body, {
+    status: "error",
+    code: "auth_unavailable",
+  });
+  assert.match(response.headers.get("Content-Type") ?? "", /^application\/json/);
+  assert.equal(response.headers.get("Cache-Control"), "no-store");
+  assert.equal(response.headers.get("Pragma"), "no-cache");
+  assert.equal(response.headers.get("Referrer-Policy"), "no-referrer");
+  assert.equal(response.headers.get("Location"), null);
+  assert.equal(response.headers.get("Set-Cookie"), null);
+  assert.equal(JSON.stringify(body).includes("localhost"), false);
+}
+
+test("blocks production-like requests before adapter, cookie, exchange, or body access", async () => {
+  const previewOrigin = "https://preview.rebuy.test";
+  const previewHost = "preview.rebuy.test";
+  let configReads = 0;
+  let emailAdapterCalls = 0;
+  let emailCookieFactoryCalls = 0;
+  let sessionAdapterCalls = 0;
+  let sessionCookieFactoryCalls = 0;
+  let callbackExchangeCalls = 0;
+  let callbackCookieFactoryCalls = 0;
+  let logoutAdapterCalls = 0;
+  let pullCount = 0;
+  const readValidatedConfig = () => {
+    configReads += 1;
+    return validateSupabaseConfig(LOCAL_SUPABASE_URL, "sb_publishable_test_fixture");
+  };
+  const readMode = (request: Request) =>
+    resolveAuthRuntimeMode(request, readValidatedConfig);
+  const postEmailOtp = createEmailOtpPostHandler(readMode, async () => {
+    emailAdapterCalls += 1;
+    emailCookieFactoryCalls += 1;
+    return makeAdapter();
+  });
+  const getSession = createSessionGetHandler(readMode, async () => {
+    sessionAdapterCalls += 1;
+    sessionCookieFactoryCalls += 1;
+    return { data: { claims: { sub: "must-not-be-read" } } };
+  });
+  const getAuthCallback = createAuthCallbackGetHandler(readMode, async () => {
+    callbackExchangeCalls += 1;
+    callbackCookieFactoryCalls += 1;
+    return { error: null };
+  });
+  const postLogout = createLogoutPostHandler(readMode, async () => {
+    logoutAdapterCalls += 1;
+    return { signOut: async () => ({ error: null }) };
+  });
+  const body = new ReadableStream<Uint8Array>({
+    pull(controller) {
+      pullCount += 1;
+      controller.enqueue(new Uint8Array([123]));
+      controller.close();
+    },
+  }, { highWaterMark: 0 });
+  const emailRequest = new Request(`${previewOrigin}/api/auth/email-otp`, {
+    method: "POST",
+    headers: {
+      Host: previewHost,
+      Origin: previewOrigin,
+      "Content-Type": "application/json",
+    },
+    body,
+    duplex: "half",
+  } as RequestInit);
+
+  const emailResponse = await postEmailOtp(emailRequest);
+  const sessionResponse = await getSession(
+    new Request(`${previewOrigin}/api/auth/session`, {
+      headers: { Host: previewHost },
+    }),
+  );
+  const callbackResponse = await getAuthCallback(
+    new Request(`${previewOrigin}/auth/callback?code=must-not-be-exchanged`, {
+      headers: { Host: previewHost },
+    }),
+  );
+  const logoutResponse = await postLogout(
+    new Request(`${previewOrigin}/api/auth/logout`, {
+      method: "POST",
+      headers: { Host: previewHost, Origin: previewOrigin },
+    }),
+  );
+
+  await assertAuthUnavailable(emailResponse);
+  await assertAuthUnavailable(sessionResponse);
+  await assertAuthUnavailable(callbackResponse);
+  await assertAuthUnavailable(logoutResponse);
+  assert.equal(configReads, 4);
+  assert.equal(emailAdapterCalls, 0);
+  assert.equal(emailCookieFactoryCalls, 0);
+  assert.equal(sessionAdapterCalls, 0);
+  assert.equal(sessionCookieFactoryCalls, 0);
+  assert.equal(callbackExchangeCalls, 0);
+  assert.equal(callbackCookieFactoryCalls, 0);
+  assert.equal(logoutAdapterCalls, 0);
+  assert.equal(emailRequest.bodyUsed, false);
+  assert.equal(pullCount, 0);
+});
+
+test("delegates local-auth mode to the existing auth handlers", async () => {
+  let emailAdapterCalls = 0;
+  const emailResponse = await handleEmailOtpRequestForMode(
+    makeJsonRequest({ action: "request", email: syntheticEmail, intent: "login" }),
+    "local-auth",
+    async () => {
+      emailAdapterCalls += 1;
+      return makeAdapter();
+    },
+  );
+  assert.equal(emailResponse.status, 200);
+  assert.deepEqual(await responseJson(emailResponse), {
+    status: "otp_sent",
+  });
+  assert.equal(emailAdapterCalls, 1);
+
+  const authenticatedResponse = await handleSessionRequest("local-auth", async () => ({
+    data: { claims: { sub: "local-user" } },
+  }));
+  const anonymousResponse = await handleSessionRequest("local-auth", async () => ({
+    data: { claims: null },
+    error: null,
+  }));
+  const errorResponse = await handleSessionRequest("local-auth", async () => ({
+    data: null,
+    error: new Error("local session error"),
+  }));
+  assert.equal(authenticatedResponse.status, 200);
+  assert.deepEqual(await responseJson(authenticatedResponse), {
+    status: "authenticated",
+  });
+  assert.equal(anonymousResponse.status, 401);
+  assert.deepEqual(await responseJson(anonymousResponse), {
+    status: "anonymous",
+  });
+  assert.equal(errorResponse.status, 500);
+  assert.deepEqual(await responseJson(errorResponse), {
+    status: "error",
+    code: "session_error",
+  });
+
+  let exchangedCode = "";
+  const callbackResponse = await handleAuthCallbackForMode(
+    new Request(`${AUTH_CALLBACK_APP_ORIGIN}${AUTH_CALLBACK_PATH}?code=opaque-code`, {
+      headers: { Host: AUTH_CALLBACK_APP_HOST },
+    }),
+    "local-auth",
+    async (code) => {
+      exchangedCode = code;
+      return { error: null };
+    },
+  );
+  assert.equal(callbackResponse.status, 303);
+  assert.equal(new URL(callbackResponse.headers.get("Location") ?? "").pathname, "/");
+  assert.equal(exchangedCode, "opaque-code");
+
+  let logoutCalls = 0;
+  const logoutResponse = await handleLogoutRequestForMode(
+    new Request(`${LOGOUT_APP_ORIGIN}/api/auth/logout`, {
+      method: "POST",
+      headers: { Origin: LOGOUT_APP_ORIGIN, Host: LOGOUT_APP_HOST },
+    }),
+    "local-auth",
+    async () => ({
+      signOut: async () => {
+        logoutCalls += 1;
+        return { error: null };
+      },
+    }),
+  );
+  assert.equal(logoutResponse.status, 200);
+  assert.equal(logoutCalls, 1);
+});
+
+test("reports both supported runtime modes through the app health contract", async () => {
+  for (const mode of AUTH_RUNTIME_MODES) {
+    const response = createAppHealthResponse(mode);
+    assert.equal(response.status, 200);
+    assert.deepEqual(await responseJson(response), {
+      status: "healthy",
+      mode,
+    });
+    assert.equal(response.headers.get("Cache-Control"), "no-store");
+  }
+
+  const readMode = (request: Request) =>
+    resolveAuthRuntimeMode(request, () =>
+      validateSupabaseConfig(LOCAL_SUPABASE_URL, "sb_publishable_test_fixture"),
+    );
+  const getAppHealth = createAppHealthGetHandler(readMode);
+  const canonicalResponse = await getAppHealth(
+    new Request(`${LOCAL_APP_ORIGIN}/api/health/app`, {
+      headers: { Host: LOCAL_APP_HOST },
+    }),
+  );
+  const productionResponse = await getAppHealth(
+    new Request("https://preview.rebuy.test/api/health/app", {
+      headers: { Host: "preview.rebuy.test" },
+    }),
+  );
+  assert.deepEqual(await responseJson(canonicalResponse), {
+    status: "healthy",
+    mode: "local-auth",
+  });
+  assert.deepEqual(await responseJson(productionResponse), {
+    status: "healthy",
+    mode: "ui-only",
+  });
+});
+
+test("keeps the ui-only login render boundary and internal provider links explicit", () => {
+  const source = readFileSync(
+    resolve(process.cwd(), "app/account/login/LoginPrototype.tsx"),
+    "utf8",
+  );
+  const pageSource = readFileSync(
+    resolve(process.cwd(), "app/account/login/page.tsx"),
+    "utf8",
+  );
+  const accountPageSource = readFileSync(
+    resolve(process.cwd(), "app/account/page.tsx"),
+    "utf8",
+  );
+  const accountClientSource = readFileSync(
+    resolve(process.cwd(), "app/account/AccountClient.tsx"),
+    "utf8",
+  );
+  const uiOnlyBranch = source.match(
+    /\{mode === "ui-only" \? \(([\s\S]*?)\) : step === "email" \?/,
+  )?.[1];
+
+  assert.ok(uiOnlyBranch);
+  assert.match(uiOnlyBranch, /账号登录暂未开放/);
+  assert.match(uiOnlyBranch, /当前为界面预览/);
+  assert.doesNotMatch(uiOnlyBranch, /<form/);
+  assert.match(source, /mode === "ui-only" \|\| busyAction/);
+  assert.match(source, /href="\/account\/provider\/google"/);
+  assert.match(source, /href="\/account\/provider\/apple"/);
+  assert.match(source, /mode === "local-auth"[\s\S]*styles\.intentTabs/);
+  assert.match(pageSource, /headers\(\)/);
+  assert.match(pageSource, /getAuthRuntimeModeForHost/);
+  assert.match(pageSource, /mode=\{mode\}/);
+  assert.match(pageSource, /nextPath=\{nextPath\}/);
+  assert.match(accountPageSource, /getAuthRuntimeModeForHost/);
+  assert.match(accountPageSource, /mode === "ui-only"/);
+  assert.match(accountPageSource, /<AccountClient mode="ui-only"/);
+  assert.match(accountPageSource, /<AccountClient mode="authenticated"/);
+  assert.ok(
+    accountPageSource.indexOf('mode === "ui-only"') <
+      accountPageSource.indexOf("const session = await resolveSessionStatus"),
+  );
+  assert.match(accountClientSource, /const authenticated = mode === "authenticated"/);
+});
+
+test("wires actual routes through request-aware composition handlers", () => {
+  const routeSources = [
+    [
+      "app/api/auth/email-otp/route.ts",
+      "createEmailOtpPostHandler",
+    ],
+    ["app/api/auth/session/route.ts", "createSessionGetHandler"],
+    ["app/api/auth/logout/route.ts", "createLogoutPostHandler"],
+    ["app/auth/callback/route.ts", "createAuthCallbackGetHandler"],
+    ["app/api/health/app/route.ts", "createAppHealthGetHandler"],
+  ] as const;
+
+  for (const [relativePath, compositionName] of routeSources) {
+    const source = readFileSync(resolve(process.cwd(), relativePath), "utf8");
+    assert.match(source, new RegExp(compositionName));
+    assert.match(source, /getAuthRuntimeMode\(request\)/);
+  }
+
+  assert.match(
+    readFileSync(resolve(process.cwd(), "app/api/auth/session/route.ts"), "utf8"),
+    /GET\(request: Request\)/,
+  );
+});
+
+test("requires both the canonical local app request and valid local config", () => {
+  assert.deepEqual(AUTH_RUNTIME_MODES, ["ui-only", "local-auth"]);
+  const canonicalRequest = new Request(`${LOCAL_APP_ORIGIN}/account/login`, {
+    headers: { Host: LOCAL_APP_HOST },
+  });
+  const productionRequest = new Request("https://preview.rebuy.test/account/login", {
+    headers: { Host: "preview.rebuy.test" },
+  });
+  let configReads = 0;
+  const validLocalConfig = () => {
+    configReads += 1;
+    return validateSupabaseConfig(LOCAL_SUPABASE_URL, "sb_publishable_test_fixture");
+  };
+
+  assert.equal(isCanonicalLocalAppRequest(canonicalRequest), true);
+  assert.equal(isCanonicalLocalAppRequest(productionRequest), false);
+  assert.equal(
+    resolveAuthRuntimeMode(canonicalRequest, validLocalConfig),
+    "local-auth",
+  );
+  assert.equal(
+    resolveAuthRuntimeMode(productionRequest, validLocalConfig),
+    "ui-only",
+  );
+  assert.equal(configReads, 2);
+  assert.equal(
+    resolveAuthRuntimeMode(canonicalRequest, () =>
+      validateSupabaseConfig("https://hosted.supabase.co/", "sb_publishable_test_fixture"),
+    ),
+    "ui-only",
+  );
+  assert.throws(
+    () =>
+      resolveAuthRuntimeMode(canonicalRequest, () => {
+        throw new Error("unexpected config failure");
+      }),
+    /unexpected config failure/,
+  );
+  assert.throws(
+    () => resolveAuthRuntimeMode(productionRequest, () => {
+      throw new Error("unexpected production config failure");
+    }),
+    /unexpected production config failure/,
+  );
+});
 
 test("rejects invalid email OTP input without calling the adapter", async () => {
   let calls = 0;

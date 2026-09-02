@@ -1,3 +1,6 @@
+import { authUnavailableResponse } from "./auth-unavailable";
+import type { AuthRuntimeMode } from "./runtime-mode-core";
+
 export const LOGOUT_APP_ORIGIN = "http://127.0.0.1:3000";
 export const LOGOUT_APP_HOST = "127.0.0.1:3000";
 
@@ -13,6 +16,10 @@ export type LogoutAuthAdapter = {
     { error?: unknown | null } | null | undefined
   >;
 };
+
+export type LogoutAuthAdapterFactory = () =>
+  | LogoutAuthAdapter
+  | Promise<LogoutAuthAdapter>;
 
 function isSameOrigin(request: Request) {
   const origin = request.headers.get("origin");
@@ -36,7 +43,7 @@ function jsonResponse(body: Record<string, string>, status: number) {
 
 export async function handleLogoutRequest(
   request: Request,
-  createAuthAdapter: () => LogoutAuthAdapter | Promise<LogoutAuthAdapter>,
+  createAuthAdapter: LogoutAuthAdapterFactory,
 ) {
   if (!isSameOrigin(request)) {
     return jsonResponse({ status: "error", code: "origin_not_allowed" }, 403);
@@ -61,4 +68,16 @@ export async function handleLogoutRequest(
   } catch {
     return jsonResponse({ status: "error", code: "signout_failed" }, 500);
   }
+}
+
+export async function handleLogoutRequestForMode(
+  request: Request,
+  mode: AuthRuntimeMode,
+  createAuthAdapter: LogoutAuthAdapterFactory,
+) {
+  if (mode === "ui-only") {
+    return authUnavailableResponse();
+  }
+
+  return handleLogoutRequest(request, createAuthAdapter);
 }

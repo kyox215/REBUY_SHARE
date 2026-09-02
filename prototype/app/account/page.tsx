@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { getAuthRuntimeModeForHost } from "@/lib/auth/runtime-mode";
 import { resolveSessionStatus } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import AccountClient from "./AccountClient";
@@ -8,6 +10,12 @@ import styles from "./account.module.css";
 export const dynamic = "force-dynamic";
 
 export default async function AccountPage() {
+  const requestHeaders = await headers();
+  const mode = getAuthRuntimeModeForHost(requestHeaders.get("host"));
+  if (mode === "ui-only") {
+    return <AccountClient mode="ui-only" />;
+  }
+
   const session = await resolveSessionStatus({
     getClaims: async () => {
       const supabase = await createClient();
@@ -32,5 +40,5 @@ export default async function AccountPage() {
     );
   }
 
-  return <AccountClient />;
+  return <AccountClient mode="authenticated" />;
 }

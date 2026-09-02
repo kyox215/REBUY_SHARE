@@ -9,29 +9,51 @@ import styles from "./account.module.css";
 
 type Theme = "dark" | "light";
 
-const securityItems = [
+const authenticatedSecurityItems = [
   { href: "/account/login", icon: Mail, title: "邮箱验证码", description: "注册与登录流程已启用", status: "已启用", statusTone: "positive" },
   { href: "/account/provider/google", icon: KeyRound, title: "Google", description: "Google 登录页面预览", status: "待配置", statusTone: "neutral" },
   { href: "/account/provider/apple", icon: ShieldCheck, title: "Apple", description: "Apple 登录页面预览", status: "待配置", statusTone: "neutral" },
 ] as const;
 
-const organizationItems = [
+const previewSecurityItems = [
+  { href: "/account/login", icon: Mail, title: "邮箱登录", description: "当前为界面预览，登录功能暂未开放", status: "未开放", statusTone: "neutral" },
+  { href: "/account/provider/google", icon: KeyRound, title: "Google", description: "Google 登录页面预览", status: "待配置", statusTone: "neutral" },
+  { href: "/account/provider/apple", icon: ShieldCheck, title: "Apple", description: "Apple 登录页面预览", status: "待配置", statusTone: "neutral" },
+] as const;
+
+const authenticatedOrganizationItems = [
   { icon: Store, title: "当前身份", description: "零售客户", status: "已登录", statusTone: "positive" },
   { icon: UserRound, title: "店铺与组织", description: "关联关系将在后续业务阶段接入", status: "待接入", statusTone: "neutral" },
+] as const;
+
+const previewOrganizationItems = [
+  { icon: Store, title: "当前身份", description: "本地演示身份 · 预览", status: "预览", statusTone: "neutral" },
+  { icon: UserRound, title: "店铺与组织", description: "登录后可管理关联关系", status: "未连接", statusTone: "neutral" },
 ] as const;
 
 function StatusPill({ tone, children }: { tone: "positive" | "neutral"; children: string }) {
   return <span className={`${styles.statusPill} ${tone === "positive" ? styles.statusPillPositive : ""}`}>{children}</span>;
 }
 
-export default function AccountClient() {
+export default function AccountClient({
+  mode,
+}: {
+  mode: "authenticated" | "ui-only";
+}) {
   const router = useRouter();
+  const authenticated = mode === "authenticated";
+  const securityItems = authenticated
+    ? authenticatedSecurityItems
+    : previewSecurityItems;
+  const organizationItems = authenticated
+    ? authenticatedOrganizationItems
+    : previewOrganizationItems;
   const [theme, setTheme] = useState<Theme>("light");
   const [signingOut, setSigningOut] = useState(false);
   const [signOutError, setSignOutError] = useState("");
 
   const handleSignOut = async () => {
-    if (signingOut) return;
+    if (!authenticated || signingOut) return;
     setSigningOut(true);
     setSignOutError("");
 
@@ -71,7 +93,7 @@ export default function AccountClient() {
             <div className={styles.profileMark} aria-hidden="true"><UserRound size={24} /></div>
           </div>
 
-          <div className={styles.previewStatus} role="status"><span className={styles.previewStatusDot} aria-hidden="true" /><span><strong>会话已验证</strong><small>本地测试账号</small></span></div>
+          <div className={styles.previewStatus} role="status"><span className={styles.previewStatusDot} aria-hidden="true" /><span><strong>{authenticated ? "会话已验证" : "界面预览"}</strong><small>{authenticated ? "本地测试账号" : "未连接真实账号"}</small></span></div>
 
           <div className={styles.groups}>
             <section className={styles.group} aria-labelledby="security-title">
@@ -88,7 +110,7 @@ export default function AccountClient() {
             </section>
 
             <section className={styles.group} aria-labelledby="organization-title">
-              <div className={styles.groupHeading}><h2 id="organization-title">组织与店铺</h2><span>当前状态</span></div>
+              <div className={styles.groupHeading}><h2 id="organization-title">组织与店铺</h2><span>{authenticated ? "当前状态" : "本地状态"}</span></div>
               <div className={styles.rowList}>
                 {organizationItems.map(({ icon: Icon, title, description, status, statusTone }) => (
                   <div className={styles.accountRow} key={title}>
@@ -112,12 +134,16 @@ export default function AccountClient() {
             </section>
           </div>
 
-          <button className={styles.logoutButton} type="button" onClick={handleSignOut} disabled={signingOut} aria-busy={signingOut}>
-            <LogOut aria-hidden="true" size={17} />{signingOut ? "正在退出..." : "退出当前账号"}
-          </button>
-          {signOutError ? <p className={styles.signOutError} role="alert">{signOutError}</p> : null}
+          {authenticated ? (
+            <>
+              <button className={styles.logoutButton} type="button" onClick={handleSignOut} disabled={signingOut} aria-busy={signingOut}>
+                <LogOut aria-hidden="true" size={17} />{signingOut ? "正在退出..." : "退出当前账号"}
+              </button>
+              {signOutError ? <p className={styles.signOutError} role="alert">{signOutError}</p> : null}
+            </>
+          ) : null}
 
-          <div className={styles.note}><CircleHelp aria-hidden="true" size={17} /><p>邮箱验证码已建立真实本地会话；第三方登录和组织业务仍按后续阶段接入。</p></div>
+          <div className={styles.note}><CircleHelp aria-hidden="true" size={17} /><p>{authenticated ? "邮箱验证码已建立真实本地会话；第三方登录和组织业务仍按后续阶段接入。" : "这是界面预览页面。账号连接和第三方凭证尚未启用。"}</p></div>
         </section>
       </div>
     </main>
