@@ -6,6 +6,8 @@ const APP_HOST = "127.0.0.1:3000";
 const MAILPIT_ORIGIN = "http://127.0.0.1:55324";
 const AUTH_COOKIE_NAME = "rebuy-g2-a1-e2a-auth-token";
 const RESEND_COOLDOWN_MS = 1000;
+const LOGIN_INTENT = "login";
+const SIGNUP_INTENT = "signup";
 const FAILURE_STAGES = new Set([
   "anonymous_session",
   "assertion",
@@ -15,6 +17,13 @@ const FAILURE_STAGES = new Set([
   "mailpit_timeout",
   "mailpit_token",
   "negative_email",
+  "login_without_account",
+  "login_without_account_mail",
+  "existing_login_request",
+  "existing_login_verify",
+  "existing_login_session",
+  "logout",
+  "logout_session",
   "NOT_PROVEN",
   "old_otp",
   "replay",
@@ -201,15 +210,27 @@ async function getSession(stage, cookieHeader) {
   }, APP_ORIGIN);
 }
 
-async function requestOtp(email, stage = "request") {
-  const result = await postOtp(stage, { action: "request", email });
+async function requestOtp(email, intent, stage = "request") {
+  const result = await postOtp(stage, { action: "request", email, intent });
   assert.equal(result.response.status, 200);
   assertFiniteBody(result.body, { status: "otp_sent" });
   console.log("REQUEST_PASS");
 }
 
-async function verifyOtp(email, token, stage) {
-  return postOtp(stage, { action: "verify", email, token });
+async function verifyOtp(email, token, intent, stage) {
+  return postOtp(stage, { action: "verify", email, intent, token });
+}
+
+async function logout(cookieHeader) {
+  return fetchJson("logout", `${APP_ORIGIN}/api/auth/logout`, {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      Cookie: cookieHeader,
+      Host: APP_HOST,
+      Origin: APP_ORIGIN,
+    },
+  }, APP_ORIGIN);
 }
 
 async function exerciseMainFlow() {
@@ -224,49 +245,92 @@ async function exerciseMainFlow() {
   console.log("WRONG_COOKIE_PASS");
 
   const email = makeSyntheticEmail();
-  await requestOtp(email);
+  const beforeLogin = await searchMailpit(email);
+  assert.equal(beforeLogin.length, 0);
+  const loginWithoutAccount = await postOtp("login_without_account", {
+    action: "request",
+    email,
+    intent: LOGIN_INTENT,
+  });
+  assert.equal(loginWithoutAccount.response.status, 502);
+  assertFiniteBody(loginWithoutAccount.body, {
+    status: "error",
+    code: "request_failed",
+  });
+  await new Promise((resolve) => setTimeout(resolve, 500));
+  const afterLogin = await searchMailpit(email);
+  if (afterLogin.length !== 0) {
+    fail("login_without_account_mail");
+  }
+  console.log("LOGIN_WITHOUT_ACCOUNT_REJECTED_PASS");
+
+  await requestOtp(email, SIGNUP_INTENT);
   const firstMail = await waitForNewOtp(email);
   console.log("MAIL_CAPTURE_PASS");
 
   const wrongToken = firstMail.token === "000000" ? "111111" : "000000";
-  const wrong = await verifyOtp(email, wrongToken, "wrong_otp");
+  const wrong = await verifyOtp(email, wrongToken, SIGNUP_INTENT, "wrong_otp");
   assert.equal(wrong.response.status, 422);
   assertFiniteBody(wrong.body, { status: "error", code: "verify_failed" });
   console.log("WRONG_OTP_PASS");
 
-  const verified = await verifyOtp(email, firstMail.token, "verify");
+  const verified = await verifyOtp(email, firstMail.token, SIGNUP_INTENT, "verify");
   assert.equal(verified.response.status, 200);
   assertFiniteBody(verified.body, { status: "verified" });
-  const cookieHeader = responseCookieHeader(verified.response);
-  assert.equal(hasCookie(cookieHeader, AUTH_COOKIE_NAME), true);
+  const signupCookieHeader = responseCookieHeader(verified.response);
+  assert.equal(hasCookie(signupCookieHeader, AUTH_COOKIE_NAME), true);
   console.log("VERIFY_PASS");
 
-  const authenticated = await getSession("authenticated_session", cookieHeader);
+  const authenticated = await getSession("authenticated_session", signupCookieHeader);
   assert.equal(authenticated.response.status, 200);
   assertFiniteBody(authenticated.body, { status: "authenticated" });
   console.log("SESSION_PASS");
 
-  const replay = await verifyOtp(email, firstMail.token, "replay");
+  const replay = await verifyOtp(email, firstMail.token, SIGNUP_INTENT, "replay");
   assert.equal(replay.response.status, 422);
   assertFiniteBody(replay.body, { status: "error", code: "verify_failed" });
   console.log("REPLAY_PASS");
 
+  const signedOut = await logout(signupCookieHeader);
+  assert.equal(signedOut.response.status, 200);
+  assertFiniteBody(signedOut.body, { status: "signed_out" });
+  const clearedCookieHeader = responseCookieHeader(signedOut.response);
+  assert.equal(hasCookie(clearedCookieHeader, AUTH_COOKIE_NAME), true);
+  const anonymousAfterLogout = await getSession("logout_session", clearedCookieHeader);
+  assert.equal(anonymousAfterLogout.response.status, 401);
+  assertFiniteBody(anonymousAfterLogout.body, { status: "anonymous" });
+  console.log("LOGOUT_PASS");
+
   await new Promise((resolve) => setTimeout(resolve, RESEND_COOLDOWN_MS + 100));
-  const resend = await postOtp("resend", { action: "resend", email });
-  assert.equal(resend.response.status, 200);
-  assertFiniteBody(resend.body, { status: "otp_sent" });
-  const resentMail = await waitForNewOtp(email, firstMail.seenIds);
-  assert.equal(typeof resentMail.token, "string");
-  console.log("RESEND_PASS");
+  await requestOtp(email, LOGIN_INTENT, "existing_login_request");
+  const loginMail = await waitForNewOtp(email, firstMail.seenIds);
+  const loginVerified = await verifyOtp(
+    email,
+    loginMail.token,
+    LOGIN_INTENT,
+    "existing_login_verify",
+  );
+  assert.equal(loginVerified.response.status, 200);
+  assertFiniteBody(loginVerified.body, { status: "verified" });
+  const loginCookieHeader = responseCookieHeader(loginVerified.response);
+  assert.equal(hasCookie(loginCookieHeader, AUTH_COOKIE_NAME), true);
+  const loggedInAgain = await getSession("existing_login_session", loginCookieHeader);
+  assert.equal(loggedInAgain.response.status, 200);
+  assertFiniteBody(loggedInAgain.body, { status: "authenticated" });
+  console.log("EXISTING_ACCOUNT_LOGIN_PASS");
 }
 
 async function exerciseOldOtpSemantics() {
   const email = makeSyntheticEmail();
-  await requestOtp(email, "resend_semantics_request");
+  await requestOtp(email, SIGNUP_INTENT, "resend_semantics_request");
   const beforeResend = await waitForNewOtp(email);
 
   await new Promise((resolve) => setTimeout(resolve, RESEND_COOLDOWN_MS + 100));
-  const resend = await postOtp("resend_semantics_resend", { action: "resend", email });
+  const resend = await postOtp("resend_semantics_resend", {
+    action: "resend",
+    email,
+    intent: SIGNUP_INTENT,
+  });
   assert.equal(resend.response.status, 200);
   assertFiniteBody(resend.body, { status: "otp_sent" });
   const afterResend = await waitForNewOtp(email, beforeResend.seenIds);
@@ -275,12 +339,17 @@ async function exerciseOldOtpSemantics() {
     fail("NOT_PROVEN");
   }
 
-  const oldOtp = await verifyOtp(email, beforeResend.token, "old_otp");
+  const oldOtp = await verifyOtp(email, beforeResend.token, SIGNUP_INTENT, "old_otp");
   assert.equal(oldOtp.response.status, 422);
   assertFiniteBody(oldOtp.body, { status: "error", code: "verify_failed" });
   console.log("OLD_OTP_REJECTED_PASS");
 
-  const currentOtp = await verifyOtp(email, afterResend.token, "resend_verify");
+  const currentOtp = await verifyOtp(
+    email,
+    afterResend.token,
+    SIGNUP_INTENT,
+    "resend_verify",
+  );
   assert.equal(currentOtp.response.status, 200);
   assertFiniteBody(currentOtp.body, { status: "verified" });
   console.log("RESEND_VERIFY_PASS");
@@ -291,7 +360,11 @@ async function exerciseNegativeEmail() {
   const before = await searchMailpit(email);
   assert.equal(before.length, 0);
 
-  const result = await postOtp("negative_email", { action: "request", email });
+  const result = await postOtp("negative_email", {
+    action: "request",
+    email,
+    intent: SIGNUP_INTENT,
+  });
   assert.equal(result.response.status, 400);
   assertFiniteBody(result.body, { status: "error", code: "invalid_request" });
   await new Promise((resolve) => setTimeout(resolve, 500));

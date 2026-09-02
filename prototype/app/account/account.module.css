@@ -276,6 +276,122 @@ a.accountRow:focus-visible {
   overflow-wrap: anywhere;
 }
 
+.logoutButton {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 28px;
+  padding: 10px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 740;
+}
+
+.logoutButton:hover:not(:disabled),
+.logoutButton:focus-visible {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.logoutButton:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.signOutError {
+  margin-top: 10px;
+  color: var(--danger);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.authUnavailable {
+  display: grid;
+  width: min(100% - 32px, 520px);
+  min-height: 100svh;
+  align-content: center;
+  gap: 14px;
+  margin: 0 auto;
+}
+
+.authUnavailable h1 {
+  font-size: clamp(28px, 6vw, 40px);
+}
+
+.authUnavailable p:not(.eyebrow) {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.authUnavailable a {
+  width: fit-content;
+  color: var(--accent);
+  font-weight: 740;
+}
+
+.logoutButton {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 28px;
+  padding: 10px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 740;
+}
+
+.logoutButton:hover:not(:disabled),
+.logoutButton:focus-visible {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.logoutButton:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.signOutError {
+  margin-top: 10px;
+  color: var(--danger);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.authUnavailable {
+  display: grid;
+  width: min(100% - 32px, 520px);
+  min-height: 100svh;
+  align-content: center;
+  gap: 14px;
+  margin: 0 auto;
+}
+
+.authUnavailable h1 {
+  font-size: clamp(28px, 6vw, 40px);
+}
+
+.authUnavailable p:not(.eyebrow) {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.authUnavailable a {
+  width: fit-content;
+  color: var(--accent);
+  font-weight: 740;
+}
+
 @media (max-width: 620px) {
   .frame {
     padding-right: 16px;

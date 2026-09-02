@@ -2,6 +2,7 @@
 
 import { ArrowLeft, Moon, Sun, X } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
 import BrandMark from "@/components/BrandMark";
@@ -9,6 +10,7 @@ import {
   EMAIL_OTP_RESEND_COOLDOWN_MS,
   normalizeSyntheticEmail,
   type EmailOtpAction,
+  type EmailOtpIntent,
 } from "@/lib/auth/email-otp";
 import styles from "./login.module.css";
 
@@ -18,6 +20,7 @@ type BusyAction = EmailOtpAction | null;
 
 type LoginPrototypeProps = {
   authStatus?: string;
+  nextPath: string;
 };
 
 type EmailOtpApiResponse =
@@ -62,6 +65,7 @@ function isApiResponse(value: unknown): value is EmailOtpApiResponse {
 async function postEmailOtp(payload: {
   action: EmailOtpAction;
   email: string;
+  intent: EmailOtpIntent;
   token?: string;
 }): Promise<EmailOtpApiResult> {
   let response: Response;
@@ -117,8 +121,10 @@ function maskEmail(email: string) {
   return `${localPart?.slice(0, 1) ?? "*"}***@${domain ?? "rebuy.test"}`;
 }
 
-export default function LoginPrototype({ authStatus }: LoginPrototypeProps) {
+export default function LoginPrototype({ authStatus, nextPath }: LoginPrototypeProps) {
+  const router = useRouter();
   const [theme, setTheme] = useState<Theme>("light");
+  const [intent, setIntent] = useState<EmailOtpIntent>("login");
   const [email, setEmail] = useState("");
   const [step, setStep] = useState<LoginStep>("email");
   const [otp, setOtp] = useState("");
@@ -164,7 +170,11 @@ export default function LoginPrototype({ authStatus }: LoginPrototypeProps) {
     setOtp("");
     setBusyAction("request");
 
-    const result = await postEmailOtp({ action: "request", email: normalizedEmail });
+    const result = await postEmailOtp({
+      action: "request",
+      email: normalizedEmail,
+      intent,
+    });
     setBusyAction(null);
 
     if (!result.ok) {
@@ -202,7 +212,7 @@ export default function LoginPrototype({ authStatus }: LoginPrototypeProps) {
     setOtpError("");
     setBusyAction("verify");
 
-    const result = await postEmailOtp({ action: "verify", email, token: otp });
+    const result = await postEmailOtp({ action: "verify", email, intent, token: otp });
     if (!result.ok) {
       setBusyAction(null);
       if (result.code === "verify_failed") {
@@ -221,8 +231,8 @@ export default function LoginPrototype({ authStatus }: LoginPrototypeProps) {
 
     setBusyAction(null);
     setOtpError("");
-    setNotice("本地会话已建立。");
-    setStep("email");
+    router.replace(nextPath);
+    router.refresh();
   };
 
   const handleEditEmail = () => {
@@ -251,7 +261,7 @@ export default function LoginPrototype({ authStatus }: LoginPrototypeProps) {
     setNotice("");
     setBusyAction("resend");
 
-    const result = await postEmailOtp({ action: "resend", email });
+    const result = await postEmailOtp({ action: "resend", email, intent });
     setBusyAction(null);
 
     if (!result.ok) {
@@ -265,6 +275,23 @@ export default function LoginPrototype({ authStatus }: LoginPrototypeProps) {
     setOtp("");
     setResendCooldownMs(EMAIL_OTP_RESEND_COOLDOWN_MS);
     setNotice("验证码已重发。");
+  };
+
+  const handleIntentChange = (nextIntent: EmailOtpIntent) => {
+    if (busyAction || nextIntent === intent) {
+      return;
+    }
+
+    setIntent(nextIntent);
+    setStep("email");
+    setEmail("");
+    setOtp("");
+    setEmailError("");
+    setOtpError("");
+    setErrorMessage("");
+    setNotice("");
+    setCallbackMessage("");
+    setResendCooldownMs(0);
   };
 
   return (
@@ -296,11 +323,34 @@ export default function LoginPrototype({ authStatus }: LoginPrototypeProps) {
         <section className={styles.content} aria-labelledby="login-title">
           <div className={styles.intro}>
             <p className={styles.eyebrow}>账号入口</p>
-            <h1 id="login-title">登录 Rebuy</h1>
+            <h1 id="login-title">
+              {intent === "login" ? "登录 Rebuy" : "注册 Rebuy"}
+            </h1>
             <p className={styles.status}>本地测试认证 · 仅限合成邮箱</p>
           </div>
 
           <div className={styles.loginPanel}>
+            <div className={styles.intentTabs} role="tablist" aria-label="选择账号操作">
+              <button
+                className={intent === "login" ? styles.intentTabActive : styles.intentTab}
+                type="button"
+                role="tab"
+                aria-selected={intent === "login"}
+                onClick={() => handleIntentChange("login")}
+              >
+                登录
+              </button>
+              <button
+                className={intent === "signup" ? styles.intentTabActive : styles.intentTab}
+                type="button"
+                role="tab"
+                aria-selected={intent === "signup"}
+                onClick={() => handleIntentChange("signup")}
+              >
+                注册
+              </button>
+            </div>
+
             {callbackMessage ? (
               <div className={styles.authStatus} role="alert">
                 <span className={styles.authStatusText}>{callbackMessage}</span>
@@ -361,7 +411,11 @@ export default function LoginPrototype({ authStatus }: LoginPrototypeProps) {
                     ) : null}
                   </div>
                   <button className={styles.primaryButton} type="submit" disabled={busyAction !== null} aria-busy={busyAction === "request"}>
-                    {busyAction === "request" ? "发送中..." : "继续"}
+                    {busyAction === "request"
+                      ? "发送中..."
+                      : intent === "login"
+                        ? "发送登录验证码"
+                        : "发送注册验证码"}
                   </button>
                 </form>
               </>
@@ -409,7 +463,11 @@ export default function LoginPrototype({ authStatus }: LoginPrototypeProps) {
                 ) : null}
 
                 <button className={styles.primaryButton} type="submit" disabled={otp.length !== 6 || busyAction !== null} aria-busy={busyAction === "verify"}>
-                  {busyAction === "verify" ? "验证中..." : "验证并登录"}
+                  {busyAction === "verify"
+                    ? "验证中..."
+                    : intent === "login"
+                      ? "验证并登录"
+                      : "验证并完成注册"}
                 </button>
 
                 <div className={styles.otpActions}>

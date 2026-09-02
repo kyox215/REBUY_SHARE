@@ -14,7 +14,11 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test:auth": "node scripts/run-auth-contract-tests.mjs",
-    "test:auth:local": "node scripts/run-local-email-otp-smoke.mjs"
+    "dev:auth:local": "node scripts/run-local-auth-dev-server.mjs",
+    "test:auth:local": "node scripts/run-local-email-otp-smoke.mjs",
+    "test:auth:p2l:structure": "node scripts/test-p2l-amr-preflight-structure.mjs",
+    "test:auth:p2l:migration:structure": "node scripts/test-p2l-migration-structure.mjs",
+    "test:auth:p2l": "node scripts/run-p2l-amr-preflight.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.5",

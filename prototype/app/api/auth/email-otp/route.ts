@@ -11,7 +11,7 @@ export async function POST(request: Request) {
     const supabase = await createAuthRouteClient();
 
     return {
-      signInWithOtp: ({ email, options }: { email: string; options: { shouldCreateUser: true } }) =>
+      signInWithOtp: ({ email, options }: { email: string; options: { shouldCreateUser: boolean } }) =>
         supabase.auth.signInWithOtp({ email, options }),
       verifyOtp: ({ email, token, type }: { email: string; token: string; type: "email" }) =>
         supabase.auth.verifyOtp({ email, token, type }),

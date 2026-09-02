@@ -46,6 +46,11 @@ import {
 } from "../../lib/auth/email-otp";
 import { resolveSessionStatus } from "../../lib/auth/session";
 import {
+  handleLogoutRequest,
+  LOGOUT_APP_HOST,
+  LOGOUT_APP_ORIGIN,
+} from "../../lib/auth/logout";
+import {
   isAllowedSupabasePublicKey,
   LOCAL_SUPABASE_URL,
   REBUY_AUTH_COOKIE_NAME,
@@ -933,10 +938,12 @@ test("rejects invalid email OTP input without calling the adapter", async () => 
     },
   });
   const invalidInputs = [
-    { action: "request", email: "person@example.invalid" },
-    { action: "request", email: syntheticEmail, extra: true },
-    { action: "verify", email: syntheticEmail, token: "1".repeat(EMAIL_OTP_LENGTH - 1) },
-    { action: "verify", email: syntheticEmail, token: validOtp, extra: true },
+    { action: "request", email: "person@example.invalid", intent: "login" },
+    { action: "request", email: syntheticEmail },
+    { action: "request", email: syntheticEmail, intent: "unknown" },
+    { action: "request", email: syntheticEmail, intent: "login", extra: true },
+    { action: "verify", email: syntheticEmail, intent: "login", token: "1".repeat(EMAIL_OTP_LENGTH - 1) },
+    { action: "verify", email: syntheticEmail, intent: "login", token: validOtp, extra: true },
     null,
   ];
 
@@ -950,8 +957,8 @@ test("rejects invalid email OTP input without calling the adapter", async () => 
   assert.equal(calls, 0);
 });
 
-test("normalizes a valid email and calls request and resend exactly once", async () => {
-  const signInCalls: Array<{ email: string; shouldCreateUser: true }> = [];
+test("separates login from signup and preserves intent when resending", async () => {
+  const signInCalls: Array<{ email: string; shouldCreateUser: boolean }> = [];
   const adapter = makeAdapter({
     signInWithOtp: async ({ email, options }) => {
       signInCalls.push({ email, shouldCreateUser: options.shouldCreateUser });
@@ -960,18 +967,18 @@ test("normalizes a valid email and calls request and resend exactly once", async
   });
 
   const request = await runEmailOtp(
-    { action: "request", email: `  E2A-CONTRACT@${SYNTHETIC_EMAIL_DOMAIN.toUpperCase()} ` },
+    { action: "request", email: `  E2A-CONTRACT@${SYNTHETIC_EMAIL_DOMAIN.toUpperCase()} `, intent: "login" },
     adapter,
   );
   const resend = await runEmailOtp(
-    { action: "resend", email: syntheticEmail },
+    { action: "resend", email: syntheticEmail, intent: "signup" },
     adapter,
   );
 
   assert.deepEqual(request, { kind: "success", action: "request", status: "otp_sent" });
   assert.deepEqual(resend, { kind: "success", action: "resend", status: "otp_sent" });
   assert.deepEqual(signInCalls, [
-    { email: syntheticEmail, shouldCreateUser: true },
+    { email: syntheticEmail, shouldCreateUser: false },
     { email: syntheticEmail, shouldCreateUser: true },
   ]);
 });
@@ -988,11 +995,11 @@ test("verifies a six digit OTP once and maps wrong or replayed OTP errors", asyn
   });
 
   const verified = await runEmailOtp(
-    { action: "verify", email: syntheticEmail, token: validOtp },
+    { action: "verify", email: syntheticEmail, intent: "login", token: validOtp },
     adapter,
   );
   const replayed = await runEmailOtp(
-    { action: "verify", email: syntheticEmail, token: validOtp },
+    { action: "verify", email: syntheticEmail, intent: "login", token: validOtp },
     adapter,
   );
 
@@ -1007,7 +1014,7 @@ test("verifies a six digit OTP once and maps wrong or replayed OTP errors", asyn
 
 test("maps thrown request and verify failures to finite codes", async () => {
   const requestFailure = await runEmailOtp(
-    { action: "request", email: syntheticEmail },
+    { action: "request", email: syntheticEmail, intent: "login" },
     makeAdapter({
       signInWithOtp: async () => {
         throw new Error("provider-request-error-that-must-not-leak");
@@ -1015,7 +1022,7 @@ test("maps thrown request and verify failures to finite codes", async () => {
     }),
   );
   const verifyFailure = await runEmailOtp(
-    { action: "verify", email: syntheticEmail, token: validOtp },
+    { action: "verify", email: syntheticEmail, intent: "login", token: validOtp },
     makeAdapter({
       verifyOtp: async () => {
         throw new Error("provider-verify-error-that-must-not-leak");
@@ -1043,13 +1050,13 @@ test("enforces same-origin JSON and body gates before creating an adapter", asyn
           Host: "127.0.0.1:3000",
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ action: "request", email: syntheticEmail }),
+        body: JSON.stringify({ action: "request", email: syntheticEmail, intent: "login" }),
       }),
       status: 403,
       code: "origin_not_allowed",
     },
     {
-      request: makeJsonRequest({ action: "request", email: syntheticEmail }, { Origin: "http://outside.invalid" }),
+      request: makeJsonRequest({ action: "request", email: syntheticEmail, intent: "login" }, { Origin: "http://outside.invalid" }),
       status: 403,
       code: "origin_not_allowed",
     },
@@ -1067,14 +1074,14 @@ test("enforces same-origin JSON and body gates before creating an adapter", asyn
       code: "unsupported_media_type",
     },
     {
-      request: makeJsonRequest({ action: "request", email: syntheticEmail }, {
+      request: makeJsonRequest({ action: "request", email: syntheticEmail, intent: "login" }, {
         "Content-Length": String(EMAIL_OTP_MAX_BODY_BYTES + 1),
       }),
       status: 413,
       code: "body_too_large",
     },
     {
-      request: makeJsonRequest({ action: "request", email: syntheticEmail }, { "Content-Length": "not-a-size" }),
+      request: makeJsonRequest({ action: "request", email: syntheticEmail, intent: "login" }, { "Content-Length": "not-a-size" }),
       status: 400,
       code: "invalid_request",
     },
@@ -1092,7 +1099,7 @@ test("enforces same-origin JSON and body gates before creating an adapter", asyn
       code: "invalid_request",
     },
     {
-      request: makeJsonRequest({ action: "request", email: "person@example.invalid" }),
+      request: makeJsonRequest({ action: "request", email: "person@example.invalid", intent: "login" }),
       status: 400,
       code: "invalid_request",
     },
@@ -1126,11 +1133,11 @@ test("returns finite route results and preserves no-store headers", async () => 
   };
 
   const requestResponse = await handleEmailOtpRequest(
-    makeJsonRequest({ action: "request", email: syntheticEmail }),
+    makeJsonRequest({ action: "request", email: syntheticEmail, intent: "login" }),
     createAdapter,
   );
   const verifyResponse = await handleEmailOtpRequest(
-    makeJsonRequest({ action: "verify", email: syntheticEmail, token: validOtp }),
+    makeJsonRequest({ action: "verify", email: syntheticEmail, intent: "login", token: validOtp }),
     createAdapter,
   );
 
@@ -1148,13 +1155,13 @@ test("returns finite route results and preserves no-store headers", async () => 
 
 test("does not expose provider errors or factory failures through the route", async () => {
   const providerFailure = await handleEmailOtpRequest(
-    makeJsonRequest({ action: "request", email: syntheticEmail }),
+    makeJsonRequest({ action: "request", email: syntheticEmail, intent: "login" }),
     async () => makeAdapter({
       signInWithOtp: async () => ({ error: new Error("raw-provider-message") }),
     }),
   );
   const factoryFailure = await handleEmailOtpRequest(
-    makeJsonRequest({ action: "verify", email: syntheticEmail, token: validOtp }),
+    makeJsonRequest({ action: "verify", email: syntheticEmail, intent: "login", token: validOtp }),
     async () => {
       throw new Error("raw-factory-message");
     },
@@ -1261,6 +1268,23 @@ test("keeps Supabase environment reads server-only and browser config explicit",
   assert.match(browserClientSource, /createClient\(config: SupabasePublicConfig\)/);
 });
 
+test("protects the account page with verified claims and never getSession", () => {
+  const accountPage = readFileSync(
+    resolve(process.cwd(), "app/account/page.tsx"),
+    "utf8",
+  );
+  const sessionRoute = readFileSync(
+    resolve(process.cwd(), "app/api/auth/session/route.ts"),
+    "utf8",
+  );
+
+  for (const source of [accountPage, sessionRoute]) {
+    assert.match(source, /auth[.]getClaims\(\)/);
+    assert.doesNotMatch(source, /auth[.]getSession\(\)/);
+  }
+  assert.match(accountPage, /redirect\("\/account\/login\?next=%2Faccount"\)/);
+});
+
 test("keeps the Rebuy cookie name fixed and makes route writes strict", () => {
   assert.equal(REBUY_AUTH_COOKIE_NAME, "rebuy-g2-a1-e2a-auth-token");
   assert.equal(REBUY_AUTH_COOKIE_OPTIONS.name, REBUY_AUTH_COOKIE_NAME);
@@ -1326,7 +1350,7 @@ test("maps only explicit rate limits and keeps resend cooldown aligned to local 
   assert.equal(isRateLimitedAuthError("a provider mentioned rate in an unrelated message"), false);
 
   const outcome = await runEmailOtp(
-    { action: "resend", email: syntheticEmail },
+    { action: "resend", email: syntheticEmail, intent: "login" },
     makeAdapter({
       signInWithOtp: async () => ({
         error: { status: 429, message: "raw provider text that must not leak" },
@@ -1339,7 +1363,7 @@ test("maps only explicit rate limits and keeps resend cooldown aligned to local 
 
 test("returns HTTP 429 for finite rate-limited route outcomes", async () => {
   const response = await handleEmailOtpRequest(
-    makeJsonRequest({ action: "resend", email: syntheticEmail }),
+    makeJsonRequest({ action: "resend", email: syntheticEmail, intent: "login" }),
     async () => makeAdapter({
       signInWithOtp: async () => ({ error: { code: "over_email_send_rate_limit" } }),
     }),
@@ -1408,10 +1432,10 @@ test("rejects invalid UTF-8 before creating an adapter", async () => {
 
 test("requires the exact fixed app origin and host", async () => {
   const rejectedRequests = [
-    makeJsonRequest({ action: "request", email: syntheticEmail }, { Host: "localhost:3000" }),
-    makeJsonRequest({ action: "request", email: syntheticEmail }, { Host: "127.0.0.1:3000.evil" }),
-    makeJsonRequest({ action: "request", email: syntheticEmail }, { Origin: "http://localhost:3000" }),
-    makeJsonRequest({ action: "request", email: syntheticEmail }, { Origin: "http://127.0.0.1:3000/" }),
+    makeJsonRequest({ action: "request", email: syntheticEmail, intent: "login" }, { Host: "localhost:3000" }),
+    makeJsonRequest({ action: "request", email: syntheticEmail, intent: "login" }, { Host: "127.0.0.1:3000.evil" }),
+    makeJsonRequest({ action: "request", email: syntheticEmail, intent: "login" }, { Origin: "http://localhost:3000" }),
+    makeJsonRequest({ action: "request", email: syntheticEmail, intent: "login" }, { Origin: "http://127.0.0.1:3000/" }),
     new Request("http://localhost:3000/api/auth/email-otp", {
       method: "POST",
       headers: {
@@ -1419,7 +1443,7 @@ test("requires the exact fixed app origin and host", async () => {
         Host: EMAIL_OTP_APP_HOST,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ action: "request", email: syntheticEmail }),
+      body: JSON.stringify({ action: "request", email: syntheticEmail, intent: "login" }),
     }),
   ];
   let factoryCalls = 0;
@@ -1437,4 +1461,73 @@ test("requires the exact fixed app origin and host", async () => {
   }
 
   assert.equal(factoryCalls, 0);
+});
+
+test("signs out only the current session through an exact same-origin POST", async () => {
+  const calls: Array<{ scope: "local" }> = [];
+  const response = await handleLogoutRequest(
+    new Request(`${LOGOUT_APP_ORIGIN}/api/auth/logout`, {
+      method: "POST",
+      headers: { Origin: LOGOUT_APP_ORIGIN, Host: LOGOUT_APP_HOST },
+    }),
+    async () => ({
+      signOut: async (options) => {
+        calls.push(options);
+        return { error: null };
+      },
+    }),
+  );
+
+  assert.equal(response.status, 200);
+  assert.deepEqual(await responseJson(response), { status: "signed_out" });
+  assert.deepEqual(calls, [{ scope: "local" }]);
+  assert.equal(response.headers.get("Cache-Control"), "no-store");
+  assert.equal(response.headers.get("Referrer-Policy"), "no-referrer");
+  assert.equal(response.headers.get("X-Content-Type-Options"), "nosniff");
+});
+
+test("rejects forged logout requests and maps provider failures finitely", async () => {
+  let factoryCalls = 0;
+  for (const request of [
+    new Request(`${LOGOUT_APP_ORIGIN}/api/auth/logout`, {
+      method: "POST",
+      headers: { Host: LOGOUT_APP_HOST },
+    }),
+    new Request(`${LOGOUT_APP_ORIGIN}/api/auth/logout`, {
+      method: "POST",
+      headers: {
+        Origin: "http://outside.invalid",
+        Host: LOGOUT_APP_HOST,
+      },
+    }),
+    new Request(`${LOGOUT_APP_ORIGIN}/api/auth/logout`, {
+      method: "POST",
+      headers: {
+        Origin: LOGOUT_APP_ORIGIN,
+        Host: LOGOUT_APP_HOST,
+        "Content-Type": "application/json",
+      },
+      body: "{}",
+    }),
+  ]) {
+    const response = await handleLogoutRequest(request, async () => {
+      factoryCalls += 1;
+      return { signOut: async () => ({ error: null }) };
+    });
+    assert.equal(response.status === 403 || response.status === 400, true);
+  }
+  assert.equal(factoryCalls, 0);
+
+  const rawError = "raw signout provider failure";
+  const failed = await handleLogoutRequest(
+    new Request(`${LOGOUT_APP_ORIGIN}/api/auth/logout`, {
+      method: "POST",
+      headers: { Origin: LOGOUT_APP_ORIGIN, Host: LOGOUT_APP_HOST },
+    }),
+    async () => ({ signOut: async () => ({ error: new Error(rawError) }) }),
+  );
+  const body = await responseJson(failed);
+  assert.equal(failed.status, 500);
+  assert.deepEqual(body, { status: "error", code: "signout_failed" });
+  assert.equal(JSON.stringify(body).includes(rawError), false);
 });

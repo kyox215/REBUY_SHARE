@@ -1,5 +1,7 @@
 export const EMAIL_OTP_ACTIONS = ["request", "verify", "resend"] as const;
 export type EmailOtpAction = (typeof EMAIL_OTP_ACTIONS)[number];
+export const EMAIL_OTP_INTENTS = ["login", "signup"] as const;
+export type EmailOtpIntent = (typeof EMAIL_OTP_INTENTS)[number];
 
 export const EMAIL_OTP_LENGTH = 6;
 export const EMAIL_OTP_MAX_EMAIL_LENGTH = 254;
@@ -10,15 +12,15 @@ const emailPattern = new RegExp(`^[^\\s@]+@${SYNTHETIC_EMAIL_DOMAIN.replace(".",
 const otpPattern = new RegExp(`^\\d{${EMAIL_OTP_LENGTH}}$`);
 
 export type EmailOtpInput =
-  | { action: "request" | "resend"; email: string }
-  | { action: "verify"; email: string; token: string };
+  | { action: "request" | "resend"; email: string; intent: EmailOtpIntent }
+  | { action: "verify"; email: string; token: string; intent: EmailOtpIntent };
 
 export type EmailOtpAuthResult = { error?: unknown } | null | undefined;
 
 export type EmailOtpAuthAdapter = {
   signInWithOtp: (credentials: {
     email: string;
-    options: { shouldCreateUser: true };
+    options: { shouldCreateUser: boolean };
   }) => Promise<EmailOtpAuthResult>;
   verifyOtp: (credentials: {
     email: string;
@@ -151,6 +153,14 @@ export function parseEmailOtpInput(value: unknown): ParsedEmailOtpInput {
     return { ok: false };
   }
   const action = actionValue as EmailOtpAction;
+  const intentValue = record.intent;
+  if (
+    typeof intentValue !== "string" ||
+    !EMAIL_OTP_INTENTS.includes(intentValue as EmailOtpIntent)
+  ) {
+    return { ok: false };
+  }
+  const intent = intentValue as EmailOtpIntent;
 
   const email = normalizeSyntheticEmail(record.email);
   if (!email) {
@@ -158,7 +168,7 @@ export function parseEmailOtpInput(value: unknown): ParsedEmailOtpInput {
   }
 
   if (action === "verify") {
-    if (!hasExactKeys(record, ["action", "email", "token"])) {
+    if (!hasExactKeys(record, ["action", "email", "intent", "token"])) {
       return { ok: false };
     }
 
@@ -168,15 +178,15 @@ export function parseEmailOtpInput(value: unknown): ParsedEmailOtpInput {
 
     return {
       ok: true,
-      input: { action, email, token: record.token },
+      input: { action, email, intent, token: record.token },
     };
   }
 
-  if (!hasExactKeys(record, ["action", "email"])) {
+  if (!hasExactKeys(record, ["action", "email", "intent"])) {
     return { ok: false };
   }
 
-  return { ok: true, input: { action, email } };
+  return { ok: true, input: { action, email, intent } };
 }
 
 export async function executeEmailOtp(
@@ -204,7 +214,7 @@ export async function executeEmailOtp(
 
     const result = await adapter.signInWithOtp({
       email: input.email,
-      options: { shouldCreateUser: true },
+      options: { shouldCreateUser: input.intent === "signup" },
     });
 
     if (!result || result.error) {
