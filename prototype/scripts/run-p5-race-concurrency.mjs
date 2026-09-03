@@ -164,7 +164,6 @@ DELETE FROM public.secondhand_units WHERE listing_id IN (${sqlList(listings)});
 DELETE FROM public.listings WHERE id IN (${sqlList(listings)});
 DELETE FROM public.product_variants WHERE product_id IN (${sqlList(products)});
 DELETE FROM public.products WHERE id IN (${sqlList(products)});
-DELETE FROM public.stores WHERE id = '${IDS.store}';
 UPDATE public.wholesale_applications
   SET status = 'rejected', organization_id = NULL, owner_membership_id = NULL,
     qualification_id = NULL, decided_at = pg_catalog.statement_timestamp()
@@ -176,6 +175,7 @@ DELETE FROM public.membership_store_scopes
 DELETE FROM public.memberships
   WHERE id IN ('${IDS.wholesaleMembership}', '${IDS.reviewerMembership}',
     '${IDS.merchantMembership}');
+DELETE FROM public.stores WHERE id = '${IDS.store}';
 DELETE FROM public.organizations
   WHERE id IN ('${IDS.merchantOrg}', '${IDS.wholesaleOrg}', '${IDS.platformOrg}');
 DELETE FROM public.profiles WHERE user_id IN (${sqlList(users)});
@@ -217,7 +217,7 @@ VALUES
   ('${IDS.wholesaleScope}', '${IDS.wholesaleMembership}', '${IDS.wholesaleOrg}',
     'wholesale', NULL, 'organization', 'active'),
   ('${IDS.merchantScope}', '${IDS.merchantMembership}', '${IDS.merchantOrg}',
-    'merchant', '${IDS.store}', 'store', 'active');
+    'merchant', NULL, 'organization', 'active');
 INSERT INTO public.wholesale_applications (id, applicant_user_id, company_name,
   country_code, status, assigned_reviewer_membership_id, assigned_at, submitted_at)
 VALUES ('${IDS.wholesaleApplication}', '${IDS.wholesaleBuyer}', 'P5 Race Wholesale',
@@ -611,7 +611,9 @@ try {
       'reserved_b', (SELECT reserved FROM public.inventory_levels WHERE id = '${IDS.cancelInventoryB}'),
       'order_events', (SELECT count(*) FROM public.order_events WHERE batch_id = '${cancelBatchId}'),
       'p5_keys', (SELECT count(*) FROM public.p5_idempotency_keys WHERE actor_user_id = '${IDS.cancelBuyer}'),
-      'inventory_events', (SELECT count(*) FROM public.inventory_events WHERE listing_id IN ('${IDS.cancelListingA}', '${IDS.cancelListingB}'))
+      'inventory_events', (SELECT count(*) FROM public.inventory_events
+        WHERE listing_id IN ('${IDS.cancelListingA}', '${IDS.cancelListingB}')
+          AND actor_user_id = '${IDS.cancelBuyer}')
     )::text;
   `, 'cancel_state'))
   assert.deepEqual(cancelState, {
