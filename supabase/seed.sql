@@ -9,7 +9,10 @@ VALUES
   ('00000000-0000-4000-8000-000000000103', 'organization.read', 'organization', 'read', 'organization', 'medium', false),
   ('00000000-0000-4000-8000-000000000104', 'store.read', 'store', 'read', 'store', 'medium', false),
   ('00000000-0000-4000-8000-000000000105', 'member.read', 'member', 'read', 'organization', 'high', false),
-  ('00000000-0000-4000-8000-000000000106', 'member.invite', 'member', 'invite', 'organization', 'high', false)
+  ('00000000-0000-4000-8000-000000000106', 'member.invite', 'member', 'invite', 'organization', 'high', false),
+  ('00000000-0000-4000-8000-000000000107', 'merchant_application.assign', 'merchant_application', 'assign', 'platform', 'high', false),
+  ('00000000-0000-4000-8000-000000000108', 'merchant_application.read_assigned', 'merchant_application', 'read_assigned', 'platform', 'high', false),
+  ('00000000-0000-4000-8000-000000000109', 'merchant_application.review', 'merchant_application', 'review', 'platform', 'critical', false)
 ON CONFLICT (id) DO UPDATE
 SET permission_key = EXCLUDED.permission_key,
     resource = EXCLUDED.resource,
@@ -24,7 +27,9 @@ INSERT INTO public.role_definitions (
 )
 VALUES
   ('00000000-0000-4000-8000-000000000201', 'owner', 'organization', 1, 'any', true, 'active', true),
-  ('00000000-0000-4000-8000-000000000202', 'employee', 'store', 1, 'merchant', true, 'active', true)
+  ('00000000-0000-4000-8000-000000000202', 'employee', 'store', 1, 'merchant', true, 'active', true),
+  ('00000000-0000-4000-8000-000000000203', 'platform_admin', 'platform', 1, 'platform', true, 'active', false),
+  ('00000000-0000-4000-8000-000000000204', 'merchant_reviewer', 'platform', 1, 'platform', true, 'active', false)
 ON CONFLICT (id) DO UPDATE
 SET organization_id = EXCLUDED.organization_id,
     organization_type = EXCLUDED.organization_type,
@@ -44,6 +49,11 @@ VALUES
   ('00000000-0000-4000-8000-000000000201', 1, '00000000-0000-4000-8000-000000000104', true),
   ('00000000-0000-4000-8000-000000000201', 1, '00000000-0000-4000-8000-000000000105', true),
   ('00000000-0000-4000-8000-000000000201', 1, '00000000-0000-4000-8000-000000000106', true),
-  ('00000000-0000-4000-8000-000000000202', 1, '00000000-0000-4000-8000-000000000104', true)
+  ('00000000-0000-4000-8000-000000000202', 1, '00000000-0000-4000-8000-000000000104', true),
+  ('00000000-0000-4000-8000-000000000203', 1, '00000000-0000-4000-8000-000000000107', true),
+  ('00000000-0000-4000-8000-000000000203', 1, '00000000-0000-4000-8000-000000000108', true),
+  ('00000000-0000-4000-8000-000000000203', 1, '00000000-0000-4000-8000-000000000109', true),
+  ('00000000-0000-4000-8000-000000000204', 1, '00000000-0000-4000-8000-000000000108', true),
+  ('00000000-0000-4000-8000-000000000204', 1, '00000000-0000-4000-8000-000000000109', true)
 ON CONFLICT (role_definition_id, role_version, permission_id) DO UPDATE
 SET is_granted = EXCLUDED.is_granted;
