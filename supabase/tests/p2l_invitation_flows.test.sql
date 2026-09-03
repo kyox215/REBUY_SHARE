@@ -968,8 +968,10 @@ BEGIN
 END
 $claims$;
 
+TRUNCATE pg_temp.p2l_create_result;
 SELECT lives_ok(
   $sql$
+    INSERT INTO pg_temp.p2l_create_result
     SELECT *
     FROM public.create_membership_invitation(
       '00000000-0000-4000-8000-000000000401',
@@ -982,6 +984,476 @@ SELECT lives_ok(
     )
   $sql$,
   'store invitation create succeeds'
+);
+
+DO $claims$
+BEGIN
+  PERFORM pg_temp.p2l_set_claims(
+    '00000000-0000-4000-8000-000000000306',
+    'p2l-target-e@rebuy.test',
+    false,
+    pg_catalog.jsonb_build_object('method', 'otp'),
+    pg_catalog.jsonb_build_object('iat', 9999999999)
+  );
+END
+$claims$;
+SELECT throws_ok(
+  $sql$
+    SELECT *
+    FROM public.accept_membership_invitation(
+      (SELECT invitation_id FROM pg_temp.p2l_create_result LIMIT 1)
+    )
+  $sql$,
+  'P0001',
+  'recent_otp_required',
+  'accept rejects missing AMR timestamp even when iat is present'
+);
+
+DO $claims$
+BEGIN
+  PERFORM pg_temp.p2l_set_claims(
+    '00000000-0000-4000-8000-000000000306',
+    'p2l-target-e@rebuy.test',
+    false,
+    pg_catalog.jsonb_build_array(
+      pg_catalog.jsonb_build_object(
+        'method', 'otp',
+        'timestamp', EXTRACT(epoch FROM pg_catalog.statement_timestamp()) - 601
+      )
+    )
+  );
+END
+$claims$;
+SELECT throws_ok(
+  $sql$
+    SELECT *
+    FROM public.accept_membership_invitation(
+      (SELECT invitation_id FROM pg_temp.p2l_create_result LIMIT 1)
+    )
+  $sql$,
+  'P0001',
+  'recent_otp_required',
+  'accept rejects stale OTP evidence'
+);
+
+DO $claims$
+BEGIN
+  PERFORM pg_temp.p2l_set_claims(
+    '00000000-0000-4000-8000-000000000306',
+    'p2l-target-d@rebuy.test',
+    false,
+    pg_catalog.jsonb_build_array(
+      pg_catalog.jsonb_build_object(
+        'method', 'otp',
+        'timestamp', EXTRACT(epoch FROM pg_catalog.statement_timestamp())
+      )
+    )
+  );
+END
+$claims$;
+SELECT throws_ok(
+  $sql$
+    SELECT *
+    FROM public.accept_membership_invitation(
+      (SELECT invitation_id FROM pg_temp.p2l_create_result LIMIT 1)
+    )
+  $sql$,
+  'P0001',
+  'invitation_not_available',
+  'accept does not disclose target-email mismatch details'
+);
+
+DO $claims$
+BEGIN
+  PERFORM pg_temp.p2l_set_claims(
+    '00000000-0000-4000-8000-000000000306',
+    'p2l-target-e@rebuy.test',
+    false,
+    pg_catalog.jsonb_build_array(
+      pg_catalog.jsonb_build_object(
+        'method', 'password',
+        'timestamp', EXTRACT(epoch FROM pg_catalog.statement_timestamp())
+      ),
+      pg_catalog.jsonb_build_object(
+        'method', 'otp',
+        'timestamp', EXTRACT(epoch FROM pg_catalog.statement_timestamp())
+      )
+    )
+  );
+END
+$claims$;
+SELECT throws_ok(
+  $sql$
+    SELECT *
+    FROM private.accept_membership_invitation_impl(
+      (SELECT invitation_id FROM pg_temp.p2l_create_result LIMIT 1)
+    )
+  $sql$,
+  'P0001',
+  'recent_otp_required',
+  'direct private accept also requires OTP in the first AMR entry'
+);
+
+TRUNCATE pg_temp.p2l_accept_result;
+DO $claims$
+BEGIN
+  PERFORM pg_temp.p2l_set_claims(
+    '00000000-0000-4000-8000-000000000306',
+    'p2l-target-e@rebuy.test',
+    false,
+    pg_catalog.jsonb_build_array(
+      pg_catalog.jsonb_build_object(
+        'method', 'otp',
+        'timestamp', EXTRACT(epoch FROM pg_catalog.statement_timestamp())
+      )
+    )
+  );
+END
+$claims$;
+SELECT lives_ok(
+  $sql$
+    INSERT INTO pg_temp.p2l_accept_result
+    SELECT *
+    FROM public.accept_membership_invitation(
+      (SELECT invitation_id FROM pg_temp.p2l_create_result LIMIT 1)
+    )
+  $sql$,
+  'store invitation accept succeeds'
+);
+
+RESET ROLE;
+SELECT is(
+  (SELECT count(*)::integer
+   FROM public.membership_store_scopes
+   WHERE membership_id = (SELECT membership_id FROM pg_temp.p2l_accept_result LIMIT 1)
+     AND organization_id = '00000000-0000-4000-8000-000000000401'
+     AND scope_type = 'store'
+     AND store_id = '00000000-0000-4000-8000-000000000501'
+     AND status = 'active'),
+  1,
+  'store accept writes exactly one active store scope'
+);
+
+SET LOCAL ROLE authenticated;
+SELECT lives_ok(
+  $sql$
+    INSERT INTO pg_temp.p2l_accept_result
+    SELECT *
+    FROM public.accept_membership_invitation(
+      (SELECT invitation_id FROM pg_temp.p2l_create_result LIMIT 1)
+    )
+  $sql$,
+  'accepted store invitation retry succeeds'
+);
+RESET ROLE;
+SELECT is(
+  (SELECT count(DISTINCT membership_id)::integer
+   FROM pg_temp.p2l_accept_result),
+  1,
+  'accepted store invitation retry returns the original membership'
+);
+SET LOCAL ROLE authenticated;
+SELECT throws_ok(
+  $sql$
+    SELECT *
+    FROM public.accept_membership_invitation(
+      '00000000-0000-4000-8000-000000001103'
+    )
+  $sql$,
+  'P0001',
+  'invitation_not_available',
+  'second invitation for an existing organization membership is unavailable'
+);
+
+DO $claims$
+BEGIN
+  PERFORM pg_temp.p2l_set_claims(
+    '00000000-0000-4000-8000-000000000301',
+    'p2l-creator@rebuy.test',
+    false,
+    pg_catalog.jsonb_build_array(
+      pg_catalog.jsonb_build_object(
+        'method', 'otp',
+        'timestamp', EXTRACT(epoch FROM pg_catalog.statement_timestamp())
+      )
+    )
+  );
+END
+$claims$;
+TRUNCATE pg_temp.p2l_create_result;
+SELECT lives_ok(
+  $sql$
+    INSERT INTO pg_temp.p2l_create_result
+    SELECT *
+    FROM public.create_membership_invitation(
+      '00000000-0000-4000-8000-000000000401',
+      '00000000-0000-4000-8000-000000000603',
+      1,
+      'organization',
+      NULL,
+      'p2l-target-b@rebuy.test',
+      '00000000-0000-0000-0000-000000001105'
+    )
+  $sql$,
+  'creator-state revalidation invitation is created'
+);
+
+DO $claims$
+BEGIN
+  PERFORM pg_temp.p2l_set_claims(
+    '00000000-0000-4000-8000-000000000303',
+    'p2l-target-b@rebuy.test',
+    false,
+    pg_catalog.jsonb_build_array(
+      pg_catalog.jsonb_build_object(
+        'method', 'otp',
+        'timestamp', EXTRACT(epoch FROM pg_catalog.statement_timestamp())
+      )
+    )
+  );
+END
+$claims$;
+
+RESET ROLE;
+UPDATE public.memberships
+SET status = 'suspended'
+WHERE id = '00000000-0000-4000-8000-000000000801';
+SET LOCAL ROLE authenticated;
+SELECT throws_ok(
+  $sql$
+    SELECT * FROM public.accept_membership_invitation(
+      (SELECT invitation_id FROM pg_temp.p2l_create_result LIMIT 1)
+    )
+  $sql$,
+  'P0001', 'invitation_not_available',
+  'accept hides revoked creator membership details'
+);
+RESET ROLE;
+UPDATE public.memberships
+SET status = 'active'
+WHERE id = '00000000-0000-4000-8000-000000000801';
+
+UPDATE public.role_permissions
+SET is_granted = false
+WHERE role_definition_id = '00000000-0000-4000-8000-000000000601'
+  AND role_version = 1
+  AND permission_id = '00000000-0000-4000-8000-000000000106';
+SET LOCAL ROLE authenticated;
+SELECT throws_ok(
+  $sql$
+    SELECT * FROM public.accept_membership_invitation(
+      (SELECT invitation_id FROM pg_temp.p2l_create_result LIMIT 1)
+    )
+  $sql$,
+  'P0001', 'invitation_not_available',
+  'accept hides revoked creator permission details'
+);
+RESET ROLE;
+UPDATE public.role_permissions
+SET is_granted = true
+WHERE role_definition_id = '00000000-0000-4000-8000-000000000601'
+  AND role_version = 1
+  AND permission_id = '00000000-0000-4000-8000-000000000106';
+
+UPDATE public.membership_store_scopes
+SET status = 'suspended'
+WHERE id = '00000000-0000-4000-0000-000000000901';
+SET LOCAL ROLE authenticated;
+SELECT throws_ok(
+  $sql$
+    SELECT * FROM public.accept_membership_invitation(
+      (SELECT invitation_id FROM pg_temp.p2l_create_result LIMIT 1)
+    )
+  $sql$,
+  'P0001', 'invitation_not_available',
+  'accept hides revoked creator scope details'
+);
+RESET ROLE;
+UPDATE public.membership_store_scopes
+SET status = 'active'
+WHERE id = '00000000-0000-4000-0000-000000000901';
+
+UPDATE public.role_definitions
+SET status = 'retired'
+WHERE id = '00000000-0000-4000-8000-000000000601';
+SET LOCAL ROLE authenticated;
+SELECT throws_ok(
+  $sql$
+    SELECT * FROM public.accept_membership_invitation(
+      (SELECT invitation_id FROM pg_temp.p2l_create_result LIMIT 1)
+    )
+  $sql$,
+  'P0001', 'invitation_not_available',
+  'accept hides retired creator role details'
+);
+RESET ROLE;
+UPDATE public.role_definitions
+SET status = 'active'
+WHERE id = '00000000-0000-4000-8000-000000000601';
+
+UPDATE public.role_definitions
+SET assignable = false
+WHERE id = '00000000-0000-4000-8000-000000000603';
+SET LOCAL ROLE authenticated;
+SELECT throws_ok(
+  $sql$
+    SELECT * FROM public.accept_membership_invitation(
+      (SELECT invitation_id FROM pg_temp.p2l_create_result LIMIT 1)
+    )
+  $sql$,
+  'P0001', 'invitation_not_available',
+  'accept hides unassignable candidate role details'
+);
+RESET ROLE;
+UPDATE public.role_definitions
+SET assignable = true
+WHERE id = '00000000-0000-4000-8000-000000000603';
+
+UPDATE public.organizations
+SET status = 'suspended'
+WHERE id = '00000000-0000-4000-8000-000000000401';
+SET LOCAL ROLE authenticated;
+SELECT throws_ok(
+  $sql$
+    SELECT * FROM public.accept_membership_invitation(
+      (SELECT invitation_id FROM pg_temp.p2l_create_result LIMIT 1)
+    )
+  $sql$,
+  'P0001', 'invitation_not_available',
+  'accept hides suspended organization details'
+);
+RESET ROLE;
+UPDATE public.organizations
+SET status = 'active'
+WHERE id = '00000000-0000-4000-8000-000000000401';
+
+SET LOCAL ROLE authenticated;
+TRUNCATE pg_temp.p2l_accept_result;
+SELECT lives_ok(
+  $sql$
+    INSERT INTO pg_temp.p2l_accept_result
+    SELECT * FROM public.accept_membership_invitation(
+      (SELECT invitation_id FROM pg_temp.p2l_create_result LIMIT 1)
+    )
+  $sql$,
+  'creator-state invitation accepts after all authorities are restored'
+);
+
+RESET ROLE;
+SELECT is(
+  (SELECT count(*)::integer
+   FROM public.memberships
+   WHERE user_id = '00000000-0000-4000-8000-000000000303'
+     AND organization_id = '00000000-0000-4000-8000-000000000401'),
+  1,
+  'restored creator-state accept creates one membership'
+);
+
+UPDATE public.membership_store_scopes
+SET scope_type = 'store',
+    store_id = '00000000-0000-4000-8000-000000000501'
+WHERE id = '00000000-0000-4000-0000-000000000901';
+SELECT is(
+  (SELECT count(*)::integer
+   FROM public.membership_store_scopes
+   WHERE membership_id = '00000000-0000-4000-8000-000000000801'
+     AND organization_id = '00000000-0000-4000-8000-000000000401'
+     AND scope_type = 'store'
+     AND store_id = '00000000-0000-4000-8000-000000000501'
+     AND status = 'active'),
+  1,
+  'creator exact store scope is active before store accept'
+);
+
+SET LOCAL ROLE authenticated;
+DO $claims$
+BEGIN
+  PERFORM pg_temp.p2l_set_claims(
+    '00000000-0000-4000-8000-000000000301',
+    'p2l-creator@rebuy.test',
+    false,
+    pg_catalog.jsonb_build_array(
+      pg_catalog.jsonb_build_object(
+        'method', 'otp',
+        'timestamp', EXTRACT(epoch FROM pg_catalog.statement_timestamp())
+      )
+    )
+  );
+END
+$claims$;
+TRUNCATE pg_temp.p2l_create_result;
+SELECT lives_ok(
+  $sql$
+    INSERT INTO pg_temp.p2l_create_result
+    SELECT *
+    FROM public.create_membership_invitation(
+      '00000000-0000-4000-8000-000000000401',
+      '00000000-0000-4000-8000-000000000602',
+      1,
+      'store',
+      '00000000-0000-4000-8000-000000000501',
+      'p2l-target-c@rebuy.test',
+      '00000000-0000-0000-0000-000000001106'
+    )
+  $sql$,
+  'store-state revalidation invitation is created'
+);
+
+DO $claims$
+BEGIN
+  PERFORM pg_temp.p2l_set_claims(
+    '00000000-0000-4000-8000-000000000304',
+    'p2l-target-c@rebuy.test',
+    false,
+    pg_catalog.jsonb_build_array(
+      pg_catalog.jsonb_build_object(
+        'method', 'otp',
+        'timestamp', EXTRACT(epoch FROM pg_catalog.statement_timestamp())
+      )
+    )
+  );
+END
+$claims$;
+RESET ROLE;
+UPDATE public.stores
+SET status = 'suspended'
+WHERE id = '00000000-0000-4000-8000-000000000501';
+SET LOCAL ROLE authenticated;
+SELECT throws_ok(
+  $sql$
+    SELECT * FROM public.accept_membership_invitation(
+      (SELECT invitation_id FROM pg_temp.p2l_create_result LIMIT 1)
+    )
+  $sql$,
+  'P0001', 'invitation_not_available',
+  'accept hides suspended store details'
+);
+RESET ROLE;
+UPDATE public.stores
+SET status = 'active'
+WHERE id = '00000000-0000-4000-8000-000000000501';
+
+SET LOCAL ROLE authenticated;
+TRUNCATE pg_temp.p2l_accept_result;
+SELECT lives_ok(
+  $sql$
+    INSERT INTO pg_temp.p2l_accept_result
+    SELECT * FROM public.accept_membership_invitation(
+      (SELECT invitation_id FROM pg_temp.p2l_create_result LIMIT 1)
+    )
+  $sql$,
+  'store-state invitation accepts after the store is restored'
+);
+RESET ROLE;
+SELECT is(
+  (SELECT count(*)::integer
+   FROM public.membership_store_scopes
+   WHERE membership_id = (SELECT membership_id FROM pg_temp.p2l_accept_result LIMIT 1)
+     AND scope_type = 'store'
+     AND store_id = '00000000-0000-4000-8000-000000000501'
+     AND status = 'active'),
+  1,
+  'restored store-state accept writes one store scope'
 );
 
 SELECT ok(

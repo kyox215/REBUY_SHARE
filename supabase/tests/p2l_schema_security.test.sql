@@ -473,6 +473,63 @@ SELECT ok(
   'authenticated has no direct invitation-path table privilege'
 );
 
+SELECT ok(
+  NOT has_schema_privilege('service_role', 'private', 'USAGE')
+  AND NOT has_schema_privilege('service_role', 'private', 'CREATE'),
+  'service_role has no effective privilege on the private schema'
+);
+
+SELECT ok(
+  NOT EXISTS (
+    SELECT 1
+    FROM unnest(ARRAY[
+      'profiles',
+      'organizations',
+      'stores',
+      'memberships',
+      'membership_invitations',
+      'membership_store_scopes',
+      'role_definitions',
+      'permissions',
+      'role_permissions',
+      'audit_logs'
+    ]::text[]) AS t(table_name)
+    CROSS JOIN unnest(ARRAY[
+      'SELECT', 'INSERT', 'UPDATE', 'DELETE', 'TRUNCATE', 'REFERENCES', 'TRIGGER'
+    ]::text[]) AS privilege(privilege_name)
+    WHERE has_table_privilege(
+            'service_role', 'public.' || t.table_name,
+            privilege.privilege_name
+          )
+       OR (
+         privilege.privilege_name IN ('SELECT', 'INSERT', 'UPDATE', 'REFERENCES')
+         AND has_any_column_privilege(
+           'service_role', 'public.' || t.table_name,
+           privilege.privilege_name
+         )
+       )
+  ),
+  'service_role has no effective table or column privilege on the ten tables'
+);
+
+SELECT ok(
+  NOT EXISTS (
+    SELECT 1
+    FROM unnest(ARRAY[
+      'private.rebuy_request_jwt()',
+      'private.rebuy_request_uid()',
+      'private.create_membership_invitation_impl(uuid,uuid,integer,text,uuid,text,uuid)',
+      'private.accept_membership_invitation_impl(uuid)',
+      'public.create_membership_invitation(uuid,uuid,integer,text,uuid,text,uuid)',
+      'public.accept_membership_invitation(uuid)'
+    ]::text[]) AS f(function_signature)
+    WHERE has_function_privilege(
+      'service_role', f.function_signature, 'EXECUTE'
+    )
+  ),
+  'service_role cannot execute any project request helper or invitation RPC'
+);
+
 SELECT ok(has_column_privilege(
   'authenticated', 'public.profiles', 'user_id', 'INSERT'
 ), 'authenticated can insert only the profile identity columns');

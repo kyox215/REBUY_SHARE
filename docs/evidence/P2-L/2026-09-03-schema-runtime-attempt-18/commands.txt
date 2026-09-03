@@ -1,0 +1,19 @@
+supabase start --yes > /private/tmp/rebuy-p2l-attempt18-start.raw 2>&1
+/Users/kyox215/.nvm/versions/node/v22.12.0/bin/node prototype/scripts/run-p2l-amr-preflight.mjs
+supabase db reset --local
+supabase test db --local supabase/tests/p2l_schema_security.test.sql supabase/tests/p2l_invitation_flows.test.sql
+supabase stop --project-id rebuy-g2-a1-e2a-local-email-otp-exec --no-backup
+docker ps -a --filter name=rebuy-g2-a1-e2a-local-email-otp-exec --format {{.Names}}
+docker volume ls --filter name=rebuy-g2-a1-e2a-local-email-otp-exec --format {{.Name}}
+docker network ls --filter name=rebuy-g2-a1-e2a-local-email-otp-exec --format {{.Name}}
+lsof -nP -iTCP:55320-55329 -sTCP:LISTEN
+rm -- /private/tmp/rebuy-p2l-attempt18-start.raw
+rm -rf -- /private/tmp/rebuy-p2l-supabase-home
+
+NOT_RUN_AFTER_STOP
+pnpm test:auth:p2l:concurrency
+supabase db lint --local --schema public,private --level warning --fail-on warning
+supabase db advisors --local --type security --level info --fail-on warn
+supabase db advisors --local --type performance --level warn --fail-on warn
+supabase db advisors --local --type all --level info
+supabase migration list --local

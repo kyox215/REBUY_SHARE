@@ -1,7 +1,11 @@
 # P2-L independent review packet
 
+复审结论见 [REVIEW NO-GO / P0=0, P1=2, P2=2](./REVIEW.md)。
+
 日期：2026-09-03（Europe/Rome）
-状态：**PENDING — 本文件是复审输入，不是复审结论**
+状态：**ORIGINAL REVIEW COMPLETE / REMEDIATION FINAL REVIEW PENDING**
+
+本文件固定 attempt #16 的原始复审输入；对应结论是上方 `REVIEW NO-GO`。整改后的 exact runtime 证据见 [attempt #20 PASS](../2026-09-03-schema-runtime-attempt-20-pass/README.md)，其最终复审必须另行绑定新的 exact commit/hashes，不改写本文件第 2 节的历史候选。
 
 ## 1. Reviewer independence and decision format
 

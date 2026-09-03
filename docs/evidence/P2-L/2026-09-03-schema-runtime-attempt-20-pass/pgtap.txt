@@ -1,0 +1,6 @@
+schema_security_file=PASS
+invitation_flows_file=PASS
+files=2
+tests=113
+failed=0
+result=PASS

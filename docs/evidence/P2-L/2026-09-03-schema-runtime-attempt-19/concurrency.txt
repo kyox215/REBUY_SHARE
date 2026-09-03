@@ -1,0 +1,6 @@
+same_invitation_concurrency=PASS
+multi_invitation_concurrency=PASS
+final_state=PASS
+stable_retry_interval=FAIL
+finite_output=P2L_INVITATION_CONCURRENCY_FAIL:stable_retry
+note=stable_retry_interval_includes_lookup_parse_accepted_retry_unavailable_retry_and_cleanup

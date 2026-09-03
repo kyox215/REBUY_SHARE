@@ -1,0 +1,5 @@
+schema=public,private
+level=warning
+fail_on=warning
+exit=0
+result=No schema errors found

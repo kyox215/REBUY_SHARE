@@ -67,7 +67,7 @@ $membership_guard$;
 CREATE SCHEMA IF NOT EXISTS private;
 ALTER SCHEMA private OWNER TO postgres;
 REVOKE ALL ON SCHEMA public, private FROM rebuy_invite_executor;
-REVOKE ALL ON SCHEMA private FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON SCHEMA private FROM PUBLIC, anon, authenticated, service_role;
 GRANT USAGE ON SCHEMA public, private TO rebuy_invite_executor;
 
 CREATE TABLE public.profiles (
@@ -576,9 +576,9 @@ AS $function$
 $function$;
 
 REVOKE ALL PRIVILEGES ON FUNCTION private.rebuy_request_jwt()
-  FROM PUBLIC, anon, authenticated, rebuy_invite_executor;
+  FROM PUBLIC, anon, authenticated, service_role, rebuy_invite_executor;
 REVOKE ALL PRIVILEGES ON FUNCTION private.rebuy_request_uid()
-  FROM PUBLIC, anon, authenticated, rebuy_invite_executor;
+  FROM PUBLIC, anon, authenticated, service_role, rebuy_invite_executor;
 GRANT EXECUTE ON FUNCTION private.rebuy_request_jwt()
   TO authenticated, rebuy_invite_executor;
 GRANT EXECUTE ON FUNCTION private.rebuy_request_uid()
@@ -1478,7 +1478,7 @@ REVOKE ALL PRIVILEGES ON TABLE
   public.permissions,
   public.role_permissions,
   public.audit_logs
-FROM PUBLIC, anon, authenticated, rebuy_invite_executor;
+FROM PUBLIC, anon, authenticated, service_role, rebuy_invite_executor;
 
 GRANT SELECT (user_id, display_name, locale, timezone, status)
   ON public.profiles TO authenticated;
@@ -2376,7 +2376,7 @@ BEGIN
   END IF;
 
   IF v_target_email <> v_email THEN
-    RAISE EXCEPTION 'invitation_email_mismatch';
+    RAISE EXCEPTION 'invitation_not_available';
   END IF;
 
   IF v_invitation_status = 'accepted' THEN
@@ -2385,7 +2385,7 @@ BEGIN
        OR v_consumed_at IS NULL
        OR v_revoked_at IS NOT NULL
     THEN
-      RAISE EXCEPTION 'invitation_already_consumed';
+      RAISE EXCEPTION 'invitation_not_available';
     END IF;
 
     PERFORM pg_catalog.set_config('rebuy.invite.op', 'accept_replay', true);
@@ -2420,7 +2420,7 @@ BEGIN
       AND (m.valid_until IS NULL OR m.valid_until > v_now)
     FOR UPDATE;
     IF NOT FOUND THEN
-      RAISE EXCEPTION 'accepted_membership_not_active';
+      RAISE EXCEPTION 'invitation_not_available';
     END IF;
 
     SELECT pg_catalog.count(*)
@@ -2433,7 +2433,7 @@ BEGIN
       AND ms.store_id IS NOT DISTINCT FROM v_invitation_store_id
       AND ms.status = 'active';
     IF v_scope_count <> 1 THEN
-      RAISE EXCEPTION 'accepted_scope_not_active';
+      RAISE EXCEPTION 'invitation_not_available';
     END IF;
 
     SELECT p.status, p.email_normalized
@@ -2506,7 +2506,7 @@ BEGIN
   WHERE o.id = v_invitation_org_id
     AND o.organization_type = v_org_type;
   IF NOT FOUND OR v_org_status <> 'active' THEN
-    RAISE EXCEPTION 'organization_not_available';
+    RAISE EXCEPTION 'invitation_not_available';
   END IF;
 
   SELECT rd.scope_type, rd.organization_id, rd.organization_type,
@@ -2536,7 +2536,7 @@ BEGIN
        )
      )
   THEN
-    RAISE EXCEPTION 'role_not_assignable';
+    RAISE EXCEPTION 'invitation_not_available';
   END IF;
 
   SELECT m.user_id, m.role_definition_id, m.role_version, m.status,
@@ -2560,7 +2560,7 @@ BEGIN
      OR v_creator_role_org_type_from_membership IS DISTINCT FROM v_creator_role_org_type
      OR v_creator_membership_status <> 'active'
   THEN
-    RAISE EXCEPTION 'creator_membership_not_active';
+    RAISE EXCEPTION 'invitation_not_available';
   END IF;
   IF NOT EXISTS (
     SELECT 1
@@ -2569,7 +2569,7 @@ BEGIN
       AND m.valid_from <= v_now
       AND (m.valid_until IS NULL OR m.valid_until > v_now)
   ) THEN
-    RAISE EXCEPTION 'creator_membership_not_active';
+    RAISE EXCEPTION 'invitation_not_available';
   END IF;
 
   SELECT rd.organization_id, rd.organization_type, rd.status,
@@ -2595,7 +2595,7 @@ BEGIN
        )
      )
   THEN
-    RAISE EXCEPTION 'creator_role_not_active';
+    RAISE EXCEPTION 'invitation_not_available';
   END IF;
 
   SELECT COALESCE(
@@ -2612,12 +2612,12 @@ BEGIN
   WHERE rp.role_definition_id = v_creator_role_from_membership
     AND rp.role_version = v_creator_version_from_membership;
   IF NOT v_has_invite THEN
-    RAISE EXCEPTION 'creator_permission_revoked';
+    RAISE EXCEPTION 'invitation_not_available';
   END IF;
 
   IF v_invitation_scope_type = 'organization' THEN
     IF v_invitation_store_id IS NOT NULL THEN
-      RAISE EXCEPTION 'invalid_invitation_scope';
+      RAISE EXCEPTION 'invitation_not_available';
     END IF;
     IF NOT EXISTS (
       SELECT 1
@@ -2629,11 +2629,11 @@ BEGIN
         AND ms.store_id IS NULL
         AND ms.status = 'active'
     ) THEN
-      RAISE EXCEPTION 'creator_scope_not_active';
+      RAISE EXCEPTION 'invitation_not_available';
     END IF;
   ELSE
     IF v_invitation_store_id IS NULL THEN
-      RAISE EXCEPTION 'invalid_invitation_scope';
+      RAISE EXCEPTION 'invitation_not_available';
     END IF;
     SELECT s.status
       INTO v_store_status
@@ -2642,8 +2642,15 @@ BEGIN
       AND s.organization_id = v_invitation_org_id
       AND s.organization_type = v_org_type;
     IF NOT FOUND OR v_store_status <> 'active' THEN
-      RAISE EXCEPTION 'store_not_available';
+      RAISE EXCEPTION 'invitation_not_available';
     END IF;
+
+    -- The scope SELECT policy is intentionally exact. Check the creator's
+    -- organization scope under an organization context first, then fall back
+    -- to the invited store under a store context. Restore the invitation
+    -- context before any membership/scope write.
+    PERFORM pg_catalog.set_config('rebuy.invite.store_id', '', true);
+    PERFORM pg_catalog.set_config('rebuy.invite.scope_type', 'organization', true);
     IF NOT EXISTS (
       SELECT 1
       FROM public.membership_store_scopes AS ms
@@ -2651,13 +2658,32 @@ BEGIN
         AND ms.organization_id = v_invitation_org_id
         AND ms.organization_type = v_org_type
         AND ms.status = 'active'
-        AND (
-          (ms.scope_type = 'organization' AND ms.store_id IS NULL)
-          OR (ms.scope_type = 'store' AND ms.store_id = v_invitation_store_id)
-        )
+        AND ms.scope_type = 'organization'
+        AND ms.store_id IS NULL
     ) THEN
-      RAISE EXCEPTION 'creator_scope_not_active';
+      PERFORM pg_catalog.set_config(
+        'rebuy.invite.store_id', v_invitation_store_id::text, true
+      );
+      PERFORM pg_catalog.set_config('rebuy.invite.scope_type', 'store', true);
+      IF NOT EXISTS (
+        SELECT 1
+        FROM public.membership_store_scopes AS ms
+        WHERE ms.membership_id = v_creator_membership_id
+          AND ms.organization_id = v_invitation_org_id
+          AND ms.organization_type = v_org_type
+          AND ms.status = 'active'
+          AND ms.scope_type = 'store'
+          AND ms.store_id = v_invitation_store_id
+      ) THEN
+        RAISE EXCEPTION 'invitation_not_available';
+      END IF;
     END IF;
+    PERFORM pg_catalog.set_config(
+      'rebuy.invite.store_id', v_invitation_store_id::text, true
+    );
+    PERFORM pg_catalog.set_config(
+      'rebuy.invite.scope_type', v_invitation_scope_type, true
+    );
   END IF;
 
   SELECT m.id
@@ -2668,7 +2694,7 @@ BEGIN
     AND m.organization_type = v_org_type
   FOR UPDATE;
   IF FOUND THEN
-    RAISE EXCEPTION 'membership_already_exists';
+    RAISE EXCEPTION 'invitation_not_available';
   END IF;
 
   SELECT p.status, p.email_normalized
@@ -2742,7 +2768,7 @@ BEGIN
       'active', v_creator_user_id, p_invitation_id, v_now, v_now, v_now
     );
   EXCEPTION WHEN unique_violation THEN
-    RAISE EXCEPTION 'membership_already_exists';
+    RAISE EXCEPTION 'invitation_not_available';
   END;
 
   PERFORM pg_catalog.set_config('rebuy.invite.op', 'accept_scope', true);
@@ -2851,9 +2877,9 @@ ALTER FUNCTION public.accept_membership_invitation(uuid) OWNER TO postgres;
 -- the ACL is preserved when the atomic handoff changes their owner.
 REVOKE ALL PRIVILEGES ON FUNCTION private.create_membership_invitation_impl(
   uuid, uuid, integer, text, uuid, text, uuid
-) FROM PUBLIC, anon, authenticated, rebuy_invite_executor;
+) FROM PUBLIC, anon, authenticated, service_role, rebuy_invite_executor;
 REVOKE ALL PRIVILEGES ON FUNCTION private.accept_membership_invitation_impl(uuid)
-  FROM PUBLIC, anon, authenticated, rebuy_invite_executor;
+  FROM PUBLIC, anon, authenticated, service_role, rebuy_invite_executor;
 GRANT USAGE ON SCHEMA private TO authenticated;
 GRANT EXECUTE ON FUNCTION private.create_membership_invitation_impl(
   uuid, uuid, integer, text, uuid, text, uuid
@@ -3010,9 +3036,9 @@ $owner_handoff$;
 
 REVOKE ALL PRIVILEGES ON FUNCTION public.create_membership_invitation(
   uuid, uuid, integer, text, uuid, text, uuid
-) FROM PUBLIC, anon, authenticated, rebuy_invite_executor;
+) FROM PUBLIC, anon, authenticated, service_role, rebuy_invite_executor;
 REVOKE ALL PRIVILEGES ON FUNCTION public.accept_membership_invitation(uuid)
-  FROM PUBLIC, anon, authenticated, rebuy_invite_executor;
+  FROM PUBLIC, anon, authenticated, service_role, rebuy_invite_executor;
 GRANT EXECUTE ON FUNCTION public.create_membership_invitation(
   uuid, uuid, integer, text, uuid, text, uuid
 ) TO authenticated;

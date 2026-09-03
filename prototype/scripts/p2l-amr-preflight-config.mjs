@@ -2,6 +2,11 @@ const PUBLIC_KEY_PATTERN = /^sb_publishable_[A-Za-z0-9_-]+$/;
 
 export const MIN_REFRESH_AMR_SEPARATION_SECONDS = 2;
 
+export function isSupportedNodeRuntime(version) {
+  const match = /^(\d+)\./.exec(version);
+  return match !== null && Number.parseInt(match[1], 10) === 22;
+}
+
 function isLegacyAnonJwt(value) {
   const parts = value.split(".");
   if (parts.length !== 3 || parts.some((part) => !/^[A-Za-z0-9_-]+$/.test(part))) {

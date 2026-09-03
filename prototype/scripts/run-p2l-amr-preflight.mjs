@@ -8,6 +8,7 @@ import { createClient } from "@supabase/supabase-js";
 
 import {
   hasMinimumAmrEpochSeparation,
+  isSupportedNodeRuntime,
   selectAllowedPublicKey,
 } from "./p2l-amr-preflight-config.mjs";
 
@@ -309,6 +310,7 @@ async function getVerifiedUser(supabase, accessToken, category) {
 }
 
 async function runPreflight() {
+  check("NODE_RUNTIME", isSupportedNodeRuntime(process.versions.node));
   const { apiUrl, publicKey } = await readLocalConfig();
   const email = makeSyntheticEmail();
   assertSyntheticEmail(email);

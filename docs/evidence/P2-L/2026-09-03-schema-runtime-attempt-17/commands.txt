@@ -1,0 +1,16 @@
+supabase start --yes > /private/tmp/rebuy-p2l-attempt17-start.raw 2>&1
+node prototype/scripts/run-p2l-amr-preflight.mjs
+supabase stop --project-id rebuy-g2-a1-e2a-local-email-otp-exec --no-backup
+docker ps -a --filter name=rebuy-g2-a1-e2a-local-email-otp-exec --format {{.Names}}
+docker volume ls --filter name=rebuy-g2-a1-e2a-local-email-otp-exec --format {{.Name}}
+docker network ls --filter name=rebuy-g2-a1-e2a-local-email-otp-exec --format {{.Name}}
+lsof -nP -iTCP:55320-55329 -sTCP:LISTEN
+rm -- /private/tmp/rebuy-p2l-attempt17-start.raw
+rm -rf -- /private/tmp/rebuy-p2l-supabase-home
+
+POST-STOP OFFLINE DIAGNOSIS ONLY
+node --input-type=module -e <synthetic createClient reproduction>
+/Users/kyox215/.nvm/versions/node/v22.12.0/bin/node --input-type=module -e <synthetic createClient control>
+/Users/kyox215/.nvm/versions/node/v22.12.0/bin/node --check prototype/scripts/run-p2l-amr-preflight.mjs
+/Users/kyox215/.nvm/versions/node/v22.12.0/bin/node prototype/scripts/test-p2l-amr-preflight-structure.mjs
+node prototype/scripts/run-p2l-amr-preflight.mjs

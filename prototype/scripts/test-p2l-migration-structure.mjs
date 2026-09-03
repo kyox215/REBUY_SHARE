@@ -17,12 +17,17 @@ const invitationTestUrl = new URL(
   '../../supabase/tests/p2l_invitation_flows.test.sql',
   import.meta.url,
 )
+const concurrencyTestUrl = new URL(
+  './run-p2l-invitation-concurrency.mjs',
+  import.meta.url,
+)
 const migration = await readFile(fileURLToPath(migrationUrl), 'utf8')
 const config = await readFile(fileURLToPath(configUrl), 'utf8')
 const roles = await readFile(fileURLToPath(rolesUrl), 'utf8')
 const seed = await readFile(fileURLToPath(seedUrl), 'utf8')
 const schemaTest = await readFile(fileURLToPath(schemaTestUrl), 'utf8')
 const invitationTest = await readFile(fileURLToPath(invitationTestUrl), 'utf8')
+const concurrencyTest = await readFile(fileURLToPath(concurrencyTestUrl), 'utf8')
 
 const expectedTables = [
   'audit_logs',
@@ -111,6 +116,32 @@ assert.doesNotMatch(
   /(?:GRANT|ALTER DEFAULT PRIVILEGES)[^;]*\bservice_role\b/is,
   'the P2-L migration must not grant access to service_role',
 )
+assert.match(
+  migration,
+  /REVOKE ALL ON SCHEMA private FROM PUBLIC, anon, authenticated, service_role;/,
+  'the private schema must explicitly revoke service_role',
+)
+assert.match(
+  migration,
+  /REVOKE ALL PRIVILEGES ON TABLE[\s\S]*?public[.]audit_logs\s+FROM PUBLIC, anon, authenticated, service_role, rebuy_invite_executor;/,
+  'all ten business tables must explicitly revoke service_role',
+)
+for (const functionSignature of [
+  'private.rebuy_request_jwt\\(\\)',
+  'private.rebuy_request_uid\\(\\)',
+  'private.create_membership_invitation_impl\\(\\s*uuid, uuid, integer, text, uuid, text, uuid\\s*\\)',
+  'private.accept_membership_invitation_impl\\(uuid\\)',
+  'public.create_membership_invitation\\(\\s*uuid, uuid, integer, text, uuid, text, uuid\\s*\\)',
+  'public.accept_membership_invitation\\(uuid\\)',
+]) {
+  assert.match(
+    migration,
+    new RegExp(
+      `REVOKE ALL PRIVILEGES ON FUNCTION ${functionSignature}\\s+FROM PUBLIC, anon, authenticated, service_role, rebuy_invite_executor;`,
+    ),
+    `${functionSignature} must explicitly revoke service_role`,
+  )
+}
 assert.doesNotMatch(
   migration,
   /CREATE(?: OR REPLACE)? TRIGGER[^;]*\b(?:ON\s+)?auth[.]users\b/is,
@@ -269,7 +300,7 @@ for (const helperName of ['rebuy_request_uid', 'rebuy_request_jwt']) {
   assert.match(
     migration,
     new RegExp(
-      `REVOKE ALL PRIVILEGES ON FUNCTION private[.]${helperName}\\(\\)[\\s\\S]*?FROM PUBLIC, anon, authenticated, rebuy_invite_executor;[\\s\\S]*?GRANT EXECUTE ON FUNCTION private[.]${helperName}\\(\\)[\\s\\S]*?TO authenticated, rebuy_invite_executor;`,
+      `REVOKE ALL PRIVILEGES ON FUNCTION private[.]${helperName}\\(\\)[\\s\\S]*?FROM PUBLIC, anon, authenticated, service_role, rebuy_invite_executor;[\\s\\S]*?GRANT EXECUTE ON FUNCTION private[.]${helperName}\\(\\)[\\s\\S]*?TO authenticated, rebuy_invite_executor;`,
     ),
     `${helperName} must be executable only by the two required roles`,
   )
@@ -471,10 +502,32 @@ const acceptImplementation = migration.slice(
   acceptImplementationStart,
   acceptWrapperStart,
 )
+for (const leakedStatusCode of [
+  'accepted_membership_not_active',
+  'accepted_scope_not_active',
+  'creator_membership_not_active',
+  'creator_role_not_active',
+  'creator_permission_revoked',
+  'creator_scope_not_active',
+  'invitation_email_mismatch',
+  'membership_already_exists',
+  'store_not_available',
+]) {
+  assert.doesNotMatch(
+    acceptImplementation,
+    new RegExp(`RAISE EXCEPTION '${leakedStatusCode}'`),
+    `accept must not expose internal status code ${leakedStatusCode}`,
+  )
+}
 assert.match(
   acceptImplementation,
   /i[.]target_email_normalized, i[.]idempotency_key,[\s\S]*?INTO[\s\S]*?v_target_email,[\s\S]*?v_invitation_idempotency_key, v_invitation_status/,
   'accept must load the persisted invitation idempotency key under the row lock',
+)
+assert.match(
+  acceptImplementation,
+  /SELECT s[.]status[\s\S]*?set_config\('rebuy[.]invite[.]store_id', '', true\)[\s\S]*?set_config\('rebuy[.]invite[.]scope_type', 'organization', true\)[\s\S]*?ms[.]scope_type = 'organization'[\s\S]*?set_config\([\s\S]*?'rebuy[.]invite[.]store_id', v_invitation_store_id::text, true[\s\S]*?set_config\('rebuy[.]invite[.]scope_type', 'store', true\)[\s\S]*?ms[.]scope_type = 'store'[\s\S]*?ms[.]store_id = v_invitation_store_id[\s\S]*?set_config\([\s\S]*?'rebuy[.]invite[.]scope_type', v_invitation_scope_type, true/,
+  'store accept must validate creator organization scope, fall back to exact store scope, and restore invitation context',
 )
 assert.match(
   acceptImplementation,
@@ -485,6 +538,152 @@ assert.match(
   acceptImplementation,
   /set_config\(\s*'rebuy[.]invite[.]op', 'accept_audit', true\s*\);[\s\S]*?set_config\(\s*'rebuy[.]invite[.]created_at', v_now::text, true\s*\);[\s\S]*?INSERT INTO public[.]audit_logs/,
   'accept must bind the acceptance audit timestamp after restoring invitation fields',
+)
+
+for (const requiredAcceptCoverage of [
+  'accept rejects missing AMR timestamp even when iat is present',
+  'accept rejects stale OTP evidence',
+  'accept does not disclose target-email mismatch details',
+  'direct private accept also requires OTP in the first AMR entry',
+  'store accept writes exactly one active store scope',
+  'accepted store invitation retry succeeds',
+  'accepted store invitation retry returns the original membership',
+  'second invitation for an existing organization membership is unavailable',
+  'creator exact store scope is active before store accept',
+  'accept hides revoked creator membership details',
+  'accept hides revoked creator permission details',
+  'accept hides revoked creator scope details',
+  'accept hides retired creator role details',
+  'accept hides unassignable candidate role details',
+  'accept hides suspended organization details',
+  'accept hides suspended store details',
+]) {
+  assert.ok(
+    invitationTest.includes(requiredAcceptCoverage),
+    `pgTAP must cover: ${requiredAcceptCoverage}`,
+  )
+}
+
+for (const requiredConcurrencyCoverage of [
+  'same_invitation_concurrency',
+  'multi_invitation_concurrency',
+  'multi_accepted_invitations',
+  'multi_sent_invitations',
+  'stable_retry_lookup',
+  'stable_retry_parse',
+  'stable_retry_accepted_call',
+  'stable_retry_accepted_exit',
+  'stable_retry_accepted_result',
+  'stable_retry_unavailable_call',
+  'stable_retry_unavailable_exit',
+  'stable_retry_unavailable_error',
+  'cleanup',
+  'cleanup_verify',
+  'failure_cleanup',
+  'P2L_INVITATION_CONCURRENCY_PASS',
+]) {
+  assert.ok(
+    concurrencyTest.includes(requiredConcurrencyCoverage),
+    `concurrency harness must cover: ${requiredConcurrencyCoverage}`,
+  )
+}
+
+function assertOrdered(source, fragments, message) {
+  let previousIndex = -1
+  for (const fragment of fragments) {
+    const nextIndex = source.indexOf(fragment, previousIndex + 1)
+    assert.ok(nextIndex > previousIndex, `${message}: ${fragment}`)
+    previousIndex = nextIndex
+  }
+}
+
+const cleanupStart = concurrencyTest.indexOf('const cleanupSql = `')
+const cleanupEnd = concurrencyTest.indexOf(
+  'const cleanupVerificationSql = `',
+  cleanupStart,
+)
+assert.ok(
+  cleanupStart > -1 && cleanupEnd > cleanupStart,
+  'concurrency cleanup SQL boundary must be present',
+)
+const concurrencyCleanup = concurrencyTest.slice(cleanupStart, cleanupEnd)
+assertOrdered(
+  concurrencyCleanup,
+  [
+    'BEGIN;',
+    'DELETE FROM public.audit_logs',
+    'DELETE FROM public.membership_store_scopes',
+    'UPDATE public.memberships',
+    'SET source_invitation_id = NULL',
+    'DELETE FROM public.membership_invitations',
+    'DELETE FROM public.memberships',
+    'DELETE FROM public.stores',
+    'DELETE FROM public.organizations',
+    'DELETE FROM auth.users',
+    'COMMIT;',
+  ],
+  'concurrency cleanup must break the invitation/membership cycle and delete in dependency order',
+)
+assert.doesNotMatch(
+  concurrencyCleanup,
+  /\b(?:TRUNCATE|CASCADE)\b|DELETE FROM public[.]profiles/i,
+  'concurrency cleanup must stay fixture-scoped and rely on the auth.users profile cascade',
+)
+assert.match(
+  migration,
+  /user_id uuid PRIMARY KEY REFERENCES auth[.]users \(id\) ON DELETE CASCADE/,
+  'profiles must retain the auth.users delete cascade used by concurrency cleanup',
+)
+assert.doesNotMatch(
+  concurrencyTest,
+  /[.]catch\(\(\) => undefined\)/,
+  'concurrency cleanup failures must not be silently swallowed',
+)
+assertOrdered(
+  concurrencyTest,
+  [
+    "stage = 'stable_retry_lookup'",
+    'const acceptedMultiRaw = await runAdmin(',
+    "stage = 'stable_retry_parse'",
+    'assert.match(acceptedMultiRaw,',
+    '[IDS.multiInvitationA, IDS.multiInvitationB].includes(',
+    'const expectedAcceptedStoreId =',
+    "stage = 'stable_retry_accepted_call'",
+    'const retry = await runPsql(',
+    "stage = 'stable_retry_accepted_exit'",
+    'assert.equal(retry.signal, null)',
+    'assert.equal(retry.code, 0)',
+    "stage = 'stable_retry_accepted_result'",
+    '`${acceptedMembershipId}|${IDS.organization}|${expectedAcceptedStoreId}|store`',
+    "stage = 'stable_retry_unavailable_call'",
+    'const unavailableRetry = await runPsql(',
+    "stage = 'stable_retry_unavailable_exit'",
+    'assert.equal(unavailableRetry.signal, null)',
+    'assert.notEqual(unavailableRetry.code, 0)',
+    "stage = 'stable_retry_unavailable_error'",
+    'assert.match(unavailableRetry.stderr, /invitation_not_available/)',
+    "stage = 'cleanup'",
+    "await runAdmin(cleanupSql, 'cleanup')",
+    "stage = 'cleanup_verify'",
+    'await runAdmin(cleanupVerificationSql, stage)',
+    'assert.deepEqual(cleanupState, emptyCleanupState)',
+  ],
+  'concurrency harness must bind every retry and cleanup assertion to a precise stage',
+)
+assert.match(
+  concurrencyTest,
+  /assert[.]match\(acceptedMultiRaw, \/\^\[0-9a-f-\]\{36\}\\\|\[0-9a-f-\]\{36\}\$\//,
+  'accepted invitation lookup must parse exactly one invitation/membership row',
+)
+assert.match(
+  concurrencyTest,
+  /assert[.]doesNotMatch\(\s*unavailableRetry[.]stderr,\s*\/creator_\|role_not_\|permission_\|scope_not_\|store_not_\|membership_already\//,
+  'unavailable retry must expose only the generic public error',
+)
+assert.match(
+  concurrencyTest,
+  /const failureStage = stage[\s\S]*?stage = 'failure_cleanup'[\s\S]*?cleanupOutcome = 'cleanup_pass'[\s\S]*?P2L_INVITATION_CONCURRENCY_FAIL:\$\{failureStage\}:\$\{cleanupOutcome\}/,
+  'failure output must preserve the original stage and report verified cleanup outcome',
 )
 
 console.log('P2L_MIGRATION_STRUCTURE_PASS')

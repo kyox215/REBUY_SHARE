@@ -1,8 +1,8 @@
 # P2-L 本地 Schema 与 RLS 纵切 Gate
 
-文档状态：**P2-L schema/RLS RUNTIME PASS；独立审查待完成；P3 仍 CLOSED**
+文档状态：**P2-L runtime Gate PASS；最终独立 review 待完成；P3 仍 CLOSED**
 记录日期：2026-09-03（Europe/Rome）
-适用分支：`codex/rebuy-v1-local-complete`；本文件保留前两次 preflight STOP，并记录第三次最终 bounded one-shot PASS。
+适用分支：`codex/rebuy-v1-local-complete`；本文件保留全部 bounded runtime、审查与修复事实，不把历史 PASS 外推为当前 Exit。
 
 ## 1. 推荐路线例外与当前冻结
 
@@ -325,3 +325,47 @@ E2b provider invite/admin key、Google、Apple、hosted Auth、custom SMTP、真
 - **Advisors / migration**：security info 与 performance warn 两个 strict Gate 均 `No issues found`。all/info 的 23 条均为 fresh empty database `unused_index` INFO；`auth_rls_initplan=0`、`unindexed_foreign_keys=0`、WARN/ERROR=`0`。migration list 的 local/database history 均为唯一 `20260831183358`。
 - **Cleanup**：exact stop/no-backup、三份精确临时文件删除、project containers/volumes/network 与 `55320–55329` listeners 清空全部通过。
 - **Current Gate**：schema/RLS/runtime 已 PASS；完整 P2-L 仍等待绑定 exact hashes 的独立安全/数据库复审，输入见 [review packet](../evidence/P2-L/2026-09-03-independent-review-packet/README.md)。该复审完成前 P3–P7、hosted/Production、main push/deploy 继续 CLOSED。详见 [attempt #16](../evidence/P2-L/2026-09-03-schema-runtime-attempt-16/README.md)。
+
+## 34. 2026-09-03｜独立审查 NO-GO；两项 P1 阻断
+
+- **Verdict**：独立只读 Sol/max reviewer 对 attempt #16 exact hashes 给出 `REVIEW NO-GO`，`P0=0 / P1=2 / P2=2`。
+- **P1 blockers**：一是未显式 revoke/验证 `service_role` 对 private schema、十表和六个函数的 effective ACL；二是 `87/87` 未覆盖 accept recent-OTP/email、邀请创建后 creator/candidate/org/store authority 失效，以及真实双连接并发。
+- **P2 findings**：accept 对目标用户泄露内部授权状态码；attempt #16 缺少脱敏 TAP/lint/advisor/migration/cleanup 原始工件及 SHA-256。
+- **Gate**：P2-L Exit 回到 NO-GO。完整报告见 [independent review verdict](../evidence/P2-L/2026-09-03-independent-review-packet/REVIEW.md)；新候选完成完整 runtime 和同一 reviewer 定向 GO 前，P3–P7、main push/deploy 保持 CLOSED。
+
+## 35. 2026-09-03｜Review 修复候选与 schema runtime attempt #17 STOP
+
+- **Offline fixes**：migration 显式 revoke `service_role` private schema、首批十表、两 request helpers、两 private implementations 和两 public wrappers；pgTAP 增加 effective ACL 断言。accept 外部错误收敛为 `invitation_not_available`；pgTAP 增加 recent-OTP/email、creator membership/permission/scope/role、candidate assignability、organization/store 失效、store accept/exact scope；新增两个独立 `psql` 连接的同邀请及同 target/org 多邀请并发 harness。静态门同步锁定上述合同。
+- **Attempt #17**：空资源、CLI `2.101.0` 与候选 hashes 锁定后，唯一 `supabase start` exit `0` 并应用 migration/seed；AMR preflight 被默认 Node `20.20.2` 启动，在 `createClient()` 初始化返回有限 `UNEXPECTED_FAIL / P2L_PREFLIGHT_FAIL`。按 one-shot Gate 立即停止；reset、pgTAP、concurrency、lint/advisors 与 migration list 均未运行。
+- **Root cause / hardening**：离线对照确认 Node 20 缺少新版 Supabase SDK 要求的 native WebSocket，固定 Node `22.12.0` 构造成功。harness 新增 major=22 的首动作 guard，纯测试覆盖 20/22/24/invalid；Node 20 现在在 status/network/OTP/DB 前 fail closed。
+- **Cleanup / next**：exact stop/no-backup、敏感 start raw 与 telemetry temp 删除、目标 containers/volumes/network/listeners 清空均通过。attempt #17 `actual_count=1` 且本包不重试。下一工作包从空资源、固定 Node `22.12.0` 运行一次完整 Gate并保存脱敏工件/哈希；详见 [attempt #17](../evidence/P2-L/2026-09-03-schema-runtime-attempt-17/README.md)。
+
+## 36. 2026-09-03｜Schema runtime attempt #18 STOP；creator store-scope context 修复候选
+
+- **Entry / progress**：固定 Node `22.12.0` 后，Auth `46/46`、两项结构门、typecheck、全量 ESLint、build 与空资源入口通过。唯一 start、完整 AMR preflight 和 fresh db reset 全部 PASS。
+- **STOP**：schema/security pgTAP 文件 PASS；invitation `52` 项中 `48` PASS、`4` FAIL，总计 `109` 项失败 `4`。失败只在 organization-scoped creator 创建的两条 store invitation accept 正向路径；按 Gate 停止，未运行 concurrency、lint/advisors 或 migration list。
+- **Root cause / offline fix**：`accept_validate` 的 membership-scope SELECT policy 故意要求 context scope/store 精确相等；store invitation 的 context 因此隐藏了 creator 的合法 organization scope。policy 不放宽；private implementation 在 store 状态验证后显式切到 organization context 检查 creator org scope，不存在时切回 exact store context 检查 creator store scope，最后恢复 invitation context。pgTAP 新增 creator exact-store fixture，静态门锁定 context 顺序。
+- **Cleanup / next**：exact stop/no-backup、敏感 temp 删除与目标 resources/listeners 清空通过；attempt #18 `actual_count=1`，本包不重试。下一工作包从空资源与新 hashes 完整复验。详见 [attempt #18](../evidence/P2-L/2026-09-03-schema-runtime-attempt-18/README.md)。
+
+## 37. 2026-09-03｜Schema runtime attempt #19 STOP；pgTAP 110/110 / concurrency 专项审查
+
+- **Passed**：唯一 start、固定 Node 22 完整 AMR、fresh reset 与两份 pgTAP 全部通过，`Files=2, Tests=110, Failed=0, Result=PASS`。attempt #18 的 organization/exact-store creator scope 两条路径已关闭。
+- **Concurrency STOP**：双连接 harness 已越过 same-invitation、same-target/org multi-invitation 与 final-state 断言，随后有限输出 `P2L_INVITATION_CONCURRENCY_FAIL:stable_retry`。旧 stage 同时覆盖 accepted lookup/parse、accepted retry/result、unavailable retry 与 cleanup，当前不能把失败诚实归因到某一项。
+- **Limit / review**：attempt #17–#19 达到本轮三次实际失败上限。exact cleanup、敏感 temp 删除与 resources/listeners 清空完成；strict lint/advisors/list 未运行。新 runtime 当时停止并进入同一独立 reviewer 的只读专项审查；harness 下一候选必须拆分有限子阶段且不输出数据。
+- **Status**：该时点 P2-L=`PGTAP PASS / CONCURRENCY REVIEW BLOCKED`，详见 [attempt #19](../evidence/P2-L/2026-09-03-schema-runtime-attempt-19/README.md)。后续专项审查结论见第 38 节；完整 runtime 和独立最终 GO 前不打开 P3–P7/main/deploy。
+
+## 38. 2026-09-03｜Concurrency 专项独立审查完成；harness-only 修复候选
+
+- **Independent verdict**：专项 `REVIEW NO-GO`；对 attempt #19 当前失败来自 harness cleanup 外键循环、而非 invitation migration defect 的置信度高于 95%。accepted membership 通过 `source_invitation_id` 回指 invitation，而 invitation 又引用 membership，旧 cleanup 先删 membership 且无事务；旧全局 stage 未切到 cleanup，并吞掉 cleanup failure，故历史输出仍是宽泛 `stable_retry`。
+- **Offline fix**：migration 不变。cleanup 现在单事务执行 audit → scopes → exact fixture `source_invitation_id=NULL` → invitations → memberships → stores → organization → auth users；profiles 使用既有 `ON DELETE CASCADE`。正常和失败路径均做精确零残留验证，失败只输出原 stage 与固定 cleanup outcome。
+- **Harness hardening**：accepted lookup 固定 exactly one UUID pair 和 A/B invitation；accepted retry 验证 signal/exit 及 membership/org/store/scope 全字段；unavailable retry 验证无 signal、非零 exit、generic public error 且排除内部码。静态门固定顺序、事务、无 destructive broad cleanup、stage 与断言。
+- **Verification / hashes**：Node 22 syntax、`P2L_MIGRATION_STRUCTURE_PASS`、定向 ESLint 与 diff check PASS。修复后 concurrency=`7938ce267e1d0febfad746bb7dcc8b575321e04719595b9b95c1e9a7ff294feb`，structure verifier=`8f8df05ce02c3173d186aa116fda35a5252295e8129e3ccc7c9ad40b31885b79`，migration 仍为 `13af3f60d2e665efaf3ae228cad2ffdee04d55c0a3969f55bbe65e4599ce28ba`。
+- **Next**：专项审查解除三次失败后的诊断暂停，只允许从空资源对 exact candidate 新开一次 bounded runtime packet；失败立即 STOP/cleanup，不在同包重试。证据见 [concurrency special review](../evidence/P2-L/2026-09-03-concurrency-special-review/README.md)。
+
+## 39. 2026-09-03｜Schema runtime attempt #20 PASS；最终独立复审待完成
+
+- **Runtime PASS**：从空目标资源唯一启动；固定 Node 22 AMR preflight、fresh reset、schema/security 与 invitation pgTAP `113/113`、真实双连接 concurrency harness 全部 PASS。accepted retry、unavailable retry 与事务化零残留 cleanup 均已真实执行。
+- **Database quality**：strict warning lint=`No schema errors found`；security info/fail-on-warn 与 performance warn/fail-on-warn 均=`No issues found`。all/info 只有 fresh empty database 的 8 条 `unused_index` INFO，WARN/ERROR、`auth_rls_initplan` 与 `unindexed_foreign_keys` 均为 0；migration history 两侧均为唯一 `20260831183358`。
+- **Application quality**：Node `22.12.0` 下 Auth contract `46/46`、typecheck、全量 ESLint、Next `16.3.2` production build、两个 P2-L structure verifier 与 diff check 全部 PASS；生成态漂移已恢复。
+- **Cleanup / evidence**：exact stop/no-backup 完成；敏感 raw/temp 删除；目标 containers/volumes/network/listeners 全空。已保存脱敏 entry、AMR、reset、pgTAP、concurrency、lint、advisors、migration list、app quality、cleanup、commands 与两组 SHA-256。
+- **Gate**：P2-L runtime Gate 当前 PASS，但 Exit 仍等待同一独立 reviewer 对 exact commit/hashes 的最终 GO。证据见 [attempt #20 PASS](../evidence/P2-L/2026-09-03-schema-runtime-attempt-20-pass/README.md)；GO 前 P3–P7、hosted/Production、main push/deploy 继续 CLOSED。

@@ -1,0 +1,9 @@
+stop_project_id=rebuy-g2-a1-e2a-local-email-otp-exec
+stop_no_backup_exit=0
+start_raw_deleted=true
+reset_raw_deleted=true
+supabase_temp_home_deleted=true
+containers_empty_after=true
+volumes_empty_after=true
+network_empty_after=true
+listeners_55320_55329_empty_after=true

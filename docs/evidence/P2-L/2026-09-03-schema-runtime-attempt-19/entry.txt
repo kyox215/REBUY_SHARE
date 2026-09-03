@@ -1,0 +1,14 @@
+date=2026-09-03
+timezone=Europe/Rome
+branch=codex/rebuy-v1-local-complete
+base_head=36b0b34a6696baa658e4c39b9ffb20a94bbbb9b6
+origin_main=3c6ebf20b56f7ab37956a4ad9c543389a5636e65
+local_project_id=rebuy-g2-a1-e2a-local-email-otp-exec
+supabase_cli=2.101.0
+node=22.12.0
+pnpm=10.33.3
+containers_empty=true
+volumes_empty=true
+network_empty=true
+listeners_55320_55329_empty=true
+database_actual_count=1

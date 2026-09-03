@@ -1,0 +1,13 @@
+schema_security_file=PASS
+invitation_tests_total=52
+invitation_tests_passed=48
+invitation_tests_failed=4
+failed_37=store invitation accept succeeds
+failed_38=store accept writes exactly one active store scope
+failed_50=store-state invitation accepts after the store is restored
+failed_51=restored store-state accept writes one store scope
+files=2
+tests_total=109
+result=FAIL
+sqlstate=P0001
+external_error=invitation_not_available

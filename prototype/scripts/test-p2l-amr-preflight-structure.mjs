@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   hasMinimumAmrEpochSeparation,
   isAllowedPublicKey,
+  isSupportedNodeRuntime,
   selectAllowedPublicKey,
 } from "./p2l-amr-preflight-config.mjs";
 
@@ -13,6 +14,10 @@ const legacyAnonKey = [
 ].join(".");
 const publishableKey = "sb_publishable_synthetic_fallback";
 
+assert.equal(isSupportedNodeRuntime("20.20.2"), false);
+assert.equal(isSupportedNodeRuntime("22.12.0"), true);
+assert.equal(isSupportedNodeRuntime("24.19.0"), false);
+assert.equal(isSupportedNodeRuntime("invalid"), false);
 assert.equal(isAllowedPublicKey(legacyAnonKey), true);
 assert.equal(
   selectAllowedPublicKey({ PUBLISHABLE_KEY: "", ANON_KEY: legacyAnonKey }),
