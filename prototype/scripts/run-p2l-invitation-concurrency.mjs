@@ -293,7 +293,12 @@ try {
     email: 'p2l-concurrent-same@rebuy.test',
     invitationIds: [IDS.sameInvitation, IDS.sameInvitation],
   })
-  assert.ok(sameResults.every((result) => result.code === 0))
+  assert.ok(
+    sameResults.every((result) => result.code === 0),
+    `same invitation worker failure: ${sameResults
+      .map((result) => `${result.code}:${result.stderr.trim()}`)
+      .join(' | ')}`,
+  )
   const sameOutputs = sameResults.map((result) => result.stdout.trim())
   assert.equal(sameOutputs[0], sameOutputs[1])
   assert.match(sameOutputs[0], /^[0-9a-f-]{36}\|[0-9a-f-]{36}\|\|organization$/)
@@ -413,7 +418,7 @@ WHERE id IN ('${IDS.multiInvitationA}', '${IDS.multiInvitationB}')
   )
   assert.deepEqual(cleanupState, emptyCleanupState)
   console.log('P2L_INVITATION_CONCURRENCY_PASS')
-} catch {
+} catch (error) {
   const failureStage = stage
   stage = 'failure_cleanup'
   let cleanupOutcome = 'cleanup_fail'
@@ -436,5 +441,6 @@ WHERE id IN ('${IDS.multiInvitationA}', '${IDS.multiInvitationB}')
   console.error(
     `P2L_INVITATION_CONCURRENCY_FAIL:${failureStage}:${cleanupOutcome}`,
   )
+  console.error(error instanceof Error ? error.message : String(error))
   process.exitCode = 1
 }

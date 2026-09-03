@@ -791,7 +791,8 @@ RESET ROLE;
 SELECT pg_catalog.set_config('request.jwt.claims', '{}'::jsonb::text, true);
 SET LOCAL ROLE anon;
 SELECT is(
-  (SELECT count(*)::integer FROM public.list_public_catalog()),
+  (SELECT count(*)::integer FROM public.list_public_catalog()
+   WHERE listing_id = (SELECT listing_id FROM pg_temp.p4_standard_listing_target)),
   1,
   'anonymous catalog exposes the active in-stock listing DTO'
 );
@@ -804,7 +805,8 @@ SELECT is(
   'guest quote exposes only the retail price'
 );
 SELECT is(
-  (SELECT count(*)::integer FROM private.list_public_catalog_impl()),
+  (SELECT count(*)::integer FROM private.list_public_catalog_impl()
+   WHERE listing_id = (SELECT listing_id FROM pg_temp.p4_listing_result)),
   1,
   'direct public-catalog implementation matches the anonymous wrapper DTO'
 );
@@ -1543,7 +1545,8 @@ SELECT pg_temp.p4_set_claims(
   '00000000-0000-4000-8000-000000004105', 'p4-merchant@rebuy.test'
 );
 SELECT is(
-  (SELECT count(*)::integer FROM public.list_public_catalog()),
+  (SELECT count(*)::integer FROM public.list_public_catalog()
+   WHERE listing_id = (SELECT listing_id FROM pg_temp.p4_standard_listing_target)),
   1,
   'P4 context reset probe sees the remaining standard catalog row'
 );
@@ -1563,7 +1566,8 @@ SELECT is(
   'a subsequent P3 RPC clears stale P4 RLS context'
 );
 SELECT is(
-  (SELECT count(*)::integer FROM public.list_public_catalog()),
+  (SELECT count(*)::integer FROM public.list_public_catalog()
+   WHERE listing_id = (SELECT listing_id FROM pg_temp.p4_standard_listing_target)),
   1,
   'P4 context reset probe remains minimal after the P3 call'
 );

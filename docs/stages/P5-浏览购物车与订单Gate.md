@@ -14,7 +14,7 @@
 
 - 币种固定 `EUR`，金额为非负整数分；P5 的 shipping/tax/discount 均固定 `0`，订单总额等于商品小计，不表示已支付。
 - 匿名用户可浏览/搜索和获取零售价；购物车、结算、订单列表/详情/取消必须登录。批发价格继续完全由 P4 服务端资格规则判定，客户端不得选择身份或价格模式。
-- 每个用户最多一个 active cart；cart 可跨多个 merchant/store。standard 数量为 `1..99`，secondhand 数量固定 `1`；加入购物车不预留库存。
+- 每个用户最多一个 active cart；cart 可跨多个 merchant/store。standard 数量为 `1..1,000,000`，与 P4 报价/库存上限一致；secondhand 数量固定 `1`；加入购物车不预留库存。
 - 购物车展示每次读取时的 current quote；任何旧价格、客户端金额、客户端库存或客户端商家分组都不作为结算输入。
 - checkout 以 actor-global UUID 幂等键、cart version 和确定性 listing 顺序执行；再次读取 current quote/availability/version，并通过 P4 private reservation primitive 在同一事务预留全部商品。
 - 任一商品无效、库存/版本变化、价格不再可用或写入失败时，整个 checkout 回滚：零订单、零子订单、零残留预留、购物车不清空；返回有限错误码。
