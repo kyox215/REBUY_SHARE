@@ -1,6 +1,6 @@
 # P3 商家入驻与平台审核 Gate
 
-文档状态：**执行中 / synthetic-only local bounded Gate 已打开**
+文档状态：**已通过 / synthetic-only local Exit REVIEW GO**
 记录日期：2026-09-03（Europe/Rome）
 适用分支：`codex/rebuy-v1-local-complete`
 
@@ -128,3 +128,9 @@
 - source commit 保持 `6e3cd7b` 不变；唯一 start 后 AMR、fresh reset、pgTAP `224/224`、三场景 concurrency、lint/advisors/migration list、Auth `46/46`、三项 structure、typecheck、ESLint、Next build、diff check 全部 PASS。
 - 本次在 cleanup 前保存脱敏有限输出和 candidate manifest；cleanup 后保存 cleanup 工件及 evidence manifest。exact stop/no-backup、raw 删除、资源与端口清空通过。
 - 当前仅待同一 reviewer 定向关闭 `P2-E01`；GO 前 P3 local Exit、P4、hosted/Production、push/deploy 仍关闭。详见 [attempt #6](../evidence/P3/2026-09-03-runtime-attempt-6-pass/README.md)。
+
+## 19. 2026-09-03｜Final independent REVIEW GO；P4 Entry 打开
+
+- clean evidence HEAD=`de31156d9b249aeb8aad1785c0a43309fc9fd6cf`；source parent=`6e3cd7bbd3cd89b2ebbe7d97b4d69b2a23ace365` 且两者间源码无差异。
+- reviewer 对 candidate manifest `16/16`、evidence manifest `13/13` 全部校验为 OK；`P2-E01 CLOSED`，最终 verdict=`REVIEW GO / P0=0 / P1=0 / P2=0`。
+- P3 synthetic-only local Exit 关闭，允许打开 P4 商品/定价/库存 synthetic-only local Gate；不外推 hosted/Production、真实 PII、main push、合并或部署。详见 [final review](../evidence/P3/2026-09-03-final-independent-review/REVIEW.md)。
