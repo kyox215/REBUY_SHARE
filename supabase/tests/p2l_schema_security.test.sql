@@ -3,8 +3,8 @@ CREATE EXTENSION IF NOT EXISTS pgtap;
 SELECT no_plan();
 SET LOCAL search_path = pg_catalog, public, extensions;
 
--- The ten-table boundary is intentional. Post-P2 objects and auth.users
--- triggers are outside this candidate.
+-- The original ten-table P2-L boundary remains intact. Later stage regressions
+-- verify only objects that are still intentionally outside the current V1 gate.
 SELECT ok(
   (
     SELECT count(*) = 10
@@ -22,10 +22,9 @@ SELECT ok(
 );
 
 SELECT ok(
-  to_regclass('public.wholesale_applications') IS NULL
-  AND to_regclass('public.qualifications') IS NULL
+  to_regclass('public.qualifications') IS NULL
   AND to_regclass('public.security_events') IS NULL,
-  'post-P2 tables are absent'
+  'unopened generic qualification and security-event tables are absent'
 );
 
 SELECT ok(

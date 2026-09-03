@@ -20,6 +20,8 @@
     "test:auth:p2l:migration:structure": "node scripts/test-p2l-migration-structure.mjs",
     "test:p3:migration:structure": "node scripts/test-p3-migration-structure.mjs",
     "test:p3:concurrency": "node scripts/run-p3-approval-concurrency.mjs",
+    "test:p4:migration:structure": "node scripts/test-p4-migration-structure.mjs",
+    "test:p4:concurrency": "node scripts/run-p4-inventory-concurrency.mjs",
     "test:auth:p2l:concurrency": "node scripts/run-p2l-invitation-concurrency.mjs",
     "test:auth:p2l": "node scripts/run-p2l-amr-preflight.mjs"
   },
