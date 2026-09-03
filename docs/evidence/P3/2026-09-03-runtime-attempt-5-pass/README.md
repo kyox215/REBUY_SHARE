@@ -47,4 +47,4 @@
 
 ## Status
 
-本 evidence 证明绑定候选已完成一次完整 synthetic-only local runtime PASS。P3 仍为 `RUNTIME PASS / FINAL INDEPENDENT REVIEW PENDING`；final reviewer GO 前不打开 P4，不推送 main，不部署。
+本 evidence 记录绑定候选完成一次完整 synthetic-only local runtime，但 initial final review 发现本目录只有摘要，缺少有限输出与 manifests，因此它不能单独作为独立可审计证明。后续以 [attempt #6 auditable PASS](../2026-09-03-runtime-attempt-6-pass/README.md) 为准；targeted reviewer GO 前不打开 P4，不推送 main，不部署。

@@ -117,3 +117,14 @@
 - strict lint、security strict、performance/warn strict 均无问题；all/info 只有 10 条 fresh empty database `unused_index` INFO，`unindexed_foreign_keys=0`、`auth_rls_initplan=0`、WARN/ERROR=`0`。
 - migration local/database history 为 `20260831183358`、`20260903120000`；Auth `46/46`、三项 structure、typecheck、全量 ESLint、Next build 与 diff check 全部 PASS。
 - exact stop/no-backup、raw 删除与目标资源/端口清空通过。P3 当前为 `RUNTIME PASS / FINAL INDEPENDENT REVIEW PENDING`；reviewer GO 前不打开 P4。详见 [attempt #5](../evidence/P3/2026-09-03-runtime-attempt-5-pass/README.md)。
+
+## 17. 2026-09-03｜Initial final review NO-GO on evidence only
+
+- exact commit `6e3cd7b` 的源码审查无 P0/P1/P2；唯一 `P2-E01` 是 attempt #5 未保存有限 runtime 工件和 candidate/evidence manifests，reviewer 无法独立核对 README 叙述。
+- verdict 为 `REVIEW NO-GO / P0=0 / P1=0 / P2=1`。允许从空资源运行一次 evidence-only bounded rerun；不得从已删除 raw 事后伪造输出。详见 [final review](../evidence/P3/2026-09-03-final-independent-review/REVIEW.md)。
+
+## 18. 2026-09-03｜Runtime attempt #6 auditable PASS
+
+- source commit 保持 `6e3cd7b` 不变；唯一 start 后 AMR、fresh reset、pgTAP `224/224`、三场景 concurrency、lint/advisors/migration list、Auth `46/46`、三项 structure、typecheck、ESLint、Next build、diff check 全部 PASS。
+- 本次在 cleanup 前保存脱敏有限输出和 candidate manifest；cleanup 后保存 cleanup 工件及 evidence manifest。exact stop/no-backup、raw 删除、资源与端口清空通过。
+- 当前仅待同一 reviewer 定向关闭 `P2-E01`；GO 前 P3 local Exit、P4、hosted/Production、push/deploy 仍关闭。详见 [attempt #6](../evidence/P3/2026-09-03-runtime-attempt-6-pass/README.md)。
