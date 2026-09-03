@@ -1,0 +1,26 @@
+SUPABASE_TELEMETRY_DISABLED=1 supabase start --yes > /private/tmp/rebuy-p4-attempt5-start.raw 2>&1
+/Users/kyox215/.nvm/versions/node/v22.12.0/bin/node prototype/scripts/run-p2l-amr-preflight.mjs
+SUPABASE_TELEMETRY_DISABLED=1 supabase db reset --local > /private/tmp/rebuy-p4-attempt5-reset.raw 2>&1
+supabase test db --local supabase/tests/p2l_schema_security.test.sql supabase/tests/p2l_invitation_flows.test.sql supabase/tests/p3_merchant_schema_security.test.sql supabase/tests/p3_merchant_workflow.test.sql supabase/tests/p4_schema_security.test.sql supabase/tests/p4_workflow.test.sql
+/Users/kyox215/.nvm/versions/node/v22.12.0/bin/node prototype/scripts/run-p4-inventory-concurrency.mjs
+supabase db lint --local --schema public,private --level warning --fail-on warning
+supabase db advisors --local --type security --level info --fail-on warn
+supabase db advisors --local --type performance --level warn --fail-on warn
+supabase db advisors --local --type all --level info
+supabase migration list --local
+/Users/kyox215/.nvm/versions/node/v22.12.0/bin/node prototype/scripts/run-auth-contract-tests.mjs
+/Users/kyox215/.nvm/versions/node/v22.12.0/bin/node prototype/scripts/test-p2l-amr-preflight-structure.mjs
+/Users/kyox215/.nvm/versions/node/v22.12.0/bin/node prototype/scripts/test-p2l-migration-structure.mjs
+/Users/kyox215/.nvm/versions/node/v22.12.0/bin/node prototype/scripts/test-p3-migration-structure.mjs
+/Users/kyox215/.nvm/versions/node/v22.12.0/bin/node prototype/scripts/test-p4-migration-structure.mjs
+/Users/kyox215/.nvm/versions/node/v22.12.0/bin/node node_modules/typescript/bin/tsc --noEmit
+/Users/kyox215/.nvm/versions/node/v22.12.0/bin/node node_modules/eslint/bin/eslint.js .
+/Users/kyox215/.nvm/versions/node/v22.12.0/bin/node node_modules/next/dist/bin/next build
+git diff --check
+supabase stop --project-id rebuy-g2-a1-e2a-local-email-otp-exec --no-backup
+apply_patch Delete File: /private/tmp/rebuy-p4-attempt5-start.raw
+apply_patch Delete File: /private/tmp/rebuy-p4-attempt5-reset.raw
+docker ps -a --filter name=rebuy-g2-a1-e2a-local-email-otp-exec --format {{.Names}}
+docker volume ls --filter label=com.supabase.cli.project=rebuy-g2-a1-e2a-local-email-otp-exec --format {{.Name}}
+docker network ls --filter label=com.supabase.cli.project=rebuy-g2-a1-e2a-local-email-otp-exec --format {{.Name}}
+lsof -nP -iTCP:55320-55329 -sTCP:LISTEN
