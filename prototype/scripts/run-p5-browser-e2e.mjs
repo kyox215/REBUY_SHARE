@@ -437,11 +437,17 @@ try {
   await fill('#login-otp', otherSignupOtp)
   await submitCurrentForm('验证并完成注册')
   await waitFor(`location.pathname === '/'`, 'other-signup-redirect')
+  const expectedNotFoundErrorStart = browserErrors.length
   await navigate(orderPath)
   await waitFor(
     `document.body.innerText.includes('This page could not be found')`,
     'cross-user-order-not-found',
   )
+  await new Promise((resolve) => setTimeout(resolve, 250))
+  const expectedNotFoundErrors = browserErrors.splice(expectedNotFoundErrorStart)
+  assert.deepEqual(expectedNotFoundErrors, [
+    'Failed to load resource: the server responded with a status of 404 (Not Found)',
+  ], 'expected_cross_user_404_console')
   console.log('P5_BROWSER_CROSS_USER_ORDER_DENIED_PASS')
   await navigate('/account')
   await clickText('button', '退出当前账号')

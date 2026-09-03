@@ -210,6 +210,7 @@ for (const phrase of [
   'checkout_double_submit',
   'cancel_confirmation',
   'cross_user_order_denied',
+  'expected_cross_user_404_console',
   'wholesale_catalog_moq',
   'P5_BROWSER_EMPTY_CART_PASS',
   'P5_BROWSER_INVALID_CART_RECOVERY_PASS',
