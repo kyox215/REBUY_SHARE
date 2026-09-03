@@ -1,6 +1,6 @@
 # P2-L 本地 Schema 与 RLS 纵切 Gate
 
-文档状态：**P2-L runtime Gate PASS；最终独立 review 待完成；P3 仍 CLOSED**
+文档状态：**P2-L local Exit 已关闭 / REVIEW GO；允许打开 P3 bounded Gate**
 记录日期：2026-09-03（Europe/Rome）
 适用分支：`codex/rebuy-v1-local-complete`；本文件保留全部 bounded runtime、审查与修复事实，不把历史 PASS 外推为当前 Exit。
 
@@ -369,3 +369,9 @@ E2b provider invite/admin key、Google、Apple、hosted Auth、custom SMTP、真
 - **Application quality**：Node `22.12.0` 下 Auth contract `46/46`、typecheck、全量 ESLint、Next `16.3.2` production build、两个 P2-L structure verifier 与 diff check 全部 PASS；生成态漂移已恢复。
 - **Cleanup / evidence**：exact stop/no-backup 完成；敏感 raw/temp 删除；目标 containers/volumes/network/listeners 全空。已保存脱敏 entry、AMR、reset、pgTAP、concurrency、lint、advisors、migration list、app quality、cleanup、commands 与两组 SHA-256。
 - **Gate**：P2-L runtime Gate 当前 PASS，但 Exit 仍等待同一独立 reviewer 对 exact commit/hashes 的最终 GO。证据见 [attempt #20 PASS](../evidence/P2-L/2026-09-03-schema-runtime-attempt-20-pass/README.md)；GO 前 P3–P7、hosted/Production、main push/deploy 继续 CLOSED。
+
+## 40. 2026-09-03｜Final independent REVIEW GO；P2-L local Exit 关闭
+
+- **Exact verdict**：独立 reviewer 绑定 commit `285c2361c6362e5be30e03ee445f2c4d5b6f7361` 与 candidate manifest，给出 `REVIEW GO / P0=0 / P1=0 / P2=1`。原 P1-01、P1-02、P2-01、P2-02 全部关闭；11 项 candidate hashes、两个结构门和 concurrency syntax 复核通过。
+- **Non-blocking debt**：失败 cleanup 用双 `JSON.stringify` 比较解析对象，jsonb 键序理论上可造成 `cleanup_fail` 诊断假阴性；它不能制造 cleanup 假 PASS，也不影响 attempt #20 正常路径的全零验证，故不阻塞 Exit。后续修复需 deep equality + 静态拒绝旧模式，并另立 hash/验证记录。
+- **Decision**：P2-L local Exit 关闭；允许按批准顺序打开 P3 自身的 bounded Gate。该决定不把 local slice 外推为 hosted/Production，也不开放 main push/deploy。完整 verdict 见 [final independent review](../evidence/P2-L/2026-09-03-final-independent-review/REVIEW.md)。
