@@ -1,6 +1,6 @@
 # P4 商品、定价、库存与批发资格 Gate
 
-文档状态：**执行中 / synthetic-only local Entry 已打开**
+文档状态：**已通过 / synthetic-only local Exit 已关闭**
 记录日期：2026-09-03（Europe/Rome）
 适用分支：`codex/rebuy-v1-local-complete`
 
@@ -85,3 +85,10 @@
 - listing/price/inventory 问题：下架 exact listing、冻结其写入并按事件/version 修复；不得删除价格、库存或资格历史。
 - local migration 只验证向前重建，不在真实数据环境做 rollback；hosted 迁移、备份恢复、真实资料和 Production 均属于后续 P7/发布 Gate。
 - 本 Gate 不实现购物车、订单、商家 UI 或真实平台 UI；对应 P5/P6。P4 final GO 前 P5–P7、main push、合并和部署继续关闭。
+
+## 9. Final independent review
+
+- exact source commit=`abf4dfa0367c60310fcb29a932cd99d559c55a17`；evidence HEAD=`313754aa82ffa5b945f6aec398ccb6b26e768988`。
+- attempt #5 从空资源完成 AMR、fresh reset、六文件 pgTAP `364/364`、三场景双连接库存并发、strict lint、security/performance advisors、migration list、Auth/structure/typecheck/ESLint/Next build/diff check，并完成 exact cleanup。
+- independent final verdict=`FINAL GO / P0=0 / P1=0 / P2=0`；P4 synthetic-only local Exit 关闭，允许打开 P5 synthetic-only local Entry。
+- 该结论不证明 hosted/Production，不授权真实 PII、支付、物流、税务、main push 或部署。完整证据见 [attempt #5](../evidence/P4/2026-09-03-runtime-attempt-5-pass/README.md) 与 [final review](../evidence/P4/2026-09-03-final-independent-review/REVIEW.md)。
