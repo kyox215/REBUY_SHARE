@@ -1,0 +1,33 @@
+SUPABASE_TELEMETRY_DISABLED=1 supabase start --yes
+/Users/kyox215/.nvm/versions/node/v22.12.0/bin/node prototype/scripts/run-p2l-amr-preflight.mjs
+SUPABASE_TELEMETRY_DISABLED=1 supabase db reset --local
+supabase test db --local
+/Users/kyox215/.nvm/versions/node/v22.12.0/bin/node prototype/scripts/run-p2l-invitation-concurrency.mjs
+/Users/kyox215/.nvm/versions/node/v22.12.0/bin/node prototype/scripts/run-p3-approval-concurrency.mjs
+/Users/kyox215/.nvm/versions/node/v22.12.0/bin/node prototype/scripts/run-p4-inventory-concurrency.mjs
+/Users/kyox215/.nvm/versions/node/v22.12.0/bin/node prototype/scripts/run-p5-checkout-concurrency.mjs
+/Users/kyox215/.nvm/versions/node/v22.12.0/bin/node prototype/scripts/run-p5-race-concurrency.mjs
+supabase db lint --local --schema public,private --level warning --fail-on warning
+supabase db advisors --local --type security --level info --fail-on warn
+supabase db advisors --local --type performance --level warn --fail-on warn
+supabase db advisors --local --type all --level info
+supabase migration list --local
+/Users/kyox215/.nvm/versions/node/v22.12.0/bin/node prototype/scripts/run-auth-contract-tests.mjs
+/Users/kyox215/.nvm/versions/node/v22.12.0/bin/node prototype/scripts/test-p2l-amr-preflight-structure.mjs
+/Users/kyox215/.nvm/versions/node/v22.12.0/bin/node prototype/scripts/test-p2l-migration-structure.mjs
+/Users/kyox215/.nvm/versions/node/v22.12.0/bin/node prototype/scripts/test-p3-migration-structure.mjs
+/Users/kyox215/.nvm/versions/node/v22.12.0/bin/node prototype/scripts/test-p4-migration-structure.mjs
+/Users/kyox215/.nvm/versions/node/v22.12.0/bin/node prototype/scripts/test-p5-migration-structure.mjs
+/Users/kyox215/.nvm/versions/node/v22.12.0/bin/node prototype/node_modules/typescript/bin/tsc --noEmit
+/Users/kyox215/.nvm/versions/node/v22.12.0/bin/node prototype/node_modules/eslint/bin/eslint.js prototype
+/Users/kyox215/.nvm/versions/node/v22.12.0/bin/node prototype/node_modules/next/dist/bin/next build
+/Users/kyox215/.nvm/versions/node/v22.12.0/bin/node prototype/scripts/run-local-auth-dev-server.mjs
+'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless=new --disable-gpu --no-first-run --no-default-browser-check --remote-debugging-address=127.0.0.1 --remote-debugging-port=9225 --user-data-dir=/private/tmp/rebuy-p5-chrome.Reo0nx about:blank
+/Users/kyox215/.nvm/versions/node/v22.12.0/bin/node prototype/scripts/run-p5-browser-e2e.mjs
+git diff --check
+supabase stop --project-id rebuy-g2-a1-e2a-local-email-otp-exec --no-backup
+delete exact temporary Chrome profile /private/tmp/rebuy-p5-chrome.Reo0nx
+docker ps -a --filter name=rebuy-g2-a1-e2a-local-email-otp-exec --format {{.Names}}
+docker volume ls --filter label=com.supabase.cli.project=rebuy-g2-a1-e2a-local-email-otp-exec --format {{.Name}}
+docker network ls --filter label=com.supabase.cli.project=rebuy-g2-a1-e2a-local-email-otp-exec --format {{.Name}}
+lsof -nP -iTCP:3000 -iTCP:9225 -iTCP:55320-55329 -sTCP:LISTEN

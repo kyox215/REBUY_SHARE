@@ -1,0 +1,12 @@
+p2l_schema_security_file=PASS
+p2l_invitation_flows_file=PASS
+p3_merchant_schema_security_file=PASS
+p3_merchant_workflow_file=PASS
+p4_schema_security_file=PASS
+p4_workflow_file=PASS
+p5_schema_security_file=PASS
+p5_workflow_file=PASS
+files=8
+tests=446
+failed=0
+result=PASS

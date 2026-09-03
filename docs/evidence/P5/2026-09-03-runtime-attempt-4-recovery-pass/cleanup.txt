@@ -1,0 +1,10 @@
+stop_project_id=rebuy-g2-a1-e2a-local-email-otp-exec
+stop_no_backup_exit=0
+dev_server_exit=0
+chrome_exit=0
+temporary_chrome_profile_deleted=true
+raw_runtime_files_present_after=false
+containers_empty_after=true
+volumes_empty_after=true
+network_empty_after=true
+listeners_3000_9225_55320_55329_empty_after=true

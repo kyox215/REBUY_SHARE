@@ -1,0 +1,8 @@
+db_reset_exit=0
+roles_applied=true
+migration_20260831183358_applied=true
+migration_20260903120000_applied=true
+migration_20260903170000_applied=true
+migration_20260904120000_applied=true
+base_seed_applied=true
+p5_catalog_seed_applied=true
