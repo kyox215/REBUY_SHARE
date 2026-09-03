@@ -12,9 +12,11 @@
 | G2-A0 账号安全合同与威胁模型 | 已通过（Exit GO；远端 docs-only reconciliation 已完成） | 本地静态 + 远端 merge/Actions + 独立复审 | [G2-A0 阶段记录](./G2-A0-账号安全合同与威胁模型验收.md)；[G2-A0 Owner 验收清单](./G2-A0-Owner验收清单.md)；[G2-A1 Entry preparation 证据](../evidence/G2-A1/2026-08-28-entry-preparation/README.md)；[A0 ADR 与威胁模型](../09-A0-账号架构ADR与威胁模型.md) |
 | G2-A1 独立 Auth spike / P2-L | E2a REVIEW GO；注册/登录 backend runtime PASS；P2-L local Exit REVIEW GO；浏览器 UI 待补 | 本地 Auth runtime + P2-L pgTAP `113/113`、双连接并发、lint/advisors/list、独立审查；不外推 hosted/Production | [注册/登录 main integration PASS](../evidence/G2-A1/2026-09-03-registration-login-main-integration-pass/README.md)；[P2-L Gate](./P2-L-本地Schema与RLS纵切Gate.md)；[P2-L final review](../evidence/P2-L/2026-09-03-final-independent-review/REVIEW.md) |
 | P3 商家入驻与平台审核 | 已通过 | synthetic-only local REVIEW GO；P0/P1/P2=0/0/0 | [P3 Gate](./P3-商家入驻与平台审核Gate.md)；[attempt #6](../evidence/P3/2026-09-03-runtime-attempt-6-pass/README.md)；[final review](../evidence/P3/2026-09-03-final-independent-review/REVIEW.md) |
-| P4 商品/定价/库存与批发资格 | 执行中（Entry 打开） | Gate 已固定；实现/运行/独立审查待完成 | [P4 Gate](./P4-商品定价库存与批发资格Gate.md) |
+| P4 商品/定价/库存与批发资格 | 已通过 | synthetic-only local FINAL GO；P0/P1/P2=0/0/0 | [P4 Gate](./P4-商品定价库存与批发资格Gate.md)；[final review](../evidence/P4/2026-09-03-final-independent-review/REVIEW.md) |
+| P5 浏览/购物车/订单 | 已通过 | synthetic-only local FINAL GO；P0/P1/P2=0/0/0 | [P5 Gate](./P5-浏览购物车与订单Gate.md)；[attempt #4 recovery](../evidence/P5/2026-09-03-runtime-attempt-4-recovery-pass/README.md)；[final review](../evidence/P5/2026-09-03-final-independent-review/REVIEW.md) |
+| P6 商家后台闭环 | 执行中（Entry 打开） | Gate 已固定；实现/运行/独立审查待完成 | [P6 Gate](./P6-商家后台闭环Gate.md) |
 
-GOV-1、G0/P1、G1、G2-A0 与 E1 的历史完成/远端闭环事实仍以各自 evidence 和 [15 台账](../15-项目状态与阶段台账.md) 为准。E2a local email OTP 为 REVIEW GO；注册/登录 Auth contract `46/46` 且 local backend runtime 已通过，active browser Gate 仍待补。P2-L 与 P3 synthetic-only local Exit 均已独立 REVIEW GO。P4 商品/定价/库存 local Gate 现可打开；P5–P7、hosted/Production、main push/deploy 尚未完成。本索引只做导航，不复制详细记录。
+GOV-1、G0/P1、G1、G2-A0 与 E1 的历史完成/远端闭环事实仍以各自 evidence 和 [15 台账](../15-项目状态与阶段台账.md) 为准。E2a local email OTP 为 REVIEW GO；注册/登录、P2-L、P3、P4 与 P5 synthetic-only local Exit 已关闭，P5 同时补齐 active browser Gate。P6 商家后台闭环 local Gate 当前执行中；P7、hosted/Production、main push/deploy 尚未完成。本索引只做导航，不复制详细记录。
 
 ## 1.1 2026-08-28 当前纠正与 G2-A1 B1 最小连接状态（历史快照；当前 B2 见 1.6）
 

@@ -1,6 +1,6 @@
 # P5 浏览、购物车与订单 Gate
 
-文档状态：**执行中 / synthetic-only local Entry 已打开**
+文档状态：**已通过 / synthetic-only local Exit 已关闭**
 记录日期：2026-09-03（Europe/Rome）
 适用分支：`codex/rebuy-v1-local-complete`
 
@@ -73,3 +73,10 @@
 - runtime 前先通过 structure/syntax/quality 与独立只读审查；任一失败立即停止并清理。最多三次实质失败，达到上限转专项审查。
 - order 写入问题时关闭 checkout/cancel 写入口，保留只读 catalog/order 查询与 append-only 证据；不删除订单或库存历史，不手工伪造成功状态。
 - 完整 runtime 与 final independent GO 前不得关闭 P5 或打开 P6；hosted/Production、真实 PII、支付/物流/税务、main push/merge/deploy 继续关闭。
+
+## 9. Exit 决定（2026-09-03）
+
+- source commit=`bc8195929c58caf68173c1b4e2b1231a066b117d`，evidence commit=`a0c449a2905b7f13c7c812baca3c3833cb27274d`。
+- attempt #4 recovery 从空资源完成八份 pgTAP `446/446`、五套并发/竞态、strict lint/advisors、migration list、Auth/structure/typecheck/ESLint/Next build、十条浏览器业务路径与完整 cleanup；candidate/evidence manifests 分别 `25/25`、`15/15`。
+- independent reviewer 给出 `FINAL GO / P0=0 / P1=0 / P2=0`。P5 synthetic-only local Exit 正式关闭，P6 synthetic-only local Entry 打开。
+- 运行证据见 [attempt #4 recovery](../evidence/P5/2026-09-03-runtime-attempt-4-recovery-pass/README.md)，终审见 [final independent review](../evidence/P5/2026-09-03-final-independent-review/REVIEW.md)。本决定不证明 hosted/Production，也不开放真实 PII、支付/物流、main push/merge 或部署。
