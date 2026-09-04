@@ -34,3 +34,12 @@
 - Production 环境变量列表仍为空，线上健康检查仍为 `mode=ui-only`；在独立 Supabase、迁移、受控邮箱和生产变量闭环前不发布 hosted-auth 候选。
 - `origin/main` 新增的两笔 UI-only Production docs-only 提交已刷新并通过 merge commit `8918735` 吸收；源码候选未变化，当前分支相对 `origin/main` 为零落后。
 - GitHub CLI 的现有登录令牌无效；该状态尚未影响 Git fetch，但 PR/CI/merge 必须在推送前恢复认证或使用经验证的等价入口。本段只记录 preflight，不把远端 CI、push 或 Production 表述为已完成。
+
+## 零新增付费约束与免费额度核对
+
+- Owner 明确要求“不使用付费”。因此没有调用 Supabase `get_cost`/`confirm_cost`/`create_project`，没有创建项目、分支、插件或付费 add-on；既有两个非 Rebuy 项目保持未触碰。
+- Supabase 官方 [billing overview](https://supabase.com/docs/guides/platform/billing-on-supabase) 当前规定：Owner/Administrator 跨所有组织合计最多两个免费活跃项目，paused 项目不计入。当前账户实时只有一个组织，但已有 `ChinaTech_date` 与 `PartsPro-V4` 两个 `ACTIVE_HEALTHY` 项目，因此第三个独立 Rebuy 项目没有可用免费项目槽位。
+- Free Plan 主要组织级/月度或逐项目额度为：数据库 `500 MB/项目`、MAU `50,000`、Storage `1 GB`、uncached/cached egress 各 `5 GB`、Edge Functions `500,000` 次、Realtime `2,000,000` 条与峰值 `200` 连接。超过 500 MB 数据库会进入只读；低活跃项目可能在 7 天后暂停，暂停后可在 90 天内恢复。Free Plan 不提供可下载的托管数据库备份，生产恢复必须自行定期 `db dump`。
+- Supabase 默认 SMTP 只向项目组织 team 的预授权邮箱投递、没有 SLA 且明确不适合生产；它只足以做受控 team-member Auth 验证，不能据此开放公众注册。
+- Vercel 当前唯一团队实时为 `Pro`，既有 `rebuy-share` 已在其中；这不是免费账户。官方 [Hobby plan](https://vercel.com/docs/plans/hobby) 虽含 100 GB Fast Data Transfer、100 万 Function invocations、4 CPU-hours、360 GB-hours memory 等免费额度，但只允许个人、非商业用途，不适合作为 Rebuy 交易试运营的合规替代。
+- 结论：在不触碰两个现有 Supabase 项目、不新增付费且不改变供应商/架构的约束下，独立 hosted Rebuy 数据库与完整 Production V1 当前不可同时成立。候选分支已非强制推送至 `origin/codex/rebuy-v1-local-complete`；PR、Supabase 创建、迁移和 hosted-auth 部署保持暂停。

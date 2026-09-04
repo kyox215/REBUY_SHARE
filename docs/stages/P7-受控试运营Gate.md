@@ -83,3 +83,9 @@
 - Vercel `rebuy-share` 的 Node 运行时已校准并回读为 `22.x`；Production env 仍为空、线上仍为 `ui-only`，尚未部署 hosted-auth。
 - `origin/main` 的 UI-only Production docs-only closeout 已通过 merge commit `8918735` 合入；当前分支零落后，业务源码候选及其已通过验证未变化。
 - GitHub CLI 当前凭据无效；push/PR/CI 尚未执行。Supabase 创建仍等待唯一组织的明确确认与 provider 成本确认，首轮真实 Auth 还需要 Owner 指定受控邮箱。
+
+## 7. 2026-09-04｜零新增付费约束
+
+- Owner 明确要求不使用付费。Supabase 官方 Free Plan 跨 Owner/Administrator 所有组织只允许两个活跃免费项目；当前账户两个槽位均由非 Rebuy 的 `ACTIVE_HEALTHY` 项目占用，不能免费创建第三个独立 Rebuy 项目。
+- 不暂停、迁移、复用或修改两个现有项目；不创建付费 project/branch/add-on。免费默认 SMTP 仅适合 team-member 受控验证，Free Plan 又缺少可下载托管备份并可能因七天低活跃暂停，均已登记为生产能力边界。
+- Vercel 当前项目位于既有 Pro 团队；Hobby 限个人非商业用途，不作为 Rebuy 交易试运营替代。若坚持零新增付费，P7 hosted database/真实 Auth/业务 Production 验收保持阻塞；local V1 证据与远端候选分支保留。
