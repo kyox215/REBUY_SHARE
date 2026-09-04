@@ -1,7 +1,7 @@
 # P6 商家后台闭环 Gate
 
-文档状态：**执行中 / synthetic-only local Entry 已打开**
-记录日期：2026-09-03（Europe/Rome）
+文档状态：**已通过 / synthetic-only local Exit 已关闭**
+记录日期：2026-09-04（Europe/Rome）
 适用分支：`codex/rebuy-v1-local-complete`
 
 ## 1. 目标与范围
@@ -70,3 +70,12 @@
 - runtime 前先通过 structure/syntax/quality 与独立只读审查；任一失败立即停止并清理。最多三次实质失败，达到上限转专项审查。
 - 模块失败时仅关闭对应 mutation，保留安全只读和 append-only evidence；不删除订单、库存、售后或审计历史，不手工伪造成功状态。
 - 完整 runtime 与 final independent GO 前不得关闭 P6 或打开 P7；hosted/Production、真实 PII、支付/物流/税务、main push/merge/deploy 继续关闭。
+
+## 9. 2026-09-04｜最终运行、独立复核与 Exit 决定
+
+- 冻结源码候选为 `09f69e6d9830a374b34bdd69ea675b2b027b7521`，脱敏运行证据提交为 `0b43b6e3c0df0ec0ad4862d04129db1c599c8a82`。candidate/evidence manifests 分别 `33/33`、`15/15` 校验通过。
+- fresh reset 后 P2–P6 十份 pgTAP `502/502`、六套 concurrency、strict lint/advisors、migration list、Auth `46/46`、全部 structure、typecheck、全量 ESLint、Next `16.3.2` production build 与真实 local Auth 浏览器闭环全部 PASS；浏览器覆盖注册、无权限页、商家 membership、目录/库存、下单、履约、售后、审计及 `390/430/768/1024/1440` 视口。
+- exact stop/no-backup 后目标 containers、volumes、network、listeners 与临时 Chrome profile 均为空；共享 Colima 未被更改。
+- 独立 reviewer 对 exact evidence HEAD 给出 `FINAL GO / P0=0 / P1=0 / P2=0 / P3=1`。原证据完整性与授权矩阵缺口均关闭；完整结论见 [final independent review](../evidence/P6/2026-09-04-final-independent-review/REVIEW.md)。
+- 唯一非阻塞 `P3-A01`：audit RPC 在关系集合限流前先聚合 JSONB，大数据量时可能放大内存与延迟；登记至 P7 性能/观测清单，不影响 P6 功能、安全或 local Exit。
+- P6 synthetic-only local Exit 正式关闭；按 Owner 已批准的 V1 清单与上线指令打开 P7 受控试运营 Entry。P6 证据不外推 hosted/Production，P7 必须独立完成 hosted Auth、数据库迁移、备份/回滚、监控、发布与生产验证。

@@ -14,9 +14,10 @@
 | P3 商家入驻与平台审核 | 已通过 | synthetic-only local REVIEW GO；P0/P1/P2=0/0/0 | [P3 Gate](./P3-商家入驻与平台审核Gate.md)；[attempt #6](../evidence/P3/2026-09-03-runtime-attempt-6-pass/README.md)；[final review](../evidence/P3/2026-09-03-final-independent-review/REVIEW.md) |
 | P4 商品/定价/库存与批发资格 | 已通过 | synthetic-only local FINAL GO；P0/P1/P2=0/0/0 | [P4 Gate](./P4-商品定价库存与批发资格Gate.md)；[final review](../evidence/P4/2026-09-03-final-independent-review/REVIEW.md) |
 | P5 浏览/购物车/订单 | 已通过 | synthetic-only local FINAL GO；P0/P1/P2=0/0/0 | [P5 Gate](./P5-浏览购物车与订单Gate.md)；[attempt #4 recovery](../evidence/P5/2026-09-03-runtime-attempt-4-recovery-pass/README.md)；[final review](../evidence/P5/2026-09-03-final-independent-review/REVIEW.md) |
-| P6 商家后台闭环 | 执行中（Entry 打开） | Gate 已固定；实现/运行/独立审查待完成 | [P6 Gate](./P6-商家后台闭环Gate.md) |
+| P6 商家后台闭环 | 已通过 | synthetic-only local FINAL GO；P0/P1/P2=0/0/0，P3=1 non-blocking | [P6 Gate](./P6-商家后台闭环Gate.md)；[final runtime](../evidence/P6/2026-09-04-final-runtime-pass/README.md)；[final review](../evidence/P6/2026-09-04-final-independent-review/REVIEW.md) |
+| P7 受控试运营 | 执行中（Entry 打开） | hosted/Production 范围合同已固定；运行证据待形成 | [P7 Gate](./P7-受控试运营Gate.md) |
 
-GOV-1、G0/P1、G1、G2-A0 与 E1 的历史完成/远端闭环事实仍以各自 evidence 和 [15 台账](../15-项目状态与阶段台账.md) 为准。E2a local email OTP 为 REVIEW GO；注册/登录、P2-L、P3、P4 与 P5 synthetic-only local Exit 已关闭，P5 同时补齐 active browser Gate。P6 商家后台闭环 local Gate 当前执行中；P7、hosted/Production、main push/deploy 尚未完成。本索引只做导航，不复制详细记录。
+GOV-1、G0/P1、G1、G2-A0 与 E1 的历史完成/远端闭环事实仍以各自 evidence 和 [15 台账](../15-项目状态与阶段台账.md) 为准。E2a local email OTP 为 REVIEW GO；注册/登录、P2-L、P3、P4、P5 与 P6 synthetic-only local Exit 已关闭，P5/P6 已补齐 active browser Gate。P7 受控试运营 Entry 已打开；hosted/Production、main push/deploy 尚待当前 Gate 形成事实证据。本索引只做导航，不复制详细记录。
 
 ## 1.1 2026-08-28 当前纠正与 G2-A1 B1 最小连接状态（历史快照；当前 B2 见 1.6）
 
