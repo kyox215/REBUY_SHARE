@@ -1,0 +1,38 @@
+git status --short
+git rev-parse HEAD
+git diff --check
+docker ps -a --filter name=rebuy-g2-a1-e2a-local-email-otp-exec --format {{.Names}}
+docker volume ls --filter label=com.supabase.cli.project=rebuy-g2-a1-e2a-local-email-otp-exec --format {{.Name}}
+docker network ls --filter label=com.supabase.cli.project=rebuy-g2-a1-e2a-local-email-otp-exec --format {{.Name}}
+lsof -nP -iTCP:3000 -iTCP:9225 -iTCP:55320-55329 -sTCP:LISTEN
+SUPABASE_TELEMETRY_DISABLED=1 supabase start --yes
+/Users/kyox215/.nvm/versions/node/v22.12.0/bin/node prototype/scripts/run-p2l-amr-preflight.mjs
+SUPABASE_TELEMETRY_DISABLED=1 supabase db reset --local
+SUPABASE_TELEMETRY_DISABLED=1 supabase test db --local
+/Users/kyox215/.nvm/versions/node/v22.12.0/bin/node prototype/scripts/run-p2l-invitation-concurrency.mjs
+/Users/kyox215/.nvm/versions/node/v22.12.0/bin/node prototype/scripts/run-p3-approval-concurrency.mjs
+/Users/kyox215/.nvm/versions/node/v22.12.0/bin/node prototype/scripts/run-p4-inventory-concurrency.mjs
+/Users/kyox215/.nvm/versions/node/v22.12.0/bin/node prototype/scripts/run-p5-checkout-concurrency.mjs
+/Users/kyox215/.nvm/versions/node/v22.12.0/bin/node prototype/scripts/run-p5-race-concurrency.mjs
+/Users/kyox215/.nvm/versions/node/v22.12.0/bin/node prototype/scripts/run-p6-concurrency.mjs
+SUPABASE_TELEMETRY_DISABLED=1 supabase db lint --local --schema public,private --level warning --fail-on warning
+SUPABASE_TELEMETRY_DISABLED=1 supabase db advisors --local --type security --level info --fail-on warn
+SUPABASE_TELEMETRY_DISABLED=1 supabase db advisors --local --type performance --level warn --fail-on warn
+SUPABASE_TELEMETRY_DISABLED=1 supabase db advisors --local --type all --level info
+SUPABASE_TELEMETRY_DISABLED=1 supabase migration list --local
+node scripts/run-auth-contract-tests.mjs
+node scripts/test-p2l-amr-preflight-structure.mjs
+node scripts/test-p2l-migration-structure.mjs
+node scripts/test-p3-migration-structure.mjs
+node scripts/test-p4-migration-structure.mjs
+node scripts/test-p5-migration-structure.mjs
+node scripts/test-p6-migration-structure.mjs
+node node_modules/typescript/bin/tsc --noEmit
+node node_modules/eslint/bin/eslint.js .
+node node_modules/next/dist/bin/next build
+/Users/kyox215/.nvm/versions/node/v22.12.0/bin/node prototype/scripts/run-local-auth-dev-server.mjs
+'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless=new --disable-gpu --no-first-run --no-default-browser-check --remote-debugging-address=127.0.0.1 --remote-debugging-port=9225 --user-data-dir=<task-owned-temp-profile> about:blank
+/Users/kyox215/.nvm/versions/node/v22.12.0/bin/node prototype/scripts/run-p6-browser-e2e.mjs
+SUPABASE_TELEMETRY_DISABLED=1 supabase stop --project-id rebuy-g2-a1-e2a-local-email-otp-exec --no-backup
+delete exact task-owned Chrome temporary profile
+repeat exact docker/lsof cleanup checks

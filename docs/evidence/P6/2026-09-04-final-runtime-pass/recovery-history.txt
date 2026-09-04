@@ -1,0 +1,25 @@
+2026-09-04 independent review of eabbe9094551e4a435d93062336a9fa02a195596
+verdict=FINAL NO-GO
+severity=P0:0,P1:0,P2:2,P3:1
+blocking=P2-E01 incomplete auditable artifacts and candidate coverage
+blocking=P2-T01 incomplete employee/private/parity/drift runtime matrix
+non_blocking=P3-A01 audit aggregation before limit
+
+2026-09-04 candidate 9a5d09eae60b1e7839d56f93bed41d618e090f0b
+authorization_matrix_added=PASS structure
+fresh_reset=PASS
+full_pgtap=Files:10,Tests:502,Result:PASS
+concurrency_sequence_exit=1
+failure=P2L_INVITATION_CONCURRENCY_FAIL:same_invitation_concurrency:cleanup_fail
+finite_error=invitation_not_available
+subsequent_concurrency_harnesses=not_run
+independent_residual_query=all task-owned rows empty
+
+root_cause=accepted replay captured statement time before waiting on invitation row lock; a winning transaction could create membership microseconds after that timestamp, causing the replay validity predicate to hide the committed membership
+cleanup_diagnostic_root_cause=JSONB semantic state was compared by serialized key order
+fix_commit=09f69e6d9830a374b34bdd69ea675b2b027b7521
+fix=accepted replay validates membership against wall time after row lock; failure cleanup compares parsed state structurally
+post_fix_structure_and_target_eslint=PASS
+post_fix_fresh_reset=PASS
+post_fix_full_pgtap=Files:10,Tests:502,Result:PASS
+post_fix_all_six_concurrency=PASS

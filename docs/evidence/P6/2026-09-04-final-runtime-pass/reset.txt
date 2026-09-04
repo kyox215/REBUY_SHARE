@@ -1,0 +1,14 @@
+exit=0
+Resetting local database
+Recreating database
+Initialising schema
+Seeding globals from roles.sql
+Applying migration 20260831183358_p2l_local_schema_rls_invites.sql
+Applying migration 20260903120000_p3_merchant_onboarding.sql
+Applying migration 20260903170000_p4_wholesale_catalog_pricing_inventory.sql
+Applying migration 20260904120000_p5_cart_orders.sql
+Applying migration 20260904170000_p6_merchant_operations.sql
+Seeding supabase/seed.sql
+Seeding supabase/p5_local_catalog_seed.sql
+Seeding supabase/p6_local_merchant_seed.sql
+Finished supabase db reset on branch main

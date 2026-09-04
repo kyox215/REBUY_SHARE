@@ -1,0 +1,8 @@
+supabase_stop_no_backup_exit=0
+target_containers=empty
+target_volumes=empty
+target_networks=empty
+listeners_3000_9225_55320_to_55329=empty
+temporary_chrome_profile=deleted
+cleanup_check_exit=1 (expected: lsof returns 1 when no listeners; preceding checks passed)
+shared_colima_runtime=intentionally_preserved

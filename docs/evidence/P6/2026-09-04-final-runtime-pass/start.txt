@@ -1,0 +1,15 @@
+command_exit=0
+images=present locally
+database=started
+schema=initialized
+roles.sql=seeded
+migration_20260831183358=applied
+migration_20260903120000=applied
+migration_20260903170000=applied
+migration_20260904120000=applied
+migration_20260904170000=applied
+seed.sql=applied
+p5_local_catalog_seed.sql=applied
+p6_local_merchant_seed.sql=applied
+health_checks=PASS
+credential_and_connection_value_lines=omitted_by_evidence_policy

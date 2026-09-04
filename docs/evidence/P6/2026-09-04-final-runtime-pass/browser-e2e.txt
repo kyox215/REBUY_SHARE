@@ -1,0 +1,9 @@
+exit=0
+LOCAL_AUTH_DEV_CONFIG_PASS
+P6_BROWSER_E2E_PASS
+covered=registration,login,no-access,membership-provision,dashboard,product-create-search,inventory-adjust,checkout,accept,ship,complete,after-sale-open-review-resolve,audit
+viewport_widths=390,430,768,1024,1440
+keyboard=Tab,Escape
+actionable_console_errors=0
+fixture_cleanup=PASS
+chrome_exit=0

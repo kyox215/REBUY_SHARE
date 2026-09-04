@@ -1,0 +1,15 @@
+exit=0
+p2l_invitation_flows.test.sql=ok
+p2l_schema_security.test.sql=ok
+p3_merchant_schema_security.test.sql=ok
+p3_merchant_workflow.test.sql=ok
+p4_schema_security.test.sql=ok
+p4_workflow.test.sql=ok
+p5_schema_security.test.sql=ok
+p5_workflow.test.sql=ok
+p6_schema_security.test.sql=ok
+p6_workflow.test.sql=ok
+All tests successful
+Files=10
+Tests=502
+Result=PASS

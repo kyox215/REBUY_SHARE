@@ -1,0 +1,9 @@
+candidate_commit=09f69e6d9830a374b34bdd69ea675b2b027b7521
+branch=codex/rebuy-v1-local-complete
+git_status_short=empty
+git_diff_check=PASS
+target_containers=empty
+target_volumes=empty
+target_networks=empty
+listeners_3000_9225_55320_to_55329=empty
+entry_check_exit=1 (expected: lsof returns 1 when no listeners; preceding checks passed)

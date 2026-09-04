@@ -1,0 +1,12 @@
+schema_strict_command_exit=0
+schema_public=PASS
+schema_private=PASS
+schema_result=No schema errors found
+security_strict_command_exit=0
+security_result=No issues found
+performance_warning_strict_command_exit=0
+performance_warning_result=No issues found
+all_info_command_exit=0
+all_info_result=unused_index INFO only
+all_info_warn_count=0
+all_info_error_count=0
