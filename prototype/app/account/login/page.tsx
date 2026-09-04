@@ -13,8 +13,8 @@ type LoginPageProps = {
 };
 
 export const metadata: Metadata = {
-  title: "注册或登录 Rebuy | 账号入口与界面预览",
-  description: "Rebuy 注册或登录入口，支持界面预览与本地测试认证边界。",
+  title: "注册或登录 Rebuy | 账号入口",
+  description: "Rebuy 注册或登录入口，支持受控邮箱认证。",
 };
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {

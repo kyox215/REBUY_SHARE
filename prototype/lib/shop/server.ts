@@ -3,6 +3,7 @@ import 'server-only'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { getAuthRuntimeModeForHost } from '@/lib/auth/runtime-mode'
+import { isAuthRuntimeEnabled } from '@/lib/auth/runtime-mode-core'
 import { resolveSessionStatus } from '@/lib/auth/session'
 import { createClient } from '@/lib/supabase/server'
 import type { CatalogListing, CartRow, OrderDetailRow, OrderSummary } from './types'
@@ -23,7 +24,7 @@ export async function getBuyerSessionStatus() {
 
 export async function requireBuyerPage(nextPath: string) {
   const mode = await getShopRuntimeMode()
-  if (mode !== 'local-auth') {
+  if (!isAuthRuntimeEnabled(mode)) {
     redirect(`/account/login?next=${encodeURIComponent(nextPath)}`)
   }
   const session = await getBuyerSessionStatus()

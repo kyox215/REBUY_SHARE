@@ -22,9 +22,13 @@ import {
   handleAuthCallbackForMode,
 } from "../../lib/auth/callback-route";
 import {
+  AppOriginConfigError,
   LOCAL_APP_HOST,
   LOCAL_APP_ORIGIN,
+  getTrustedHostedAppOrigin,
   isCanonicalLocalAppRequest,
+  normalizeHostedAppOrigin,
+  validateHostedAppOrigins,
 } from "../../lib/auth/app-origin";
 import {
   exchangeAndPersistSession,
@@ -37,6 +41,7 @@ import {
 import {
   EMAIL_OTP_LENGTH,
   SYNTHETIC_EMAIL_DOMAIN,
+  normalizeEmail,
   runEmailOtp,
   type EmailOtpAuthAdapter,
 } from "../../lib/auth/email-otp";
@@ -72,6 +77,7 @@ import {
   LOGOUT_APP_ORIGIN,
 } from "../../lib/auth/logout";
 import {
+  getRebuyAuthCookieOptions,
   isAllowedSupabasePublicKey,
   LOCAL_SUPABASE_URL,
   REBUY_AUTH_COOKIE_NAME,
@@ -94,6 +100,42 @@ test("normalizes safe same-origin destinations", () => {
   for (const destination of acceptedDestinations) {
     assert.equal(normalizeSafeNext(destination), destination);
   }
+});
+
+test("accepts only exact HTTPS hosted origins and the current Vercel deployment", () => {
+  const primary = "https://rebuy-share.vercel.app";
+  const deployment = "rebuy-share-abc123-team.vercel.app";
+  assert.equal(normalizeHostedAppOrigin(primary), primary);
+  assert.deepEqual(
+    validateHostedAppOrigins(primary, "production", deployment),
+    [primary, `https://${deployment}`],
+  );
+  assert.deepEqual(validateHostedAppOrigins(primary, "development", deployment), [primary]);
+  for (const origin of [
+    "http://rebuy-share.vercel.app",
+    "https://user:pass@rebuy-share.vercel.app",
+    "https://rebuy-share.vercel.app/path",
+    "https://rebuy-share.vercel.app?query=1",
+    "https://127.0.0.1",
+    "https://localhost",
+  ]) {
+    assert.equal(normalizeHostedAppOrigin(origin), null, origin);
+  }
+  assert.throws(
+    () => validateHostedAppOrigins(primary, "production", "outside.example.com"),
+    AppOriginConfigError,
+  );
+  const request = new Request(`${primary}/account/login`, {
+    headers: { Host: "rebuy-share.vercel.app" },
+  });
+  assert.equal(getTrustedHostedAppOrigin(request, [primary]), primary);
+  assert.equal(
+    getTrustedHostedAppOrigin(
+      new Request(`${primary}/account/login`, { headers: { Host: "outside.example.com" } }),
+      [primary],
+    ),
+    null,
+  );
 });
 
 test("rejects external, deeply encoded, and unsafe destinations", () => {
@@ -921,6 +963,8 @@ test("persists only access and refresh tokens and maps callback failures finitel
 
 const syntheticEmail = `e2a-contract@${SYNTHETIC_EMAIL_DOMAIN}`;
 const validOtp = "7".repeat(EMAIL_OTP_LENGTH);
+const hostedOrigin = "https://rebuy-share.vercel.app";
+const hostedEmail = "pilot@example.com";
 
 function makeAdapter(overrides: Partial<EmailOtpAuthAdapter> = {}) {
   return {
@@ -962,6 +1006,114 @@ async function assertAuthUnavailable(response: Response) {
   assert.equal(response.headers.get("Set-Cookie"), null);
   assert.equal(JSON.stringify(body).includes("localhost"), false);
 }
+
+test("normalizes hosted email addresses without weakening the local synthetic policy", () => {
+  assert.equal(normalizeEmail(" Pilot@Example.COM "), hostedEmail);
+  assert.equal(normalizeEmail("pilot@localhost"), null);
+  assert.equal(normalizeEmail("pilot@example.com/path"), null);
+  assert.equal(normalizeEmail("pilot @example.com"), null);
+});
+
+test("runs hosted email OTP only for an allowed pilot and conceals denied requests", async () => {
+  let adapterCalls = 0;
+  const makeHostedRequest = (email: string, host = "rebuy-share.vercel.app") =>
+    new Request(`${hostedOrigin}/api/auth/email-otp`, {
+      method: "POST",
+      headers: {
+        Host: host,
+        Origin: hostedOrigin,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ action: "request", email, intent: "signup" }),
+    });
+  const policy = {
+    appOrigin: hostedOrigin,
+    normalizeEmail,
+    isAllowed: (email: string) => email === hostedEmail,
+    concealDeniedRequests: true,
+  };
+
+  const allowed = await handleEmailOtpRequest(
+    makeHostedRequest(hostedEmail),
+    async () => {
+      adapterCalls += 1;
+      return makeAdapter();
+    },
+    policy,
+  );
+  const denied = await handleEmailOtpRequest(
+    makeHostedRequest("denied@example.com"),
+    async () => {
+      adapterCalls += 1;
+      return makeAdapter();
+    },
+    policy,
+  );
+  const forged = await handleEmailOtpRequest(
+    makeHostedRequest(hostedEmail, "outside.example.com"),
+    async () => {
+      adapterCalls += 1;
+      return makeAdapter();
+    },
+    policy,
+  );
+
+  assert.equal(allowed.status, 200);
+  assert.deepEqual(await responseJson(allowed), { status: "otp_sent" });
+  assert.equal(denied.status, 200);
+  assert.deepEqual(await responseJson(denied), { status: "otp_sent" });
+  assert.equal(forged.status, 403);
+  assert.equal(adapterCalls, 1);
+});
+
+test("accepts only exact hosted callback forwarding and keeps redirects on origin", async () => {
+  let exchangeCalls = 0;
+  const accepted = await handleAuthCallbackForMode(
+    new Request(`${hostedOrigin}${AUTH_CALLBACK_PATH}?code=opaque-code`, {
+      headers: {
+        Host: "rebuy-share.vercel.app",
+        "x-forwarded-host": "rebuy-share.vercel.app",
+        "x-forwarded-port": "443",
+        "x-forwarded-proto": "https",
+        "x-forwarded-for": "203.0.113.10, 198.51.100.4",
+      },
+    }),
+    "hosted-auth",
+    async () => {
+      exchangeCalls += 1;
+      return { error: null };
+    },
+    undefined,
+    hostedOrigin,
+  );
+  const forged = await handleAuthCallbackForMode(
+    new Request(`${hostedOrigin}${AUTH_CALLBACK_PATH}?code=opaque-code`, {
+      headers: {
+        Host: "rebuy-share.vercel.app",
+        "x-forwarded-host": "outside.example.com",
+        "x-forwarded-port": "443",
+        "x-forwarded-proto": "https",
+        "x-forwarded-for": "203.0.113.10",
+      },
+    }),
+    "hosted-auth",
+    async () => {
+      exchangeCalls += 1;
+      return { error: null };
+    },
+    undefined,
+    hostedOrigin,
+  );
+
+  assert.equal(accepted.status, 303);
+  assert.equal(new URL(accepted.headers.get("Location") ?? "").origin, hostedOrigin);
+  assert.equal(new URL(forged.headers.get("Location") ?? "").origin, hostedOrigin);
+  assert.equal(
+    new URL(forged.headers.get("Location") ?? "").searchParams.get("auth_error"),
+    "exchange_error",
+  );
+  assert.equal(exchangeCalls, 1);
+});
 
 test("blocks production-like requests before adapter, cookie, exchange, or body access", async () => {
   const previewOrigin = "https://preview.rebuy.test";
@@ -1126,7 +1278,7 @@ test("delegates local-auth mode to the existing auth handlers", async () => {
   assert.equal(logoutCalls, 1);
 });
 
-test("reports both supported runtime modes through the app health contract", async () => {
+test("reports every supported runtime mode through the app health contract", async () => {
   for (const mode of AUTH_RUNTIME_MODES) {
     const response = createAppHealthResponse(mode);
     assert.equal(response.status, 200);
@@ -1190,7 +1342,7 @@ test("keeps the ui-only login render boundary and internal provider links explic
   assert.match(source, /mode === "ui-only" \|\| busyAction/);
   assert.match(source, /href="\/account\/provider\/google"/);
   assert.match(source, /href="\/account\/provider\/apple"/);
-  assert.match(source, /mode === "local-auth"[\s\S]*styles\.intentTabs/);
+  assert.match(source, /mode !== "ui-only"[\s\S]*styles\.intentTabs/);
   assert.match(pageSource, /headers\(\)/);
   assert.match(pageSource, /getAuthRuntimeModeForHost/);
   assert.match(pageSource, /mode=\{mode\}/);
@@ -1230,8 +1382,8 @@ test("wires actual routes through request-aware composition handlers", () => {
   );
 });
 
-test("requires both the canonical local app request and valid local config", () => {
-  assert.deepEqual(AUTH_RUNTIME_MODES, ["ui-only", "local-auth"]);
+test("requires a canonical request and matching local or hosted config", () => {
+  assert.deepEqual(AUTH_RUNTIME_MODES, ["ui-only", "local-auth", "hosted-auth"]);
   const canonicalRequest = new Request(`${LOCAL_APP_ORIGIN}/account/login`, {
     headers: { Host: LOCAL_APP_HOST },
   });
@@ -1257,7 +1409,29 @@ test("requires both the canonical local app request and valid local config", () 
   assert.equal(configReads, 2);
   assert.equal(
     resolveAuthRuntimeMode(canonicalRequest, () =>
-      validateSupabaseConfig("https://hosted.supabase.co/", "sb_publishable_test_fixture"),
+      validateSupabaseConfig("https://abcdefghijklmnopqrst.supabase.co/", "sb_publishable_test_fixture"),
+    ),
+    "ui-only",
+  );
+  const hostedOrigin = "https://rebuy-share.vercel.app";
+  const hostedRequest = new Request(`${hostedOrigin}/account/login`, {
+    headers: { Host: "rebuy-share.vercel.app" },
+  });
+  const hostedConfig = () => validateSupabaseConfig(
+    "https://abcdefghijklmnopqrst.supabase.co/",
+    "sb_publishable_test_fixture",
+  );
+  assert.equal(
+    resolveAuthRuntimeMode(hostedRequest, hostedConfig, () => [hostedOrigin]),
+    "hosted-auth",
+  );
+  assert.equal(
+    resolveAuthRuntimeMode(
+      new Request("https://outside.example.com/account/login", {
+        headers: { Host: "outside.example.com" },
+      }),
+      hostedConfig,
+      () => [hostedOrigin],
     ),
     "ui-only",
   );
@@ -1544,7 +1718,7 @@ const legacyPrivilegedFixture = [
   "fixture-signature",
 ].join(".");
 
-test("accepts only the canonical local URL and anonymous public key forms", () => {
+test("accepts canonical local and hosted URLs with public key boundaries", () => {
   assert.equal(isAllowedSupabasePublicKey("sb_publishable_test_fixture"), true);
   assert.equal(isAllowedSupabasePublicKey(legacyAnonFixture), true);
   assert.deepEqual(
@@ -1552,6 +1726,7 @@ test("accepts only the canonical local URL and anonymous public key forms", () =
     {
       url: LOCAL_SUPABASE_URL,
       publishableKey: "sb_publishable_test_fixture",
+      runtimeMode: "local-auth",
     },
   );
   assert.deepEqual(
@@ -1559,7 +1734,26 @@ test("accepts only the canonical local URL and anonymous public key forms", () =
     {
       url: LOCAL_SUPABASE_URL,
       publishableKey: legacyAnonFixture,
+      runtimeMode: "local-auth",
     },
+  );
+  assert.deepEqual(
+    validateSupabaseConfig(
+      "https://abcdefghijklmnopqrst.supabase.co/",
+      "sb_publishable_test_fixture",
+    ),
+    {
+      url: "https://abcdefghijklmnopqrst.supabase.co/",
+      publishableKey: "sb_publishable_test_fixture",
+      runtimeMode: "hosted-auth",
+    },
+  );
+  assert.throws(
+    () => validateSupabaseConfig(
+      "https://abcdefghijklmnopqrst.supabase.co/",
+      legacyAnonFixture,
+    ),
+    /Supabase configuration is invalid/,
   );
 });
 
@@ -1573,12 +1767,17 @@ test("rejects URL variants, privileged keys, unknown keys, and malformed JWTs", 
     "http://user:pass@127.0.0.1:55321/",
     "https://127.0.0.1:55321/",
     "http://127.0.0.1:55322/",
+    "http://abcdefghijklmnopqrst.supabase.co/",
+    "https://abcdefghijklmnopqrs.supabase.co/",
+    "https://abcdefghijklmnopqrst.supabase.co/rest/v1/",
+    "https://abcdefghijklmnopqrst.supabase.co/?query=1",
+    "https://user:pass@abcdefghijklmnopqrst.supabase.co/",
   ];
 
   for (const url of rejectedUrls) {
     assert.throws(
       () => validateSupabaseConfig(url, "sb_publishable_test_fixture"),
-      /Local Supabase configuration is invalid/,
+      /Supabase configuration is invalid/,
       url,
     );
   }
@@ -1595,7 +1794,7 @@ test("rejects URL variants, privileged keys, unknown keys, and malformed JWTs", 
     assert.equal(isAllowedSupabasePublicKey(key), false, key);
     assert.throws(
       () => validateSupabaseConfig(LOCAL_SUPABASE_URL, key),
-      /Local Supabase configuration is invalid/,
+      /Supabase configuration is invalid/,
       key,
     );
   }
@@ -1606,6 +1805,8 @@ test("keeps Supabase environment reads server-only and browser config explicit",
     readFileSync(resolve(process.cwd(), relativePath), "utf8");
   const configSource = source("lib/supabase/config.ts");
   const serverConfigSource = source("lib/supabase/server-config.ts");
+  const serverOriginSource = source("lib/auth/server-origin.ts");
+  const serverEmailPolicySource = source("lib/auth/server-email-policy.ts");
   const browserClientSource = source("lib/supabase/client.ts");
 
   assert.doesNotMatch(configSource, /\bprocess\.env\b/);
@@ -1614,6 +1815,13 @@ test("keeps Supabase environment reads server-only and browser config explicit",
   assert.match(serverConfigSource, /process\.env\.SUPABASE_URL/);
   assert.match(serverConfigSource, /process\.env\.SUPABASE_PUBLISHABLE_KEY/);
   assert.doesNotMatch(serverConfigSource, /NEXT_PUBLIC_/);
+  assert.match(serverOriginSource, /import ["']server-only["']/);
+  assert.match(serverOriginSource, /process\.env\.REBUY_APP_ORIGIN/);
+  assert.match(serverOriginSource, /process\.env\.VERCEL_URL/);
+  assert.match(serverEmailPolicySource, /import ["']server-only["']/);
+  assert.match(serverEmailPolicySource, /process\.env\.REBUY_AUTH_ALLOWED_EMAILS/);
+  assert.doesNotMatch(serverOriginSource, /NEXT_PUBLIC_/);
+  assert.doesNotMatch(serverEmailPolicySource, /NEXT_PUBLIC_/);
   assert.doesNotMatch(browserClientSource, /\bprocess\.env\b/);
   assert.doesNotMatch(browserClientSource, /NEXT_PUBLIC_/);
   assert.match(browserClientSource, /createClient\(config: SupabasePublicConfig\)/);
@@ -1639,6 +1847,8 @@ test("protects the account page with verified claims and never getSession", () =
 test("keeps the Rebuy cookie name fixed and makes route writes strict", () => {
   assert.equal(REBUY_AUTH_COOKIE_NAME, "rebuy-g2-a1-e2a-auth-token");
   assert.equal(REBUY_AUTH_COOKIE_OPTIONS.name, REBUY_AUTH_COOKIE_NAME);
+  assert.equal(getRebuyAuthCookieOptions("local-auth").secure, false);
+  assert.equal(getRebuyAuthCookieOptions("hosted-auth").secure, true);
 
   const writes: string[] = [];
   const store = {

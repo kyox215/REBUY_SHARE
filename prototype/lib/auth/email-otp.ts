@@ -9,7 +9,10 @@ export const EMAIL_OTP_RESEND_COOLDOWN_MS = 1000;
 export const SYNTHETIC_EMAIL_DOMAIN = "rebuy.test";
 
 const emailPattern = new RegExp(`^[^\\s@]+@${SYNTHETIC_EMAIL_DOMAIN.replace(".", "\\.")}$`, "i");
+const hostedEmailPattern = /^[^\s@<>(),:;\\"\[\]]+@(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i;
 const otpPattern = new RegExp(`^\\d{${EMAIL_OTP_LENGTH}}$`);
+
+export type EmailNormalizer = (value: unknown) => string | null;
 
 export type EmailOtpInput =
   | { action: "request" | "resend"; email: string; intent: EmailOtpIntent }
@@ -20,7 +23,7 @@ export type EmailOtpAuthResult = { error?: unknown } | null | undefined;
 export type EmailOtpAuthAdapter = {
   signInWithOtp: (credentials: {
     email: string;
-    options: { shouldCreateUser: boolean };
+    options: { shouldCreateUser: boolean; emailRedirectTo?: string };
   }) => Promise<EmailOtpAuthResult>;
   verifyOtp: (credentials: {
     email: string;
@@ -135,11 +138,34 @@ export function normalizeSyntheticEmail(value: unknown): string | null {
   return normalized;
 }
 
+export function normalizeEmail(value: unknown): string | null {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const normalized = value.trim().toLowerCase();
+  const atIndex = normalized.lastIndexOf("@");
+  const localPart = atIndex > 0 ? normalized.slice(0, atIndex) : "";
+
+  if (
+    normalized.length > EMAIL_OTP_MAX_EMAIL_LENGTH ||
+    localPart.length > 64 ||
+    !hostedEmailPattern.test(normalized)
+  ) {
+    return null;
+  }
+
+  return normalized;
+}
+
 export function isSyntheticEmail(value: unknown): value is string {
   return normalizeSyntheticEmail(value) !== null;
 }
 
-export function parseEmailOtpInput(value: unknown): ParsedEmailOtpInput {
+export function parseEmailOtpInput(
+  value: unknown,
+  normalize: EmailNormalizer = normalizeSyntheticEmail,
+): ParsedEmailOtpInput {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     return { ok: false };
   }
@@ -162,7 +188,7 @@ export function parseEmailOtpInput(value: unknown): ParsedEmailOtpInput {
   }
   const intent = intentValue as EmailOtpIntent;
 
-  const email = normalizeSyntheticEmail(record.email);
+  const email = normalize(record.email);
   if (!email) {
     return { ok: false };
   }
@@ -234,8 +260,9 @@ export async function executeEmailOtp(
 export async function runEmailOtp(
   value: unknown,
   adapter: EmailOtpAuthAdapter,
+  normalize: EmailNormalizer = normalizeSyntheticEmail,
 ): Promise<EmailOtpOutcome> {
-  const parsed = parseEmailOtpInput(value);
+  const parsed = parseEmailOtpInput(value, normalize);
   if (!parsed.ok) {
     return { kind: "error", code: "invalid_input" };
   }

@@ -1,6 +1,8 @@
 import {
   executeEmailOtp,
+  normalizeSyntheticEmail,
   parseEmailOtpInput,
+  type EmailNormalizer,
   type EmailOtpAuthAdapter,
   type EmailOtpOutcome,
 } from "./email-otp";
@@ -19,9 +21,23 @@ const noStoreHeaders = {
   "X-Content-Type-Options": "nosniff",
 };
 
-export type EmailOtpAuthAdapterFactory = () =>
+export type EmailOtpAuthAdapterFactory = (context?: { appOrigin: string }) =>
   | EmailOtpAuthAdapter
   | Promise<EmailOtpAuthAdapter>;
+
+export type EmailOtpRequestPolicy = {
+  appOrigin: string;
+  normalizeEmail: EmailNormalizer;
+  isAllowed: (email: string) => boolean;
+  concealDeniedRequests: boolean;
+};
+
+const localEmailOtpPolicy: EmailOtpRequestPolicy = {
+  appOrigin: EMAIL_OTP_APP_ORIGIN,
+  normalizeEmail: normalizeSyntheticEmail,
+  isAllowed: () => true,
+  concealDeniedRequests: false,
+};
 
 type BodyReadResult =
   | { ok: true; value: unknown }
@@ -34,7 +50,7 @@ function jsonResponse(
   return Response.json(body, { status, headers: noStoreHeaders });
 }
 
-function isSameOrigin(request: Request) {
+function isSameOrigin(request: Request, appOrigin: string) {
   const origin = request.headers.get("origin");
   const host = request.headers.get("host");
   if (!origin || !host) {
@@ -44,9 +60,9 @@ function isSameOrigin(request: Request) {
   try {
     const requestOrigin = new URL(request.url).origin;
     return (
-      requestOrigin === EMAIL_OTP_APP_ORIGIN &&
-      origin === EMAIL_OTP_APP_ORIGIN &&
-      host === EMAIL_OTP_APP_HOST
+      requestOrigin === appOrigin &&
+      origin === appOrigin &&
+      host === new URL(appOrigin).host
     );
   } catch {
     return false;
@@ -151,8 +167,9 @@ function outcomeResponse(outcome: EmailOtpOutcome) {
 export async function handleEmailOtpRequest(
   request: Request,
   createAuthAdapter: EmailOtpAuthAdapterFactory,
+  policy: EmailOtpRequestPolicy = localEmailOtpPolicy,
 ) {
-  if (!isSameOrigin(request)) {
+  if (!isSameOrigin(request, policy.appOrigin)) {
     return jsonResponse({ status: "error", code: "origin_not_allowed" }, 403);
   }
 
@@ -171,14 +188,24 @@ export async function handleEmailOtpRequest(
     );
   }
 
-  const parsed = parseEmailOtpInput(body.value);
+  const parsed = parseEmailOtpInput(body.value, policy.normalizeEmail);
   if (!parsed.ok) {
     return jsonResponse({ status: "error", code: "invalid_request" }, 400);
   }
 
+  if (!policy.isAllowed(parsed.input.email)) {
+    if (
+      policy.concealDeniedRequests &&
+      (parsed.input.action === "request" || parsed.input.action === "resend")
+    ) {
+      return jsonResponse({ status: "otp_sent" }, 200);
+    }
+    return jsonResponse({ status: "error", code: "verify_failed" }, 422);
+  }
+
   let adapter: EmailOtpAuthAdapter;
   try {
-    adapter = await createAuthAdapter();
+    adapter = await createAuthAdapter({ appOrigin: policy.appOrigin });
   } catch {
     return jsonResponse({ status: "error", code: "server_error" }, 500);
   }
@@ -191,10 +218,14 @@ export async function handleEmailOtpRequestForMode(
   request: Request,
   mode: AuthRuntimeMode,
   createAuthAdapter: EmailOtpAuthAdapterFactory,
+  policy?: EmailOtpRequestPolicy,
 ) {
-  if (mode === "ui-only") {
+  if (mode === "ui-only" || !policy) {
+    if (mode === "local-auth") {
+      return handleEmailOtpRequest(request, createAuthAdapter, localEmailOtpPolicy);
+    }
     return authUnavailableResponse();
   }
 
-  return handleEmailOtpRequest(request, createAuthAdapter);
+  return handleEmailOtpRequest(request, createAuthAdapter, policy);
 }

@@ -9,9 +9,12 @@ export const REBUY_AUTH_COOKIE_OPTIONS = {
   secure: false,
 } as const satisfies CookieOptionsWithName;
 
+export type SupabaseRuntimeMode = "local-auth" | "hosted-auth";
+
 export type SupabasePublicConfig = {
-  url: typeof LOCAL_SUPABASE_URL;
+  url: string;
   publishableKey: string;
+  runtimeMode: SupabaseRuntimeMode;
 };
 
 const modernPublishableKeyPattern = /^sb_publishable_[A-Za-z0-9_-]+$/;
@@ -79,21 +82,67 @@ export function isAllowedSupabasePublicKey(value: unknown): value is string {
 
 export class SupabaseConfigError extends Error {
   constructor() {
-    super("Local Supabase configuration is invalid.");
+    super("Supabase configuration is invalid.");
     this.name = "SupabaseConfigError";
   }
+}
+
+function normalizeHostedSupabaseUrl(value: unknown) {
+  if (typeof value !== "string" || value.length > 100) {
+    return null;
+  }
+
+  try {
+    const url = new URL(value);
+    if (
+      url.protocol !== "https:" ||
+      url.username !== "" ||
+      url.password !== "" ||
+      url.port !== "" ||
+      url.pathname !== "/" ||
+      url.search !== "" ||
+      url.hash !== "" ||
+      !/^[a-z0-9]{20}\.supabase\.co$/.test(url.hostname)
+    ) {
+      return null;
+    }
+    return `${url.origin}/`;
+  } catch {
+    return null;
+  }
+}
+
+export function getRebuyAuthCookieOptions(runtimeMode: SupabaseRuntimeMode) {
+  return {
+    ...REBUY_AUTH_COOKIE_OPTIONS,
+    secure: runtimeMode === "hosted-auth",
+  } as const satisfies CookieOptionsWithName;
 }
 
 export function validateSupabaseConfig(
   url: unknown,
   publishableKey: unknown,
 ): SupabasePublicConfig {
-  if (url !== LOCAL_SUPABASE_URL || !isAllowedSupabasePublicKey(publishableKey)) {
+  if (!isAllowedSupabasePublicKey(publishableKey)) {
+    throw new SupabaseConfigError();
+  }
+
+  if (url === LOCAL_SUPABASE_URL) {
+    return {
+      url: LOCAL_SUPABASE_URL,
+      publishableKey,
+      runtimeMode: "local-auth",
+    };
+  }
+
+  const hostedUrl = normalizeHostedSupabaseUrl(url);
+  if (!hostedUrl || !modernPublishableKeyPattern.test(publishableKey)) {
     throw new SupabaseConfigError();
   }
 
   return {
-    url: LOCAL_SUPABASE_URL,
+    url: hostedUrl,
     publishableKey,
+    runtimeMode: "hosted-auth",
   };
 }

@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 import { createEphemeralExchangeCookieMethods } from "../auth/callback-session";
-import { REBUY_AUTH_COOKIE_OPTIONS } from "./config";
+import { getRebuyAuthCookieOptions } from "./config";
 import { createServerCookieMethods } from "./cookies";
 import { getSupabaseServerConfig } from "./server-config";
 
@@ -15,10 +15,11 @@ export async function createAuthRouteClient() {
 }
 
 export async function createAuthCallbackClients(flowId?: string) {
-  const { url, publishableKey } = getSupabaseServerConfig();
+  const config = getSupabaseServerConfig();
+  const { url, publishableKey } = config;
   const cookieStore = await cookies();
   const options = {
-    cookieOptions: REBUY_AUTH_COOKIE_OPTIONS,
+    cookieOptions: getRebuyAuthCookieOptions(config.runtimeMode),
   } as const;
 
   return {
@@ -34,11 +35,11 @@ export async function createAuthCallbackClients(flowId?: string) {
 }
 
 async function createConfiguredServerClient(mode: "readonly" | "strict") {
-  const { url, publishableKey } = getSupabaseServerConfig();
+  const { url, publishableKey, runtimeMode } = getSupabaseServerConfig();
   const cookieStore = await cookies();
 
   return createServerClient(url, publishableKey, {
-    cookieOptions: REBUY_AUTH_COOKIE_OPTIONS,
+    cookieOptions: getRebuyAuthCookieOptions(runtimeMode),
     cookies: createServerCookieMethods(cookieStore, mode),
   });
 }

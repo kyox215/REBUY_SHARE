@@ -4,6 +4,7 @@ import { headers } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { getAuthRuntimeModeForHost } from '@/lib/auth/runtime-mode'
+import { isAuthRuntimeEnabled } from '@/lib/auth/runtime-mode-core'
 import { resolveSessionStatus } from '@/lib/auth/session'
 import { createClient } from '@/lib/supabase/server'
 
@@ -58,7 +59,7 @@ function mapMerchantError(message: string) {
 
 async function requireMerchantAction(nextPath: string) {
   const requestHeaders = await headers()
-  if (getAuthRuntimeModeForHost(requestHeaders.get('host')) !== 'local-auth') {
+  if (!isAuthRuntimeEnabled(getAuthRuntimeModeForHost(requestHeaders.get('host')))) {
     redirect(`/account/login?next=${encodeURIComponent(nextPath)}`)
   }
   const supabase = await createClient()

@@ -70,6 +70,16 @@ SELECT ok(NOT EXISTS (
   HAVING count(*) > 1
 ), 'authorization locking keeps one permissive executor UPDATE policy per table');
 
+SELECT is((SELECT count(*)::integer FROM pg_catalog.pg_policies AS p
+  WHERE p.schemaname = 'public' AND p.cmd = 'ALL'
+    AND p.tablename = ANY (ARRAY['catalog_events', 'inventory_events'])
+    AND p.roles @> ARRAY['rebuy_business_executor']::name[]
+    AND p.qual LIKE '%rebuy.p6.op%'
+    AND p.qual LIKE '%audit_list%'
+    AND p.qual LIKE '%rebuy.p6.organization_id%'
+    AND p.qual LIKE '%rebuy.p6.store_id%'), 2,
+  'relation-limited audit reads remain bound to the authorized P6 store');
+
 SELECT ok(
   pg_catalog.has_column_privilege('rebuy_business_executor',
     'public.permissions', 'is_active', 'UPDATE')

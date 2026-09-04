@@ -5,6 +5,7 @@ import {
 import {
   handleEmailOtpRequestForMode,
   type EmailOtpAuthAdapterFactory,
+  type EmailOtpRequestPolicy,
 } from "./email-otp-route";
 import {
   handleLogoutRequestForMode,
@@ -12,14 +13,32 @@ import {
 } from "./logout";
 import { handleSessionRequest, type SessionClaimsFactory } from "./session-route";
 import type { AuthCodeExchange } from "./callback";
-import type { AuthRuntimeModeReader } from "./runtime-mode-core";
+import type { AuthRuntimeMode, AuthRuntimeModeReader } from "./runtime-mode-core";
+
+export type AuthAppOriginReader = (
+  request: Request,
+  mode: AuthRuntimeMode,
+) => string | null;
+
+export type EmailOtpPolicyReader = (
+  request: Request,
+  mode: AuthRuntimeMode,
+) => EmailOtpRequestPolicy | undefined;
 
 export function createEmailOtpPostHandler(
   readMode: AuthRuntimeModeReader,
   createAuthAdapter: EmailOtpAuthAdapterFactory,
+  readPolicy?: EmailOtpPolicyReader,
 ) {
-  return (request: Request) =>
-    handleEmailOtpRequestForMode(request, readMode(request), createAuthAdapter);
+  return (request: Request) => {
+    const mode = readMode(request);
+    return handleEmailOtpRequestForMode(
+      request,
+      mode,
+      createAuthAdapter,
+      readPolicy?.(request, mode),
+    );
+  };
 }
 
 export function createSessionGetHandler(
@@ -32,16 +51,33 @@ export function createSessionGetHandler(
 export function createLogoutPostHandler(
   readMode: AuthRuntimeModeReader,
   createAuthAdapter: LogoutAuthAdapterFactory,
+  readAppOrigin?: AuthAppOriginReader,
 ) {
-  return (request: Request) =>
-    handleLogoutRequestForMode(request, readMode(request), createAuthAdapter);
+  return (request: Request) => {
+    const mode = readMode(request);
+    return handleLogoutRequestForMode(
+      request,
+      mode,
+      createAuthAdapter,
+      readAppOrigin?.(request, mode),
+    );
+  };
 }
 
 export function createAuthCallbackGetHandler(
   readMode: AuthRuntimeModeReader,
   exchange: AuthCodeExchange,
   decider?: AuthCallbackDecider,
+  readAppOrigin?: AuthAppOriginReader,
 ) {
-  return (request: Request) =>
-    handleAuthCallbackForMode(request, readMode(request), exchange, decider);
+  return (request: Request) => {
+    const mode = readMode(request);
+    return handleAuthCallbackForMode(
+      request,
+      mode,
+      exchange,
+      decider,
+      readAppOrigin?.(request, mode),
+    );
+  };
 }

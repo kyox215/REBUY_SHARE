@@ -21,16 +21,16 @@ export type LogoutAuthAdapterFactory = () =>
   | LogoutAuthAdapter
   | Promise<LogoutAuthAdapter>;
 
-function isSameOrigin(request: Request) {
+function isSameOrigin(request: Request, appOrigin: string) {
   const origin = request.headers.get("origin");
   const host = request.headers.get("host");
   if (!origin || !host) return false;
 
   try {
     return (
-      new URL(request.url).origin === LOGOUT_APP_ORIGIN &&
-      origin === LOGOUT_APP_ORIGIN &&
-      host === LOGOUT_APP_HOST
+      new URL(request.url).origin === appOrigin &&
+      origin === appOrigin &&
+      host === new URL(appOrigin).host
     );
   } catch {
     return false;
@@ -44,8 +44,9 @@ function jsonResponse(body: Record<string, string>, status: number) {
 export async function handleLogoutRequest(
   request: Request,
   createAuthAdapter: LogoutAuthAdapterFactory,
+  appOrigin = LOGOUT_APP_ORIGIN,
 ) {
-  if (!isSameOrigin(request)) {
+  if (!isSameOrigin(request, appOrigin)) {
     return jsonResponse({ status: "error", code: "origin_not_allowed" }, 403);
   }
 
@@ -74,10 +75,12 @@ export async function handleLogoutRequestForMode(
   request: Request,
   mode: AuthRuntimeMode,
   createAuthAdapter: LogoutAuthAdapterFactory,
+  appOrigin?: string | null,
 ) {
-  if (mode === "ui-only") {
+  const resolvedOrigin = appOrigin ?? (mode === "local-auth" ? LOGOUT_APP_ORIGIN : null);
+  if (mode === "ui-only" || !resolvedOrigin) {
     return authUnavailableResponse();
   }
 
-  return handleLogoutRequest(request, createAuthAdapter);
+  return handleLogoutRequest(request, createAuthAdapter, resolvedOrigin);
 }

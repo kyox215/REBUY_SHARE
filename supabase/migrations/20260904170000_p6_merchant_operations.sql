@@ -512,6 +512,57 @@ CREATE POLICY p6_idempotency_keys_p6_all
     AND store_id::text = (SELECT pg_catalog.current_setting('rebuy.p6.store_id', true))
   );
 
+-- Audit reads need a relation-wide path so filtering/sorting/limiting happens
+-- before rows are materialized. Extend the existing single permissive policy
+-- per table/action; the P6 branch is read-only because WITH CHECK remains P4-only.
+DROP POLICY catalog_events_p4_all ON public.catalog_events;
+CREATE POLICY catalog_events_p4_all
+  ON public.catalog_events FOR ALL TO rebuy_business_executor
+  USING (
+    (
+      (SELECT pg_catalog.current_setting('rebuy.p4.authorized', true)) = 'true'
+      AND listing_id::text = (SELECT pg_catalog.current_setting(
+        'rebuy.p4.listing_id', true))
+    )
+    OR (
+      (SELECT pg_catalog.current_setting('rebuy.p6.authorized', true)) = 'true'
+      AND (SELECT pg_catalog.current_setting('rebuy.p6.op', true)) = 'audit_list'
+      AND organization_id::text = (SELECT pg_catalog.current_setting(
+        'rebuy.p6.organization_id', true))
+      AND store_id::text = (SELECT pg_catalog.current_setting(
+        'rebuy.p6.store_id', true))
+    )
+  ) WITH CHECK (
+    (SELECT pg_catalog.current_setting('rebuy.p4.authorized', true)) = 'true'
+    AND id::text = (SELECT pg_catalog.current_setting('rebuy.p4.event_id', true))
+    AND actor_user_id::text = (SELECT pg_catalog.current_setting(
+      'rebuy.p4.actor_user_id', true))
+  );
+
+DROP POLICY inventory_events_p4_all ON public.inventory_events;
+CREATE POLICY inventory_events_p4_all
+  ON public.inventory_events FOR ALL TO rebuy_business_executor
+  USING (
+    (
+      (SELECT pg_catalog.current_setting('rebuy.p4.authorized', true)) = 'true'
+      AND listing_id::text = (SELECT pg_catalog.current_setting(
+        'rebuy.p4.listing_id', true))
+    )
+    OR (
+      (SELECT pg_catalog.current_setting('rebuy.p6.authorized', true)) = 'true'
+      AND (SELECT pg_catalog.current_setting('rebuy.p6.op', true)) = 'audit_list'
+      AND organization_id::text = (SELECT pg_catalog.current_setting(
+        'rebuy.p6.organization_id', true))
+      AND store_id::text = (SELECT pg_catalog.current_setting(
+        'rebuy.p6.store_id', true))
+    )
+  ) WITH CHECK (
+    (SELECT pg_catalog.current_setting('rebuy.p4.authorized', true)) = 'true'
+    AND id::text = (SELECT pg_catalog.current_setting('rebuy.p4.event_id', true))
+    AND actor_user_id::text = (SELECT pg_catalog.current_setting(
+      'rebuy.p4.actor_user_id', true))
+  );
+
 -- Mutation authorization rows are held with SHARE locks until commit. Extend
 -- the existing permissive UPDATE policies instead of adding parallel policies;
 -- the P6 branch never passes WITH CHECK and therefore cannot update a row.
@@ -1605,7 +1656,7 @@ RETURNS TABLE (
 LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = ''
 AS $function$
 DECLARE
-  v_auth record; v_listing record; v_rows jsonb := '[]'::jsonb;
+  v_auth record;
 BEGIN
   IF p_limit IS NULL OR p_limit < 1 OR p_limit > 100
      OR (p_event_prefix IS NOT NULL
@@ -1616,45 +1667,30 @@ BEGIN
     p_store_id, 'merchant.audit.read', false
   );
   PERFORM pg_catalog.set_config('rebuy.p6.op', 'audit_list', true);
-  SELECT v_rows || COALESCE(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object(
-    'event_code', e.event_code, 'entity_type', e.entity_type,
-    'entity_id', e.entity_id, 'reason_code', e.reason_code,
-    'from_status', e.from_status, 'to_status', e.to_status,
-    'from_version', e.from_version, 'to_version', e.to_version,
-    'created_at', e.created_at
-  )), '[]'::jsonb) INTO v_rows
-  FROM public.merchant_operation_events AS e
-  WHERE e.organization_id = v_auth.organization_id AND e.store_id = v_auth.store_id;
-  FOR v_listing IN SELECT l.id FROM public.listings AS l
-    WHERE l.organization_id = v_auth.organization_id AND l.store_id = v_auth.store_id
-    ORDER BY l.id
-  LOOP
-    PERFORM pg_catalog.set_config('rebuy.p4.listing_id', v_listing.id::text, true);
-    SELECT v_rows || COALESCE(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object(
-      'event_code', e.event_code, 'entity_type', 'listing',
-      'entity_id', e.listing_id, 'reason_code', 'catalog_change',
-      'from_status', NULL, 'to_status', e.event_code,
-      'from_version', e.from_version, 'to_version', e.to_version,
-      'created_at', e.created_at
-    )), '[]'::jsonb) INTO v_rows
-    FROM public.catalog_events AS e WHERE e.listing_id = v_listing.id;
-    SELECT v_rows || COALESCE(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object(
-      'event_code', e.event_code, 'entity_type', 'inventory',
-      'entity_id', e.listing_id, 'reason_code', 'inventory_change',
-      'from_status', NULL, 'to_status', e.event_code,
-      'from_version', e.from_version, 'to_version', e.to_version,
-      'created_at', e.created_at
-    )), '[]'::jsonb) INTO v_rows
-    FROM public.inventory_events AS e WHERE e.listing_id = v_listing.id;
-  END LOOP;
   RETURN QUERY SELECT r.event_code, r.entity_type, r.entity_id,
     r.reason_code, r.from_status, r.to_status, r.from_version,
     r.to_version, r.created_at
-  FROM pg_catalog.jsonb_to_recordset(v_rows) AS r(
-    event_code text, entity_type text, entity_id uuid, reason_code text,
-    from_status text, to_status text, from_version integer,
-    to_version integer, created_at timestamptz
-  )
+  FROM (
+    SELECT e.event_code, e.entity_type, e.entity_id, e.reason_code,
+      e.from_status, e.to_status, e.from_version, e.to_version, e.created_at
+    FROM public.merchant_operation_events AS e
+    WHERE e.organization_id = v_auth.organization_id
+      AND e.store_id = v_auth.store_id
+    UNION ALL
+    SELECT e.event_code, 'listing'::text, e.listing_id,
+      'catalog_change'::text, NULL::text, e.event_code,
+      e.from_version, e.to_version, e.created_at
+    FROM public.catalog_events AS e
+    WHERE e.organization_id = v_auth.organization_id
+      AND e.store_id = v_auth.store_id
+    UNION ALL
+    SELECT e.event_code, 'inventory'::text, e.listing_id,
+      'inventory_change'::text, NULL::text, e.event_code,
+      e.from_version, e.to_version, e.created_at
+    FROM public.inventory_events AS e
+    WHERE e.organization_id = v_auth.organization_id
+      AND e.store_id = v_auth.store_id
+  ) AS r
   WHERE p_event_prefix IS NULL OR r.event_code LIKE p_event_prefix || '%'
   ORDER BY r.created_at DESC, r.entity_id DESC LIMIT p_limit;
   PERFORM private.rebuy_p6_reset_context();

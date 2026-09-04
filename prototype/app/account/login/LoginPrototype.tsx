@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import BrandMark from "@/components/BrandMark";
 import {
   EMAIL_OTP_RESEND_COOLDOWN_MS,
+  normalizeEmail,
   normalizeSyntheticEmail,
   type EmailOtpAction,
   type EmailOtpIntent,
@@ -20,7 +21,7 @@ type BusyAction = EmailOtpAction | null;
 
 type LoginPrototypeProps = {
   authStatus?: string;
-  mode: "ui-only" | "local-auth";
+  mode: "ui-only" | "local-auth" | "hosted-auth";
   nextPath: string;
 };
 
@@ -33,17 +34,17 @@ type EmailOtpApiResult =
   | { ok: false; code: string };
 
 const errorMessages: Record<string, string> = {
-  invalid_input: "请输入 @rebuy.test 本地测试邮箱和 6 位验证码。",
-  invalid_request: "请输入有效的本地测试信息。",
+  invalid_input: "请输入有效邮箱和 6 位验证码。",
+  invalid_request: "请输入有效的账号信息。",
   request_failed: "验证码暂时无法发送，请稍后再试。",
   verify_failed: "验证码无效或已过期，请重新获取。",
   resend_failed: "验证码暂时无法重发，请稍后再试。",
   rate_limited: "操作过于频繁，请稍后再试。",
-  origin_not_allowed: "暂时无法完成本地登录，请稍后再试。",
-  unsupported_media_type: "暂时无法完成本地登录，请稍后再试。",
-  body_too_large: "暂时无法完成本地登录，请稍后再试。",
+  origin_not_allowed: "暂时无法完成登录，请稍后再试。",
+  unsupported_media_type: "暂时无法完成登录，请稍后再试。",
+  body_too_large: "暂时无法完成登录，请稍后再试。",
   server_error: "暂时无法完成本地登录，请稍后再试。",
-  network_error: "暂时无法连接本地认证，请稍后再试。",
+  network_error: "暂时无法连接认证服务，请稍后再试。",
 };
 
 function messageForError(code: string) {
@@ -163,10 +164,16 @@ export default function LoginPrototype({
     setOtpError("");
     setErrorMessage("");
     setNotice("");
-    const normalizedEmail = normalizeSyntheticEmail(email);
+    const normalizedEmail = mode === "local-auth"
+      ? normalizeSyntheticEmail(email)
+      : normalizeEmail(email);
 
     if (!normalizedEmail) {
-      setEmailError("请输入 @rebuy.test 本地测试邮箱。");
+      setEmailError(
+        mode === "local-auth"
+          ? "请输入 @rebuy.test 本地测试邮箱。"
+          : "请输入有效邮箱地址。",
+      );
       return;
     }
 
@@ -188,7 +195,11 @@ export default function LoginPrototype({
     }
 
     setResendCooldownMs(EMAIL_OTP_RESEND_COOLDOWN_MS);
-    setNotice("验证码已发送。");
+    setNotice(
+      mode === "hosted-auth"
+        ? "若该邮箱已获准，登录邮件已发送。请打开邮件中的安全链接；如邮件提供验证码，也可在下方输入。"
+        : "验证码已发送。",
+    );
     setStep("otp");
   };
 
@@ -279,7 +290,11 @@ export default function LoginPrototype({
 
     setOtp("");
     setResendCooldownMs(EMAIL_OTP_RESEND_COOLDOWN_MS);
-    setNotice("验证码已重发。");
+    setNotice(
+      mode === "hosted-auth"
+        ? "若该邮箱已获准，登录邮件已重新发送。"
+        : "验证码已重发。",
+    );
   };
 
   const handleIntentChange = (nextIntent: EmailOtpIntent) => {
@@ -339,12 +354,16 @@ export default function LoginPrototype({
                   : "注册 Rebuy"}
             </h1>
             <p className={styles.status}>
-              {mode === "ui-only" ? "当前为界面预览 · 登录功能暂未开放" : "本地测试认证 · 仅限合成邮箱"}
+              {mode === "ui-only"
+                ? "当前为界面预览 · 登录功能暂未开放"
+                : mode === "local-auth"
+                  ? "本地测试认证 · 仅限合成邮箱"
+                  : "受控试运营 · 仅向已获准邮箱开放"}
             </p>
           </div>
 
           <div className={styles.loginPanel}>
-            {mode === "local-auth" ? (
+            {mode !== "ui-only" ? (
               <div className={styles.intentTabs} role="tablist" aria-label="选择账号操作">
                 <button
                   className={intent === "login" ? styles.intentTabActive : styles.intentTab}
@@ -412,7 +431,7 @@ export default function LoginPrototype({
                       type="email"
                       inputMode="email"
                       autoComplete="email"
-                      placeholder="name@rebuy.test"
+                      placeholder={mode === "local-auth" ? "name@rebuy.test" : "name@example.com"}
                       value={email}
                       onChange={(event) => {
                         setEmail(event.target.value);

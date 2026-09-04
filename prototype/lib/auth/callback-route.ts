@@ -52,22 +52,27 @@ function redirectResponse(target: URL) {
   });
 }
 
-function loginRedirect(code: AuthCallbackErrorCode) {
-  const target = new URL("/account/login", AUTH_CALLBACK_APP_ORIGIN);
+function loginRedirect(code: AuthCallbackErrorCode, appOrigin: string) {
+  const target = new URL("/account/login", appOrigin);
   target.searchParams.set("auth_error", code);
   target.hash = "";
 
   return redirectResponse(target);
 }
 
-function isTrustedCallbackRequest(request: Request, requestUrl: URL) {
+function isTrustedCallbackRequest(
+  request: Request,
+  requestUrl: URL,
+  appOrigin: string,
+) {
+  const expectedUrl = new URL(appOrigin);
   if (
-    requestUrl.origin !== AUTH_CALLBACK_APP_ORIGIN ||
+    requestUrl.origin !== expectedUrl.origin ||
     requestUrl.pathname !== AUTH_CALLBACK_PATH ||
     requestUrl.username !== "" ||
     requestUrl.password !== "" ||
     requestUrl.hash !== "" ||
-    request.headers.get("host") !== AUTH_CALLBACK_APP_HOST
+    request.headers.get("host") !== expectedUrl.host
   ) {
     return false;
   }
@@ -99,11 +104,28 @@ function isTrustedCallbackRequest(request: Request, requestUrl: URL) {
     return !hasRejectedHeader;
   }
 
+  if (
+    forwardedValues["x-forwarded-host"] !== expectedUrl.host ||
+    forwardedValues["x-forwarded-proto"] !== expectedUrl.protocol.slice(0, -1)
+  ) {
+    return false;
+  }
+
+  if (appOrigin === AUTH_CALLBACK_APP_ORIGIN) {
+    return (
+      forwardedValues["x-forwarded-port"] === "3000" &&
+      nextLoopbackAddresses.has(forwardedValues["x-forwarded-for"] ?? "")
+    );
+  }
+
+  const forwardedPort = forwardedValues["x-forwarded-port"];
+  const forwardedFor = forwardedValues["x-forwarded-for"] ?? "";
+  const forwardedAddresses = forwardedFor.split(",").map((value) => value.trim());
   return (
-    forwardedValues["x-forwarded-host"] === AUTH_CALLBACK_APP_HOST &&
-    forwardedValues["x-forwarded-port"] === "3000" &&
-    forwardedValues["x-forwarded-proto"] === "http" &&
-    nextLoopbackAddresses.has(forwardedValues["x-forwarded-for"] ?? "")
+    (forwardedPort === undefined || forwardedPort === "443") &&
+    forwardedFor.length > 0 &&
+    forwardedFor.length <= 256 &&
+    forwardedAddresses.every((value) => /^[0-9a-f:.]+$/i.test(value))
   );
 }
 
@@ -125,26 +147,27 @@ export async function handleAuthCallback(
   request: Request,
   exchange: AuthCodeExchange,
   decider: AuthCallbackDecider = decideAuthCallback,
+  appOrigin = AUTH_CALLBACK_APP_ORIGIN,
 ) {
   let requestUrl: URL;
   try {
     requestUrl = new URL(request.url);
   } catch {
-    return loginRedirect("exchange_error");
+    return loginRedirect("exchange_error", appOrigin);
   }
 
-  if (!isTrustedCallbackRequest(request, requestUrl)) {
-    return loginRedirect("exchange_error");
+  if (!isTrustedCallbackRequest(request, requestUrl, appOrigin)) {
+    return loginRedirect("exchange_error", appOrigin);
   }
 
   const searchParams = requestUrl.searchParams;
   if (hasUnsafeNext(searchParams.get("next"))) {
-    return loginRedirect("exchange_error");
+    return loginRedirect("exchange_error", appOrigin);
   }
 
   const flowIds = searchParams.getAll("sb_flow_id");
   if (flowIds.length > 1 || (flowIds.length === 1 && !isValidPkceFlowId(flowIds[0]))) {
-    return loginRedirect("exchange_error");
+    return loginRedirect("exchange_error", appOrigin);
   }
   const flowId = flowIds[0];
 
@@ -159,30 +182,30 @@ export async function handleAuthCallback(
       exchange,
     });
   } catch {
-    return loginRedirect("exchange_error");
+    return loginRedirect("exchange_error", appOrigin);
   }
 
   if (decision.kind === "error") {
-    return loginRedirect(decision.code);
+    return loginRedirect(decision.code, appOrigin);
   }
 
   if (decision.kind !== "success" || typeof decision.next !== "string") {
-    return loginRedirect("exchange_error");
+    return loginRedirect("exchange_error", appOrigin);
   }
 
   try {
     if (!decision.next.startsWith("/") || decision.next.startsWith("//")) {
-      return loginRedirect("exchange_error");
+      return loginRedirect("exchange_error", appOrigin);
     }
 
-    const target = new URL(decision.next, AUTH_CALLBACK_APP_ORIGIN);
-    if (target.origin !== AUTH_CALLBACK_APP_ORIGIN) {
-      return loginRedirect("exchange_error");
+    const target = new URL(decision.next, appOrigin);
+    if (target.origin !== appOrigin) {
+      return loginRedirect("exchange_error", appOrigin);
     }
 
     return redirectResponse(target);
   } catch {
-    return loginRedirect("exchange_error");
+    return loginRedirect("exchange_error", appOrigin);
   }
 }
 
@@ -191,10 +214,12 @@ export async function handleAuthCallbackForMode(
   mode: AuthRuntimeMode,
   exchange: AuthCodeExchange,
   decider: AuthCallbackDecider = decideAuthCallback,
+  appOrigin?: string | null,
 ) {
-  if (mode === "ui-only") {
+  const resolvedOrigin = appOrigin ?? (mode === "local-auth" ? AUTH_CALLBACK_APP_ORIGIN : null);
+  if (mode === "ui-only" || !resolvedOrigin) {
     return authUnavailableResponse();
   }
 
-  return handleAuthCallback(request, exchange, decider);
+  return handleAuthCallback(request, exchange, decider, resolvedOrigin);
 }
