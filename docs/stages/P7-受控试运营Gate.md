@@ -77,3 +77,9 @@
 - Node 22 Auth `50/50`、全部 structure、typecheck、全量 ESLint、Next build 通过；fresh reset 后 pgTAP 最终 `503/503`，strict lint/security/performance advisors 与 migration list 通过，exact cleanup 完成。
 - 首轮 policy 组合方式触发 P4 单一 permissive policy 门；已定向合并到原 policy 并在唯一复验关闭。库存/订单 mutation 未变化，P6 concurrency 证据复用。
 - 当前仅为 local candidate。Vercel target 已唯一解析为既有 `rebuy-share` Pro 项目，当前 Production 为 READY/ui-only 且有 rollback candidate；Supabase 当前无 Rebuy 项目，外部创建仍等组织与费用确认。证据见 [hosted-runtime candidate](../evidence/P7/2026-09-04-hosted-runtime-candidate/README.md)。
+
+## 6. 2026-09-04｜发布配置与 main 同步预检
+
+- Vercel `rebuy-share` 的 Node 运行时已校准并回读为 `22.x`；Production env 仍为空、线上仍为 `ui-only`，尚未部署 hosted-auth。
+- `origin/main` 的 UI-only Production docs-only closeout 已通过 merge commit `8918735` 合入；当前分支零落后，业务源码候选及其已通过验证未变化。
+- GitHub CLI 当前凭据无效；push/PR/CI 尚未执行。Supabase 创建仍等待唯一组织的明确确认与 provider 成本确认，首轮真实 Auth 还需要 Owner 指定受控邮箱。

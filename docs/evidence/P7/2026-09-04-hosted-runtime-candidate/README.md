@@ -27,3 +27,10 @@
 - P7 未改变库存/订单/履约/售后的 mutation、锁顺序或幂等逻辑，因此不重复 P6 已通过的六套 concurrency；其哈希绑定证据继续作为回归基线。
 - 本记录只证明 hosted-runtime 发布候选在本地成立；未证明 hosted Supabase、真实邮件、Vercel Preview/Production、`main`、远端 CI 或生产业务路径。
 - Supabase connector 当前只显示两个与 Rebuy 无关的项目；没有读取或修改它们。创建独立项目仍等待 Owner 对唯一可见组织的明确确认和 provider 成本确认。
+
+## 发布配置预检
+
+- 唯一 Vercel 目标继续为 `rebuy-share`；项目运行时已从历史 `24.x` 校准并回读为 `22.x`，与 `package.json`、本地验证和 GitHub Actions 的 Node `22.12.0` 基线一致。
+- Production 环境变量列表仍为空，线上健康检查仍为 `mode=ui-only`；在独立 Supabase、迁移、受控邮箱和生产变量闭环前不发布 hosted-auth 候选。
+- `origin/main` 新增的两笔 UI-only Production docs-only 提交已刷新并通过 merge commit `8918735` 吸收；源码候选未变化，当前分支相对 `origin/main` 为零落后。
+- GitHub CLI 的现有登录令牌无效；该状态尚未影响 Git fetch，但 PR/CI/merge 必须在推送前恢复认证或使用经验证的等价入口。本段只记录 preflight，不把远端 CI、push 或 Production 表述为已完成。
