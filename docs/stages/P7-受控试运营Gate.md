@@ -70,3 +70,10 @@
 - 应用发布失败：不改变数据库数据，恢复上一 schema-compatible READY deployment/alias；失败候选保留供诊断。
 - 数据库迁移失败：立即停止应用写入；使用事务回滚或前向修复，按 provider 可用恢复点处理，不删除订单/库存/事件。
 - 生产验证失败：不把阶段标为已通过；暂停新注册/下单/商家 mutation 中受影响部分，保留只读与审计，报告精确影响和恢复条件。
+
+## 5. 2026-09-04｜hosted-runtime 本地候选
+
+- 源码候选 `856d5ee60d0540cefe47bf947e41a80c78c6b8a4` 已实现 hosted Auth/runtime、secure cookie、受控邮箱、精确 Vercel origin、安全 header、`fra1` region 与 audit 关系限流。
+- Node 22 Auth `50/50`、全部 structure、typecheck、全量 ESLint、Next build 通过；fresh reset 后 pgTAP 最终 `503/503`，strict lint/security/performance advisors 与 migration list 通过，exact cleanup 完成。
+- 首轮 policy 组合方式触发 P4 单一 permissive policy 门；已定向合并到原 policy 并在唯一复验关闭。库存/订单 mutation 未变化，P6 concurrency 证据复用。
+- 当前仅为 local candidate。Vercel target 已唯一解析为既有 `rebuy-share` Pro 项目，当前 Production 为 READY/ui-only 且有 rollback candidate；Supabase 当前无 Rebuy 项目，外部创建仍等组织与费用确认。证据见 [hosted-runtime candidate](../evidence/P7/2026-09-04-hosted-runtime-candidate/README.md)。
