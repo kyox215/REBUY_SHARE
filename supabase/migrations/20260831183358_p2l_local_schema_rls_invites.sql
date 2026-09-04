@@ -2416,8 +2416,13 @@ BEGIN
       AND m.role_definition_organization_type IS NOT DISTINCT FROM v_invitation_role_org_type
       AND m.source_invitation_id = p_invitation_id
       AND m.status = 'active'
-      AND m.valid_from <= v_now
-      AND (m.valid_until IS NULL OR m.valid_until > v_now)
+      -- A concurrent replay can begin before the winning transaction creates
+      -- the membership, then resume after the invitation row lock is released.
+      -- Revalidate against wall time after that lock instead of the replay
+      -- statement's earlier timestamp, which can precede valid_from by µs.
+      AND m.valid_from <= pg_catalog.clock_timestamp()
+      AND (m.valid_until IS NULL
+        OR m.valid_until > pg_catalog.clock_timestamp())
     FOR UPDATE;
     IF NOT FOUND THEN
       RAISE EXCEPTION 'invitation_not_available';

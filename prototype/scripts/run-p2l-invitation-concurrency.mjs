@@ -428,10 +428,12 @@ WHERE id IN ('${IDS.multiInvitationA}', '${IDS.multiInvitationB}')
       const verificationResult = await runPsql(cleanupVerificationSql)
       if (
         verificationResult.signal === null &&
-        verificationResult.code === 0 &&
-        JSON.stringify(JSON.parse(verificationResult.stdout.trim())) ===
-          JSON.stringify(emptyCleanupState)
+        verificationResult.code === 0
       ) {
+        assert.deepEqual(
+          JSON.parse(verificationResult.stdout.trim()),
+          emptyCleanupState,
+        )
         cleanupOutcome = 'cleanup_pass'
       }
     }

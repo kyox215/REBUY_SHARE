@@ -539,6 +539,11 @@ assert.match(
   /set_config\(\s*'rebuy[.]invite[.]op', 'accept_audit', true\s*\);[\s\S]*?set_config\(\s*'rebuy[.]invite[.]created_at', v_now::text, true\s*\);[\s\S]*?INSERT INTO public[.]audit_logs/,
   'accept must bind the acceptance audit timestamp after restoring invitation fields',
 )
+assert.match(
+  acceptImplementation,
+  /v_invitation_status = 'accepted'[\s\S]*?m[.]valid_from <= pg_catalog[.]clock_timestamp\(\)[\s\S]*?m[.]valid_until > pg_catalog[.]clock_timestamp\(\)/,
+  'a blocked same-invitation replay must validate membership time after the row lock',
+)
 
 for (const requiredAcceptCoverage of [
   'accept rejects missing AMR timestamp even when iat is present',
@@ -684,6 +689,11 @@ assert.match(
   concurrencyTest,
   /const failureStage = stage[\s\S]*?stage = 'failure_cleanup'[\s\S]*?cleanupOutcome = 'cleanup_pass'[\s\S]*?P2L_INVITATION_CONCURRENCY_FAIL:\$\{failureStage\}:\$\{cleanupOutcome\}/,
   'failure output must preserve the original stage and report verified cleanup outcome',
+)
+assert.match(
+  concurrencyTest,
+  /assert[.]deepEqual\(\s*JSON[.]parse\(verificationResult[.]stdout[.]trim\(\)\),\s*emptyCleanupState/,
+  'failure cleanup must compare parsed state structurally instead of JSON key order',
 )
 
 console.log('P2L_MIGRATION_STRUCTURE_PASS')
