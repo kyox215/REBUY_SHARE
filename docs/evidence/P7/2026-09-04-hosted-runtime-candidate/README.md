@@ -43,3 +43,4 @@
 - Supabase 默认 SMTP 只向项目组织 team 的预授权邮箱投递、没有 SLA 且明确不适合生产；它只足以做受控 team-member Auth 验证，不能据此开放公众注册。
 - Vercel 当前唯一团队实时为 `Pro`，既有 `rebuy-share` 已在其中；这不是免费账户。官方 [Hobby plan](https://vercel.com/docs/plans/hobby) 虽含 100 GB Fast Data Transfer、100 万 Function invocations、4 CPU-hours、360 GB-hours memory 等免费额度，但只允许个人、非商业用途，不适合作为 Rebuy 交易试运营的合规替代。
 - 结论：不触碰两个现有 Supabase 项目、不新增付费且保持 Supabase 架构时，可行候选是“新建独立 Free 组织 → 重新核验 $0 project cost → 创建一个 Free Rebuy 项目”。创建云端组织需要 Owner action-time 确认；在确认前，候选分支保留于 `origin/codex/rebuy-v1-local-complete`，PR、Supabase 创建、迁移和 hosted-auth 部署保持暂停。
+- Free Plan 下的 80%/90% 用量门、Auth containment、暂停处理、仓库外加密日备份、恢复演练与回退边界已整理为 [FREE_PLAN_RUNBOOK](./FREE_PLAN_RUNBOOK.md)；它尚未执行，不替代 hosted 证据。

@@ -89,3 +89,4 @@
 - Owner 明确要求不使用付费。当前 Supabase 唯一组织实时为 `plan=pro`，同一组织不能混用 Free 与 Pro；在该组织创建第三个项目会新增 compute 成本。零新增付费候选必须另建独立 Free 组织，再核验 $0 project cost；现有两个非 Rebuy 项目不占用此方案的写入范围，也不得被暂停、迁移或复用。
 - 不暂停、迁移、复用或修改两个现有项目；不创建付费 project/branch/add-on。免费默认 SMTP 仅适合 team-member 受控验证，Free Plan 又缺少可下载托管备份并可能因七天低活跃暂停，均已登记为生产能力边界。
 - Vercel 当前项目位于既有 Pro 团队；Hobby 限个人非商业用途，不作为 Rebuy 交易试运营替代。新 Free Supabase 组织获确认前，P7 hosted database/真实 Auth/业务 Production 验收保持阻塞；local V1 证据与远端候选分支保留。
+- Free Plan 运行手册已固定 80% 预警、90% 停写、team-member Auth、七天低活跃暂停处理、仓库外加密日备份与隔离恢复演练要求；当前仅为候选，见 [runbook](../evidence/P7/2026-09-04-hosted-runtime-candidate/FREE_PLAN_RUNBOOK.md)。
