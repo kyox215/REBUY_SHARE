@@ -11,6 +11,10 @@ import styles from '@/app/shop.module.css'
 export const dynamic = 'force-dynamic'
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+const batchStatusCopy: Record<string, string> = { confirmed: '已确认', processing: '商家处理中', completed: '已完成', cancelled: '已取消' }
+const merchantStatusCopy: Record<string, string> = { pending: '待商家处理', accepted: '商家已接单', shipped: '运输中', completed: '已完成', rejected: '商家已拒绝', cancelled: '已取消' }
+const inventoryStatusCopy: Record<string, string> = { reserved: '已预留', mixed: '部分核销或释放', sold: '已核销', released: '已释放' }
+const eventCopy: Record<string, string> = { 'order.confirmed': '订单已确认并预留库存', 'merchant_order.accepted': '商家已接单', 'merchant_order.rejected': '商家已拒绝并释放库存', 'merchant_order.shipped': '商家已登记发货', 'merchant_order.completed': '订单已完成并核销库存', 'order.cancelled': '订单已取消并释放库存' }
 const noticeCopy: Record<string, string> = {
   'order-created': '订单已创建，所有商品库存已在同一事务中预留。',
   'order-cancelled': '订单已取消，全部库存已原子释放。',
@@ -58,12 +62,12 @@ export default async function OrderDetailPage({
               return (
                 <article className={styles.panel} key={merchantOrder.merchant_order_id}>
                   <div className={styles.orderHeader}>
-                    <div><p><Store size={14} aria-hidden="true" /> 商家子订单</p><h2>{merchantOrder.store_name}</h2><p>{merchantOrder.merchant_order_status === 'pending' ? '待商家处理' : '已取消'}</p></div>
+                    <div><p><Store size={14} aria-hidden="true" /> 商家子订单</p><h2>{merchantOrder.store_name}</h2><p>{merchantStatusCopy[merchantOrder.merchant_order_status]}</p></div>
                     <strong>{formatEuro(merchantOrder.merchant_subtotal_cents)}</strong>
                   </div>
                   {items.map((item) => (
                     <div className={styles.orderItem} key={item.listing_id}>
-                      <div><h3>{item.title_snapshot}</h3><p>{item.sku_snapshot} · {item.audience === 'wholesale' ? '批发价' : '零售价'} · {item.quantity} 件 · 库存{item.item_inventory_status === 'reserved' ? '已预留' : '已释放'}</p></div>
+                      <div><h3>{item.title_snapshot}</h3><p>{item.sku_snapshot} · {item.audience === 'wholesale' ? '批发价' : '零售价'} · {item.quantity} 件 · 库存{inventoryStatusCopy[item.item_inventory_status]}</p></div>
                       <strong>{formatEuro(item.line_amount_cents)}</strong>
                     </div>
                   ))}
@@ -75,8 +79,8 @@ export default async function OrderDetailPage({
             <section className={`${styles.panel} ${styles.summary}`}>
               <h2>订单状态</h2>
               <div className={styles.summaryRows}>
-                <div className={styles.summaryRow}><span>订单</span><strong>{order.order_status === 'confirmed' ? '已确认' : '已取消'}</strong></div>
-                <div className={styles.summaryRow}><span>库存</span><strong>{order.inventory_status === 'reserved' ? '已预留' : '已释放'}</strong></div>
+                <div className={styles.summaryRow}><span>订单</span><strong>{batchStatusCopy[order.order_status]}</strong></div>
+                <div className={styles.summaryRow}><span>库存</span><strong>{inventoryStatusCopy[order.inventory_status]}</strong></div>
                 <div className={styles.summaryRow}><span>支付</span><strong>无需支付</strong></div>
                 <div className={`${styles.summaryRow} ${styles.summaryTotal}`}><span>合计</span><strong>{formatEuro(order.total_cents)}</strong></div>
               </div>
@@ -97,7 +101,7 @@ export default async function OrderDetailPage({
               <div className={styles.orderHeader}><div><p className={styles.eyebrow}>不可变事件</p><h2>订单时间线</h2></div><CheckCircle2 size={21} aria-hidden="true" /></div>
               <div className={styles.timeline}>
                 {events.map((event) => (
-                  <div className={styles.timelineItem} key={`${event.event}-${event.created_at}`}><span className={styles.timelineDot} /><div><strong>{event.event === 'order.confirmed' ? '订单已确认并预留库存' : '订单已取消并释放库存'}</strong><br />{new Intl.DateTimeFormat('zh-CN', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(event.created_at))}</div></div>
+                  <div className={styles.timelineItem} key={`${event.event}-${event.created_at}`}><span className={styles.timelineDot} /><div><strong>{eventCopy[event.event] ?? event.event}</strong><br />{new Intl.DateTimeFormat('zh-CN', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(event.created_at))}</div></div>
                 ))}
               </div>
             </section>

@@ -7,6 +7,13 @@ import styles from '@/app/shop.module.css'
 
 export const dynamic = 'force-dynamic'
 
+const orderStatusCopy: Record<string, string> = {
+  confirmed: '已确认 / 已预留',
+  processing: '商家处理中',
+  completed: '已完成 / 已核销',
+  cancelled: '已取消 / 已释放',
+}
+
 export default async function OrdersPage() {
   await requireBuyerPage('/account/orders')
   const orders = await loadOrders()
@@ -32,7 +39,7 @@ export default async function OrdersPage() {
                 </div>
                 <div className={styles.orderCardMeta}>
                   <strong>{formatEuro(order.total_cents)}</strong>
-                  <span className={`${styles.statusPill} ${order.order_status === 'cancelled' ? styles.statusCancelled : ''}`}>{order.order_status === 'confirmed' ? '已确认 / 已预留' : '已取消 / 已释放'}</span>
+                  <span className={`${styles.statusPill} ${order.order_status === 'cancelled' ? styles.statusCancelled : ''}`}>{orderStatusCopy[order.order_status]}</span>
                   <ChevronRight size={18} aria-hidden="true" />
                 </div>
               </Link>

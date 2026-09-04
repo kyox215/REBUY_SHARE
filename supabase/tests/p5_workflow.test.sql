@@ -381,7 +381,7 @@ INSERT INTO pg_temp.p5_cancel_result SELECT * FROM public.cancel_my_order_batch(
 SELECT is((SELECT order_status || ':' || inventory_status
   FROM pg_temp.p5_cancel_result LIMIT 1), 'cancelled:released',
   'buyer cancellation atomically releases the full batch');
-INSERT INTO pg_temp.p5_cancel_result SELECT * FROM private.cancel_my_order_batch_impl(
+INSERT INTO pg_temp.p5_cancel_result SELECT * FROM private.cancel_my_order_batch_p6_impl(
   (SELECT batch_id FROM pg_temp.p5_checkout_result LIMIT 1), 1,
   '00000000-0000-4000-8000-000000007201');
 SELECT is((SELECT count(DISTINCT batch_id::text || ':' || order_status || ':'

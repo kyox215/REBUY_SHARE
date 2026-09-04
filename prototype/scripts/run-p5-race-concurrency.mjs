@@ -331,9 +331,9 @@ function cancelSql(batchId) {
 BEGIN;
 SET LOCAL statement_timeout = '12s';
 ${claimsSql(IDS.cancelBuyer, 'p5-race-cancel@rebuy.test')}
-SET LOCAL ROLE rebuy_business_executor;
+SET LOCAL ROLE authenticated;
 SELECT order_status || '|' || inventory_status || '|' || order_version::text
-FROM private.cancel_my_order_batch_impl(
+FROM public.cancel_my_order_batch(
   '${batchId}', 1, '${IDS.cancelKey}'
 );
 COMMIT;

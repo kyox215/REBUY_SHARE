@@ -1,4 +1,4 @@
--- P2-L/P4 authorization and category catalogs only.
+-- P2-L/P4/P6 authorization and category catalogs only.
 -- No auth.users, identity, email, tenant, store, membership, listing, price, or inventory rows.
 
 INSERT INTO public.permissions (
@@ -21,7 +21,11 @@ VALUES
   ('00000000-0000-4000-8000-000000000114', 'wholesale_application.assign', 'wholesale_application', 'assign', 'platform', 'high', false),
   ('00000000-0000-4000-8000-000000000115', 'wholesale_application.read_assigned', 'wholesale_application', 'read_assigned', 'platform', 'high', false),
   ('00000000-0000-4000-8000-000000000116', 'wholesale_application.review', 'wholesale_application', 'review', 'platform', 'critical', false),
-  ('00000000-0000-4000-8000-000000000117', 'wholesale_qualification.manage', 'wholesale_qualification', 'manage', 'platform', 'critical', false)
+  ('00000000-0000-4000-8000-000000000117', 'wholesale_qualification.manage', 'wholesale_qualification', 'manage', 'platform', 'critical', false),
+  ('00000000-0000-4000-8000-000000000118', 'merchant.dashboard.read', 'merchant_dashboard', 'read', 'store', 'medium', false),
+  ('00000000-0000-4000-8000-000000000119', 'merchant.order.fulfill', 'merchant_order', 'fulfill', 'store', 'critical', false),
+  ('00000000-0000-4000-8000-000000000120', 'merchant.after_sale.manage', 'merchant_after_sale', 'manage', 'store', 'high', false),
+  ('00000000-0000-4000-8000-000000000121', 'merchant.audit.read', 'merchant_audit', 'read', 'store', 'high', false)
 ON CONFLICT (id) DO UPDATE
 SET permission_key = EXCLUDED.permission_key,
     resource = EXCLUDED.resource,
@@ -75,7 +79,14 @@ VALUES
   ('00000000-0000-4000-8000-000000000203', 1, '00000000-0000-4000-8000-000000000117', true),
   ('00000000-0000-4000-8000-000000000205', 1, '00000000-0000-4000-8000-000000000115', true),
   ('00000000-0000-4000-8000-000000000205', 1, '00000000-0000-4000-8000-000000000116', true),
-  ('00000000-0000-4000-8000-000000000205', 1, '00000000-0000-4000-8000-000000000117', true)
+  ('00000000-0000-4000-8000-000000000205', 1, '00000000-0000-4000-8000-000000000117', true),
+  ('00000000-0000-4000-8000-000000000201', 1, '00000000-0000-4000-8000-000000000118', true),
+  ('00000000-0000-4000-8000-000000000201', 1, '00000000-0000-4000-8000-000000000119', true),
+  ('00000000-0000-4000-8000-000000000201', 1, '00000000-0000-4000-8000-000000000120', true),
+  ('00000000-0000-4000-8000-000000000201', 1, '00000000-0000-4000-8000-000000000121', true),
+  ('00000000-0000-4000-8000-000000000202', 1, '00000000-0000-4000-8000-000000000118', true),
+  ('00000000-0000-4000-8000-000000000202', 1, '00000000-0000-4000-8000-000000000119', true),
+  ('00000000-0000-4000-8000-000000000202', 1, '00000000-0000-4000-8000-000000000120', true)
 ON CONFLICT (role_definition_id, role_version, permission_id) DO UPDATE
 SET is_granted = EXCLUDED.is_granted;
 

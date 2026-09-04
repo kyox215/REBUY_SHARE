@@ -43,8 +43,8 @@ export type CartRow = {
 export type OrderSummary = {
   batch_id: string
   synthetic_order_reference: string
-  order_status: 'confirmed' | 'cancelled'
-  inventory_status: 'reserved' | 'released'
+  order_status: 'confirmed' | 'processing' | 'completed' | 'cancelled'
+  inventory_status: 'reserved' | 'mixed' | 'sold' | 'released'
   payment_status: 'not_required'
   currency_code: 'EUR'
   total_cents: number
@@ -59,14 +59,14 @@ export type OrderDetailRow = {
   batch_id: string
   synthetic_order_reference: string
   synthetic_delivery_reference: string
-  order_status: 'confirmed' | 'cancelled'
-  inventory_status: 'reserved' | 'released'
+  order_status: 'confirmed' | 'processing' | 'completed' | 'cancelled'
+  inventory_status: 'reserved' | 'mixed' | 'sold' | 'released'
   payment_status: 'not_required'
   currency_code: 'EUR'
   total_cents: number
   order_version: number
   merchant_order_id: string
-  merchant_order_status: 'pending' | 'cancelled'
+  merchant_order_status: 'pending' | 'accepted' | 'shipped' | 'completed' | 'rejected' | 'cancelled'
   store_id: string
   store_name: string
   merchant_subtotal_cents: number
@@ -78,7 +78,7 @@ export type OrderDetailRow = {
   audience: 'retail' | 'wholesale'
   unit_amount_cents: number
   line_amount_cents: number
-  item_inventory_status: 'reserved' | 'released'
+  item_inventory_status: 'reserved' | 'sold' | 'released'
   event_codes: Array<{ event: string; status: string; created_at: string }>
   created_at: string
   cancelled_at: string | null

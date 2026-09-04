@@ -151,13 +151,23 @@ SELECT ok(
       'private.checkout_cart_impl(integer,text,uuid)',
       'private.list_my_orders_impl()',
       'private.get_my_order_impl(uuid)',
-      'private.cancel_my_order_batch_impl(uuid,integer,uuid)'
+      'private.cancel_my_order_batch_p6_impl(uuid,integer,uuid)'
     ]) AS f(signature)
     WHERE NOT pg_catalog.has_function_privilege('authenticated', f.signature, 'EXECUTE')
        OR pg_catalog.has_function_privilege('anon', f.signature, 'EXECUTE')
        OR pg_catalog.has_function_privilege('service_role', f.signature, 'EXECUTE')
   ),
   'direct private parity surface matches authenticated buyer wrappers'
+);
+
+SELECT ok(
+  NOT pg_catalog.has_function_privilege('authenticated',
+    'private.cancel_my_order_batch_impl(uuid,integer,uuid)', 'EXECUTE')
+  AND NOT pg_catalog.has_function_privilege('anon',
+    'private.cancel_my_order_batch_impl(uuid,integer,uuid)', 'EXECUTE')
+  AND NOT pg_catalog.has_function_privilege('service_role',
+    'private.cancel_my_order_batch_impl(uuid,integer,uuid)', 'EXECUTE'),
+  'superseded P5 cancellation implementation remains closed to external roles'
 );
 
 SELECT ok(
