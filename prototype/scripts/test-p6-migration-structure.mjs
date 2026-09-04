@@ -108,10 +108,23 @@ assert.match(orderPage, /advanceMerchantOrderAction/)
 assert.match(afterSalePage, /reviewMerchantAfterSaleAction/)
 assert.match(auditPage, /loadMerchantAudit/)
 assert.match(schemaTest, /external roles have no P6 table privileges/)
+assert.match(schemaTest, /P6 private implementations have effective authenticated-only ACLs/)
 assert.match(workflowTest, /full merchant fulfillment reaches completed and sold/)
 assert.match(workflowTest, /same order action key replays the original result/)
 assert.match(workflowTest, /cross-store merchant order access fails closed/)
 assert.match(workflowTest, /after-sale reaches a recorded terminal resolution/)
+for (const phrase of ['store-scoped employee sees exactly one authorized merchant context',
+  'private read implementation preserves employee authorization parity',
+  'private direct read rejects an employee cross-store target',
+  'employee without inventory permission cannot use the private write implementation',
+  'permission drift immediately invalidates employee dashboard access',
+  'retired role drift immediately invalidates private direct access',
+  'public and private dashboard reads return the same authorized DTO',
+  'private direct inventory write applies the same guarded workflow',
+  'public wrapper replays the private write result without duplication',
+  'private direct inventory write rejects a cross-store listing']) {
+  assert.match(workflowTest, new RegExp(phrase))
+}
 assert.match(workflowTest, /CREATE TRIGGER p6_mid_operation_rollback/)
 assert.match(workflowTest, /p6_injected_operation_event_failure/)
 for (const rollbackCategory of ['inventory', 'merchant order', 'batch', 'order items',

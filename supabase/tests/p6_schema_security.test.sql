@@ -97,6 +97,26 @@ SELECT is((SELECT count(*)::integer FROM pg_catalog.pg_proc AS p
     AND coalesce(p.proconfig, ARRAY[]::text[]) @> ARRAY['search_path=""']), 12,
   'all P6 private implementations are volatile empty-path executor definers');
 
+SELECT ok(NOT EXISTS (
+  SELECT 1 FROM unnest(ARRAY[
+    'private.get_my_merchant_context_impl()',
+    'private.get_my_merchant_dashboard_impl(uuid)',
+    'private.list_my_merchant_products_impl(uuid)',
+    'private.list_my_merchant_inventory_impl(uuid)',
+    'private.list_my_merchant_orders_impl(uuid)',
+    'private.get_my_merchant_order_impl(uuid,uuid)',
+    'private.list_my_merchant_after_sales_impl(uuid)',
+    'private.list_my_merchant_audit_impl(uuid,text,integer)',
+    'private.adjust_my_merchant_inventory_impl(uuid,uuid,integer,text,integer,uuid)',
+    'private.advance_my_merchant_order_impl(uuid,uuid,text,text,text,integer,uuid)',
+    'private.open_my_merchant_after_sale_impl(uuid,uuid,text,uuid)',
+    'private.review_my_merchant_after_sale_impl(uuid,uuid,text,text,integer,uuid)'
+  ]) AS f(signature)
+  WHERE NOT pg_catalog.has_function_privilege('authenticated', f.signature, 'EXECUTE')
+     OR pg_catalog.has_function_privilege('anon', f.signature, 'EXECUTE')
+     OR pg_catalog.has_function_privilege('service_role', f.signature, 'EXECUTE')
+), 'P6 private implementations have effective authenticated-only ACLs');
+
 SELECT is((SELECT count(*)::integer FROM pg_catalog.pg_proc AS p
   JOIN pg_catalog.pg_namespace AS n ON n.oid = p.pronamespace
   WHERE n.nspname = 'public' AND p.proname = ANY (ARRAY[

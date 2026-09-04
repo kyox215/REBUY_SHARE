@@ -3,12 +3,15 @@ CREATE EXTENSION IF NOT EXISTS pgtap;
 SELECT no_plan();
 SET LOCAL search_path = pg_catalog, public, extensions;
 
-CREATE OR REPLACE FUNCTION pg_temp.p6_set_claims(p_age_seconds integer DEFAULT 0)
+CREATE OR REPLACE FUNCTION pg_temp.p6_set_claims(
+  p_age_seconds integer DEFAULT 0,
+  p_user_id uuid DEFAULT '90000000-0000-4000-8000-000000000001'::uuid,
+  p_email text DEFAULT 'p5-local-catalog-owner@rebuy.test'
+)
 RETURNS void LANGUAGE plpgsql AS $function$
 BEGIN
   PERFORM pg_catalog.set_config('request.jwt.claims', pg_catalog.jsonb_build_object(
-    'sub', '90000000-0000-4000-8000-000000000001',
-    'email', 'p5-local-catalog-owner@rebuy.test', 'is_anonymous', false,
+    'sub', p_user_id, 'email', p_email, 'is_anonymous', false,
     'amr', pg_catalog.jsonb_build_array(pg_catalog.jsonb_build_object(
       'method', 'otp', 'timestamp', EXTRACT(epoch FROM pg_catalog.statement_timestamp()) - p_age_seconds
     )))::text, true);
@@ -38,6 +41,87 @@ GRANT ALL ON TABLE pg_temp.p6_cart, pg_temp.p6_checkout,
   pg_temp.p6_rollback_checkout, pg_temp.p6_order_action, pg_temp.p6_case
   TO authenticated;
 
+INSERT INTO auth.users (id, email, raw_app_meta_data, raw_user_meta_data, role, aud)
+VALUES ('90000000-0000-4000-8000-000000000011',
+  'p6-local-employee@rebuy.test', '{}'::jsonb, '{}'::jsonb,
+  'authenticated', 'authenticated');
+INSERT INTO public.memberships (
+  id, user_id, organization_id, organization_type,
+  role_definition_id, role_version, status, valid_from
+)
+VALUES ('90000000-0000-4000-8000-000000000911',
+  '90000000-0000-4000-8000-000000000011',
+  '90000000-0000-4000-8000-000000000101', 'merchant',
+  '00000000-0000-4000-8000-000000000202', 1, 'active',
+  pg_catalog.statement_timestamp() - interval '1 hour');
+INSERT INTO public.membership_store_scopes (
+  id, membership_id, organization_id, organization_type,
+  store_id, scope_type, status
+)
+VALUES ('90000000-0000-4000-8000-000000000912',
+  '90000000-0000-4000-8000-000000000911',
+  '90000000-0000-4000-8000-000000000101', 'merchant',
+  '90000000-0000-4000-8000-000000000201', 'store', 'active');
+
+SET LOCAL ROLE authenticated;
+SELECT pg_temp.p6_set_claims(0,
+  '90000000-0000-4000-8000-000000000011',
+  'p6-local-employee@rebuy.test');
+SELECT is((SELECT count(*)::integer FROM public.get_my_merchant_context()), 1,
+  'store-scoped employee sees exactly one authorized merchant context');
+SELECT is((SELECT store_id FROM public.get_my_merchant_dashboard(
+  '90000000-0000-4000-8000-000000000201')),
+  '90000000-0000-4000-8000-000000000201'::uuid,
+  'store-scoped employee can read its assigned dashboard');
+SELECT is((SELECT store_id FROM private.get_my_merchant_dashboard_impl(
+  '90000000-0000-4000-8000-000000000201')),
+  '90000000-0000-4000-8000-000000000201'::uuid,
+  'private read implementation preserves employee authorization parity');
+SELECT throws_ok($$SELECT * FROM private.get_my_merchant_dashboard_impl(
+  '90000000-0000-4000-8000-000000000202')$$,
+  'P0001', 'merchant_scope_forbidden',
+  'private direct read rejects an employee cross-store target');
+SELECT throws_ok($$SELECT * FROM private.adjust_my_merchant_inventory_impl(
+  '90000000-0000-4000-8000-000000000201',
+  '90000000-0000-4000-8000-000000000501', 1, 'cycle_count', 1,
+  '96000000-0000-4000-8000-000000000001')$$,
+  'P0001', 'merchant_scope_forbidden',
+  'employee without inventory permission cannot use the private write implementation');
+
+RESET ROLE;
+UPDATE public.role_permissions SET is_granted = false
+WHERE role_definition_id = '00000000-0000-4000-8000-000000000202'
+  AND role_version = 1
+  AND permission_id = '00000000-0000-4000-8000-000000000118';
+SET LOCAL ROLE authenticated;
+SELECT pg_temp.p6_set_claims(0,
+  '90000000-0000-4000-8000-000000000011',
+  'p6-local-employee@rebuy.test');
+SELECT throws_ok($$SELECT * FROM public.get_my_merchant_dashboard(
+  '90000000-0000-4000-8000-000000000201')$$,
+  'P0001', 'merchant_scope_forbidden',
+  'permission drift immediately invalidates employee dashboard access');
+
+RESET ROLE;
+UPDATE public.role_permissions SET is_granted = true
+WHERE role_definition_id = '00000000-0000-4000-8000-000000000202'
+  AND role_version = 1
+  AND permission_id = '00000000-0000-4000-8000-000000000118';
+UPDATE public.role_definitions SET status = 'retired'
+WHERE id = '00000000-0000-4000-8000-000000000202' AND version = 1;
+SET LOCAL ROLE authenticated;
+SELECT pg_temp.p6_set_claims(0,
+  '90000000-0000-4000-8000-000000000011',
+  'p6-local-employee@rebuy.test');
+SELECT throws_ok($$SELECT * FROM private.get_my_merchant_dashboard_impl(
+  '90000000-0000-4000-8000-000000000201')$$,
+  'P0001', 'merchant_scope_forbidden',
+  'retired role drift immediately invalidates private direct access');
+
+RESET ROLE;
+UPDATE public.role_definitions SET status = 'active'
+WHERE id = '00000000-0000-4000-8000-000000000202' AND version = 1;
+
 SET LOCAL ROLE authenticated;
 SELECT pg_temp.p6_set_claims();
 
@@ -49,6 +133,15 @@ SELECT is((SELECT store_id FROM public.get_my_merchant_context()),
 SELECT is((SELECT count(*)::integer FROM public.list_my_merchant_products(
   '90000000-0000-4000-8000-000000000201')), 2,
   'merchant product DTO contains only own-store listings');
+SELECT is((SELECT active_listing_count::text || ':' || low_stock_count::text
+  || ':' || pending_order_count::text
+  FROM public.get_my_merchant_dashboard(
+    '90000000-0000-4000-8000-000000000201')),
+  (SELECT active_listing_count::text || ':' || low_stock_count::text
+    || ':' || pending_order_count::text
+   FROM private.get_my_merchant_dashboard_impl(
+    '90000000-0000-4000-8000-000000000201')),
+  'public and private dashboard reads return the same authorized DTO');
 
 SELECT throws_ok($$SELECT * FROM public.get_my_merchant_dashboard(
   '90000000-0000-4000-8000-000000000202')$$,
@@ -129,6 +222,24 @@ SELECT is((SELECT count(*)::integer FROM public.list_my_merchant_audit(
   '90000000-0000-4000-8000-000000000201', 'inventory', 20)
   WHERE reason_code = 'stock_received'), 1,
   'inventory reason is visible in the immutable merchant audit');
+SELECT is((SELECT on_hand::text || ':' || inventory_version::text
+  FROM private.adjust_my_merchant_inventory_impl(
+    '90000000-0000-4000-8000-000000000201',
+    '90000000-0000-4000-8000-000000000501', 1, 'cycle_count', 4,
+    '96000000-0000-4000-8000-000000000026')), '26:5',
+  'private direct inventory write applies the same guarded workflow');
+SELECT is((SELECT on_hand::text || ':' || inventory_version::text
+  FROM public.adjust_my_merchant_inventory(
+    '90000000-0000-4000-8000-000000000201',
+    '90000000-0000-4000-8000-000000000501', 1, 'cycle_count', 4,
+    '96000000-0000-4000-8000-000000000026')), '26:5',
+  'public wrapper replays the private write result without duplication');
+SELECT throws_ok($$SELECT * FROM private.adjust_my_merchant_inventory_impl(
+  '90000000-0000-4000-8000-000000000201',
+  '90000000-0000-4000-8000-000000000502', 1, 'cycle_count', 1,
+  '96000000-0000-4000-8000-000000000027')$$,
+  'P0001', 'merchant_inventory_scope_forbidden',
+  'private direct inventory write rejects a cross-store listing');
 TRUNCATE p6_order_action;
 INSERT INTO p6_order_action SELECT * FROM public.advance_my_merchant_order(
   '90000000-0000-4000-8000-000000000201',
